@@ -11,6 +11,13 @@ EFI_HANDLE gImageHandle;
 
 int gStartupFreePages;
 
+typedef struct idtr_s
+{
+    uint16_t table_limit;
+    uint64_t base_address;
+} __attribute__((packed)) idtr_t;
+
+
 typedef struct idt_entry_s
 {
     uint32_t d1_32;
@@ -19,7 +26,8 @@ typedef struct idt_entry_s
     uint32_t d4_32;
 } __attribute__((packed)) idt_entry_t;
 
-idt_entry_t g_IDT[256] asm("idt_table");
+idt_entry_t *g_IDT;
+
 
 EFI_EVENT timer_ev;
 
@@ -124,7 +132,7 @@ void init_ram() {
                   printf("MAX_MEM     ");
              break;
          }
-         printf("%10d pages @ %10lx\n",MMap[0].NumberOfPages,MMap[0].PhysicalStart);
+         printf("%10d pages @ %#llx\n",MMap[0].NumberOfPages,MMap[0].PhysicalStart);
      }
      printf("Have %d free pages\n",gStartupFreePages);
      printf("%d kb available, %d mb\n",gStartupFreePages*EFI_PAGE_SIZE, (gStartupFreePages*EFI_PAGE_SIZE)/1024/1024 );
@@ -132,7 +140,7 @@ void init_ram() {
 
 // shamelessly ripped from Charn (github.com/peterdn)
 void write_idt_entry(int interrupt_number, void (*isr_routine)()) {
-    idt_entry_t *e = &g_IDT[interrupt_number];
+    idt_entry_t *e = g_IDT+ interrupt_number; 
     e->d4_32 = 0;
     e->d3_32 = 0;
     unsigned long offset_u = (((unsigned long) isr_routine) & 0xFFFF0000);
@@ -142,26 +150,33 @@ void write_idt_entry(int interrupt_number, void (*isr_routine)()) {
 }
 
 void handle_syscall() {
-     printf("Syscall!\n");
-     __asm__("leave; iretq");
+     __asm__("cli; hlt"); 
 }
 
 void init_idt() {
+     __asm__ __volatile__("cli");
      printf("Loading UEFI's IDT...\n");
-     __asm__ ("sidt idt_table");
+     uint64_t idtr_p;
+     uint64_t idt_p;
+     idtr_t idtr;
+     __asm__ volatile("sidt %0": "=m" (idtr));
+     idtr_p = &idtr;
+//     idt_p = *(uint64_t*)(idtr_p_c[2]);
+//     idtr->table_limit = 256;
+     idt_p = (uint64_t)(idtr.base_address);
+     g_IDT = (idt_entry_t*)idt_p;
+
+     printf("Located IDT with %d entries at %#lx\n", idtr.table_limit/sizeof(idt_entry_t), idtr.base_address);
      printf("Patching...\n");
-     __asm__ ("cli");
+     idtr.base_address = g_IDT;
      write_idt_entry(0x80, &handle_syscall);
-     __asm__ ("lidt idt_table");
-     __asm__ ("sti");
-     int i=0;
-     for(i=0; i<256; i++) {
-         printf("Interupt %d, ISR %d %d %d %d\n", i, g_IDT[i].d1_32, g_IDT[i].d2_32, g_IDT[i].d3_32, g_IDT[i].d4_32);
-     }
+     __asm__ __volatile__("lidt %0": "=m" (idtr));
+     __asm__ __volatile__("sti");
      printf("Loaded syscall handler!\n");
 }
 
 void timer_func(EFI_EVENT Event, void *ctx) {
+     printf(".");
 }
  
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
@@ -191,10 +206,19 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     if(timer_stat != EFI_SUCCESS) {
        printf("Error configuring timer!\n");
     }
+
+
     
     printf("Ready to do stuff\n");
-    __asm__("int $0x80");
 
+    int i=0;
+    for(i=0; i<256; i++) {
+        if(g_IDT[i].d1_32 != 0) {
+           printf("Interupt %d configured\n", i);
+        }
+    }
+
+    __asm__("int $0x80");
     while(1) {
     } 
 }

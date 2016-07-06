@@ -28,7 +28,7 @@
 void *malloc(size_t size)
 {
 	void *buf;
-	EFI_STATUS s = BS->AllocatePool(EfiConventionalMemory, (UINTN)(size + sizeof(size_t)), &buf);
+	EFI_STATUS s = BS->AllocatePool(EfiLoaderCode, (UINTN)(size + sizeof(size_t)), &buf);
 	if(EFI_ERROR(s))
 	{
 		fprintf(stderr, "malloc(%d) failed: %d\n", size, s);

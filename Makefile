@@ -28,4 +28,4 @@ boot.iso: boot.img
 	xorriso -as mkisofs -R -f -e boot.img -no-emul-boot -o boot.iso iso
 
 run-qemu:
-	qemu-system-x86_64 -bios ${OVMFPATH}/OVMF.fd -usb -usbdevice disk::boot.fs -netdev user,id=mynet0,net=192.168.76.0/24,dhcpstart=192.168.76.9 -device virtio-net,netdev=mynet0 -nographic -serial stdio
+	qemu-system-x86_64 -bios ${OVMFPATH}/OVMF.fd -usb -usbdevice disk::boot.img -netdev user,id=mynet0,net=192.168.76.0/24,dhcpstart=192.168.76.9 -device virtio-net,netdev=mynet0 -nographic -serial stdio
