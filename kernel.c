@@ -18,12 +18,18 @@ typedef struct idtr_s
 } __attribute__((packed)) idtr_t;
 
 
-typedef struct idt_entry_s
+/*typedef struct idt_entry_s
 {
     uint32_t d1_32;
     uint32_t d2_32;
     uint32_t d3_32;
     uint32_t d4_32;
+} __attribute__((packed)) idt_entry_t;*/
+
+typedef struct idt_entry_s {
+        unsigned short offset_low,seg_selector;
+        unsigned char reserved,flag;
+        unsigned short offset_high;
 } __attribute__((packed)) idt_entry_t;
 
 idt_entry_t *g_IDT;
@@ -141,12 +147,15 @@ void init_ram() {
 // shamelessly ripped from Charn (github.com/peterdn)
 void write_idt_entry(int interrupt_number, void (*isr_routine)()) {
     idt_entry_t *e = g_IDT+ interrupt_number; 
-    e->d4_32 = 0;
+/*    e->d4_32 = 0;
     e->d3_32 = 0;
     unsigned long offset_u = (((unsigned long) isr_routine) & 0xFFFF0000);
     unsigned long offset_l = (((unsigned long) isr_routine) & 0xFFFF);
     e->d2_32 = offset_u | 0x8E00;
-    e->d1_32 = offset_l | 0x180000;
+    e->d1_32 = offset_l | 0x180000;*/
+    unsigned long new_addr = (unsigned long)isr_routine;
+    e->offset_high = (unsigned short) (new_addr >> 16);
+    e->offset_low  = (unsigned short) (new_addr & 0x0000FFFF);
 }
 
 void handle_syscall() {
@@ -159,14 +168,16 @@ void init_idt() {
      uint64_t idtr_p;
      uint64_t idt_p;
      idtr_t idtr;
+     unsigned  char idtr_p_c[6];
      __asm__ volatile("sidt %0": "=m" (idtr));
      idtr_p = &idtr;
 //     idt_p = *(uint64_t*)(idtr_p_c[2]);
 //     idtr->table_limit = 256;
+//     idt_p = *((unsigned long *)&idtr_p_c[2]);
      idt_p = (uint64_t)(idtr.base_address);
      g_IDT = (idt_entry_t*)idt_p;
 
-     printf("Located IDT with %d entries at %#lx\n", idtr.table_limit/sizeof(idt_entry_t), idtr.base_address);
+     printf("Located IDT with %d entries at %#lx\n", idtr.table_limit/16, idtr.base_address);
      printf("Patching...\n");
      idtr.base_address = g_IDT;
      write_idt_entry(0x80, &handle_syscall);
@@ -176,7 +187,7 @@ void init_idt() {
 }
 
 void timer_func(EFI_EVENT Event, void *ctx) {
-     printf(".");
+//     printf(".");
 }
  
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
@@ -213,11 +224,11 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
     int i=0;
     for(i=0; i<256; i++) {
-        if(g_IDT[i].d1_32 != 0) {
-           printf("Interupt %d configured\n", i);
+        if(g_IDT[i].offset_high != 0) {
+           printf("Interupt %d, isr %#llx configured\n", i, (g_IDT[i].offset_high<<16)+(g_IDT[i].offset_low) );
         }
     }
-
+    printf("%#llx syscall handler\n",(uint64_t)handle_syscall);
     __asm__("int $0x80");
     while(1) {
     } 
