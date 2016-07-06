@@ -7,6 +7,9 @@ all: BOOTX64.EFI boot.fs
 kernel.o: kernel.c
 	x86_64-w64-mingw32-gcc -ffreestanding ${INCLUDES} -c $< -o $@
 
+efilibc/efilibc.a:
+	make -C efilibc
+
 BOOTX64.EFI: efilibc/efilibc.a kernel.o
 	x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $@ kernel.o efilibc/efilibc.a -lgcc
 
