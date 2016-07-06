@@ -142,26 +142,26 @@ void write_idt_entry(int interrupt_number, void (*isr_routine)()) {
 }
 
 void handle_syscall() {
-     __asm__("leave; iret");
+     printf("Syscall!\n");
+     __asm__("leave; iretq");
 }
 
 void init_idt() {
      printf("Loading UEFI's IDT...\n");
-     __asm__ __volatile__ ("sidt idt_table");
+     __asm__ ("sidt idt_table");
      printf("Patching...\n");
-     __asm__ __volatile__ ("cli");
+     __asm__ ("cli");
      write_idt_entry(0x80, &handle_syscall);
-     __asm__ __volatile__ ("lidt idt_table");
-     __asm__ __volatile__ ("sti");
-//     int i=0;
-//     for(i=0; i<256; i++) {
-//         printf("Interupt %d, ISR %d %d %d %d\n", i, g_IDT[i].d1_32, g_IDT[i].d2_32, g_IDT[i].d3_32, g_IDT[i].d4_32);
-//     }
+     __asm__ ("lidt idt_table");
+     __asm__ ("sti");
+     int i=0;
+     for(i=0; i<256; i++) {
+         printf("Interupt %d, ISR %d %d %d %d\n", i, g_IDT[i].d1_32, g_IDT[i].d2_32, g_IDT[i].d3_32, g_IDT[i].d4_32);
+     }
      printf("Loaded syscall handler!\n");
 }
 
 void timer_func(EFI_EVENT Event, void *ctx) {
-     printf(".");
 }
  
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
@@ -193,7 +193,8 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     }
     
     printf("Ready to do stuff\n");
-    INTN index;
+    __asm__("int $0x80");
+
     while(1) {
     } 
 }
