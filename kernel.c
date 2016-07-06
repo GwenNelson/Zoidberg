@@ -21,6 +21,8 @@ typedef struct idt_entry_s
 
 idt_entry_t g_IDT[256] asm("idt_table");
 
+EFI_EVENT timer_ev;
+
 void init_net() {
     EFI_NETWORK_INTERFACE_IDENTIFIER_INTERFACE *nii;
     EFI_SIMPLE_NETWORK *simple_net;   
@@ -157,6 +159,10 @@ void init_idt() {
 //     }
      printf("Loaded syscall handler!\n");
 }
+
+void timer_func(EFI_EVENT Event, void *ctx) {
+     printf(".");
+}
  
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     ST = SystemTable;
@@ -178,7 +184,16 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     
     printf("Setting up IDT\n");
     init_idt();
+
+    printf("Setting up scheduler\n");
+    BS->CreateEvent(EVT_TIMER | EVT_NOTIFY_SIGNAL, TPL_CALLBACK, (EFI_EVENT_NOTIFY)timer_func,NULL, &timer_ev);
+    EFI_STATUS timer_stat = BS->SetTimer(timer_ev,TimerPeriodic,0);
+    if(timer_stat != EFI_SUCCESS) {
+       printf("Error configuring timer!\n");
+    }
     
     printf("Ready to do stuff\n");
-    while(1) {} 
+    INTN index;
+    while(1) {
+    } 
 }
