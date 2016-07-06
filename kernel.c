@@ -11,6 +11,16 @@ EFI_HANDLE gImageHandle;
 
 int gStartupFreePages;
 
+typedef struct idt_entry_s
+{
+    uint32_t d1_32;
+    uint32_t d2_32;
+    uint32_t d3_32;
+    uint32_t d4_32;
+} __attribute__((packed)) idt_entry_t;
+
+idt_entry_t g_IDT[256] asm("idt_table");
+
 void init_net() {
     EFI_NETWORK_INTERFACE_IDENTIFIER_INTERFACE *nii;
     EFI_SIMPLE_NETWORK *simple_net;   
@@ -117,6 +127,36 @@ void init_ram() {
      printf("Have %d free pages\n",gStartupFreePages);
      printf("%d kb available, %d mb\n",gStartupFreePages*EFI_PAGE_SIZE, (gStartupFreePages*EFI_PAGE_SIZE)/1024/1024 );
 }
+
+// shamelessly ripped from Charn (github.com/peterdn)
+void write_idt_entry(int interrupt_number, void (*isr_routine)()) {
+    idt_entry_t *e = &g_IDT[interrupt_number];
+    e->d4_32 = 0;
+    e->d3_32 = 0;
+    unsigned long offset_u = (((unsigned long) isr_routine) & 0xFFFF0000);
+    unsigned long offset_l = (((unsigned long) isr_routine) & 0xFFFF);
+    e->d2_32 = offset_u | 0x8E00;
+    e->d1_32 = offset_l | 0x180000;
+}
+
+void handle_syscall() {
+     __asm__("leave; iret");
+}
+
+void init_idt() {
+     printf("Loading UEFI's IDT...\n");
+     __asm__ __volatile__ ("sidt idt_table");
+     printf("Patching...\n");
+     __asm__ __volatile__ ("cli");
+     write_idt_entry(0x80, &handle_syscall);
+     __asm__ __volatile__ ("lidt idt_table");
+     __asm__ __volatile__ ("sti");
+//     int i=0;
+//     for(i=0; i<256; i++) {
+//         printf("Interupt %d, ISR %d %d %d %d\n", i, g_IDT[i].d1_32, g_IDT[i].d2_32, g_IDT[i].d3_32, g_IDT[i].d4_32);
+//     }
+     printf("Loaded syscall handler!\n");
+}
  
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     ST = SystemTable;
@@ -132,7 +172,13 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     printf("Kernel entry point (efi_main) located at: %#11x\n", (uint64_t)efi_main);
 
     init_ram();
+
     printf("Disabling UEFI Watchdog\n");
-//    BS->SetWatchdogTimer(0, 0, 0, NULL);
- 
+    BS->SetWatchdogTimer(0, 0, 0, NULL);
+    
+    printf("Setting up IDT\n");
+    init_idt();
+    
+    printf("Ready to do stuff\n");
+    while(1) {} 
 }

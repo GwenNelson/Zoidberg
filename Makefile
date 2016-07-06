@@ -21,4 +21,4 @@ boot.fs: BOOTX64.EFI
 	mcopy -i $@ BOOTX64.EFI ::/EFI/BOOT
 
 run-qemu:
-	qemu-system-x86_64 -bios ${OVMFPATH}/OVMF.fd -usb -usbdevice disk::boot.fs -netdev user,id=mynet0,net=192.168.76.0/24,dhcpstart=192.168.76.9 -device virtio-net,netdev=mynet0 #-nographic -serial stdio
+	qemu-system-x86_64 -bios ${OVMFPATH}/OVMF.fd -usb -usbdevice disk::boot.fs -netdev user,id=mynet0,net=192.168.76.0/24,dhcpstart=192.168.76.9 -device virtio-net,netdev=mynet0 -nographic -serial stdio
