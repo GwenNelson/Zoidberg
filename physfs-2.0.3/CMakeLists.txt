@@ -11,21 +11,6 @@ SET(PHYSFS_VERSION 2.0.3)
 # Increment this if/when we break backwards compatibility.
 SET(PHYSFS_SOVERSION 1)
 
-# I hate that they define "WIN32" ... we're about to move to Win64...I hope!
-IF(WIN32 AND NOT WINDOWS)
-    SET(WINDOWS TRUE)
-ENDIF(WIN32 AND NOT WINDOWS)
-
-# Bleh, let's do it for "APPLE" too.
-IF(APPLE AND NOT MACOSX)
-    SET(MACOSX TRUE)
-ENDIF(APPLE AND NOT MACOSX)
-
-# For now, Haiku and BeOS are the same, as far as the build system cares.
-IF(HAIKU AND NOT BEOS)
-    SET(BEOS TRUE)
-ENDIF(HAIKU AND NOT BEOS)
-
 INCLUDE(CheckIncludeFile)
 INCLUDE(CheckLibraryExists)
 INCLUDE(CheckCSourceCompiles)
@@ -34,17 +19,6 @@ INCLUDE_DIRECTORIES(.)
 #INCLUDE_DIRECTORIES(platform)
 #INCLUDE_DIRECTORIES(archivers)
 
-IF(MACOSX)
-    # Fallback to older OS X on PowerPC to support wider range of systems...
-    IF(CMAKE_OSX_ARCHITECTURES MATCHES ppc)
-        ADD_DEFINITIONS(-DMAC_OS_X_VERSION_MIN_REQUIRED=1020)
-        SET(OTHER_LDFLAGS ${OTHER_LDFLAGS} " -mmacosx-version-min=10.2")
-    ENDIF(CMAKE_OSX_ARCHITECTURES MATCHES ppc)
-
-    # Need these everywhere...
-    ADD_DEFINITIONS(-fno-common)
-    SET(OTHER_LDFLAGS ${OTHER_LDFLAGS} " -framework Carbon -framework IOKit")
-ENDIF(MACOSX)
 
 # Add some gcc-specific command lines.
 IF(CMAKE_COMPILER_IS_GNUCC)
@@ -71,12 +45,6 @@ IF(CMAKE_COMPILER_IS_GNUCC)
         ENDIF(NOT OS2 AND NOT SOLARIS AND NOT WINDOWS)
     ENDIF(PHYSFS_IS_GCC4)
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
-
-IF(MSVC)
-    # VS.NET 8.0 got really really anal about strcpy, etc, which even if we
-    #  cleaned up our code, zlib, etc still use...so disable the warning.
-    ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS=1)
-ENDIF(MSVC)
 
 # Basic chunks of source code ...
 
@@ -109,15 +77,6 @@ SET(LZMA_SRCS
     lzma/C/Compress/Lzma/LzmaDecode.c
 )
 
-IF(BEOS)
-    # We add this explicitly, since we don't want CMake to think this
-    #  is a C++ project unless we're on BeOS.
-    SET(PHYSFS_BEOS_SRCS platform/beos.cpp)
-    FIND_LIBRARY(BE_LIBRARY be)
-    FIND_LIBRARY(ROOT_LIBRARY root)
-    SET(OPTIONAL_LIBRARY_LIBS ${OPTIONAL_LIBRARY_LIBS} ${BE_LIBRARY} ${ROOT_LIBRARY})
-ENDIF(BEOS)
-
 # Almost everything is "compiled" here, but things that don't apply to the
 #  build are #ifdef'd out. This is to make it easy to embed PhysicsFS into
 #  another project or bring up a new build system: just compile all the source
@@ -126,12 +85,8 @@ SET(PHYSFS_SRCS
     physfs.c
     physfs_byteorder.c
     physfs_unicode.c
-    platform/os2.c
-    platform/pocketpc.c
     platform/posix.c
     platform/unix.c
-    platform/macosx.c
-    platform/windows.c
     archivers/dir.c
     archivers/grp.c
     archivers/hog.c
@@ -140,46 +95,20 @@ SET(PHYSFS_SRCS
     archivers/qpak.c
     archivers/wad.c
     archivers/zip.c
-    ${PHYSFS_BEOS_SRCS}
 )
 
 
 # platform layers ...
 
-IF(UNIX)
-    IF(BEOS)
-        SET(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
-        SET(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
-        SET(HAVE_PTHREAD_H TRUE)
-    ELSE(BEOS)
-        # !!! FIXME
-        #  AC_DEFINE([PHYSFS_HAVE_LLSEEK], 1, [define if we have llseek])
-        CHECK_INCLUDE_FILE(sys/ucred.h HAVE_UCRED_H)
-        IF(HAVE_UCRED_H)
-            ADD_DEFINITIONS(-DPHYSFS_HAVE_SYS_UCRED_H=1)
-            SET(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
-        ENDIF(HAVE_UCRED_H)
-
-        CHECK_INCLUDE_FILE(mntent.h HAVE_MNTENT_H)
-        IF(HAVE_MNTENT_H)
-            ADD_DEFINITIONS(-DPHYSFS_HAVE_MNTENT_H=1)
-            SET(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
-        ENDIF(HAVE_MNTENT_H)
-
-        CHECK_INCLUDE_FILE(pthread.h HAVE_PTHREAD_H)
-        IF(HAVE_PTHREAD_H)
-            SET(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
-        ENDIF(HAVE_PTHREAD_H)
-    ENDIF(BEOS)
-ENDIF(UNIX)
-
-IF(WINDOWS)
-    SET(PHYSFS_HAVE_CDROM_SUPPORT TRUE)
-    SET(PHYSFS_HAVE_THREAD_SUPPORT TRUE)
-ENDIF(WINDOWS)
+# Your threading support is bad, and you should feel bad
+SET(PHYSFS_HAVE_THREAD_SUPPORT FALSE)
+SET(PHYSFS_HAVE_CDROM_SUPPORT FALSE)
+SET(PHYSFS_HAVE_PTHREAD_H FALSE)
 
 IF(NOT PHYSFS_HAVE_CDROM_SUPPORT)
     ADD_DEFINITIONS(-DPHYSFS_NO_CDROM_SUPPORT=1)
+    MESSAGE(WARNING " ***")
+    MESSAGE(WARNING " *** Zoidberg is fine with this, but the warning is left in:")
     MESSAGE(WARNING " ***")
     MESSAGE(WARNING " *** There is no CD-ROM support in this build!")
     MESSAGE(WARNING " *** PhysicsFS will just pretend there are no discs.")
@@ -189,10 +118,11 @@ IF(NOT PHYSFS_HAVE_CDROM_SUPPORT)
     MESSAGE(WARNING " ***")
 ENDIF(NOT PHYSFS_HAVE_CDROM_SUPPORT)
 
-IF(PHYSFS_HAVE_THREAD_SUPPORT)
-    ADD_DEFINITIONS(-D_REENTRANT -D_THREAD_SAFE)
-ELSE(PHYSFS_HAVE_THREAD_SUPPORT)
+IF(NOT PHYSFS_HAVE_THREAD_SUPPORT)
     ADD_DEFINITIONS(-DPHYSFS_NO_THREAD_SUPPORT=1)
+    MESSAGE(WARNING " ***")
+    MESSAGE(WARNING " *** Zoidberg: Your kernel threading support is bad and you should feel bad")
+    MESSAGE(WARNING " *** EVerything will still work, but the default warning has been left in:")
     MESSAGE(WARNING " ***")
     MESSAGE(WARNING " *** There is no thread support in this build!")
     MESSAGE(WARNING " *** PhysicsFS will NOT be reentrant!")
@@ -252,14 +182,11 @@ ENDIF(PHYSFS_ARCHIVE_QPAK)
 
 # See if some archiver required zlib, and see about using system version.
 
-IF(PHYSFS_NEED_ZLIB)
-    FIND_PACKAGE(ZLIB)
+OPTION(PHYSFS_INTERNAL_ZLIB "Link own zlib instead of system library" TRUE)
 
-    IF(ZLIB_FOUND)
-        OPTION(PHYSFS_INTERNAL_ZLIB "Link own zlib instead of system library" FALSE)
-    ELSE(HAVE_SYSTEM_ZLIB)
-        SET(PHYSFS_INTERNAL_ZLIB TRUE)
-    ENDIF(ZLIB_FOUND)
+IF(PHYSFS_NEED_ZLIB)
+
+    SET(PHYSFS_INTERNAL_ZLIB TRUE)
 
     IF(PHYSFS_INTERNAL_ZLIB)
         INCLUDE_DIRECTORIES(zlib123)
@@ -279,7 +206,7 @@ IF(PHYSFS_BUILD_STATIC)
     SET(PHYSFS_INSTALL_TARGETS ${PHYSFS_INSTALL_TARGETS} ";physfs-static")
 ENDIF(PHYSFS_BUILD_STATIC)
 
-OPTION(PHYSFS_BUILD_SHARED "Build shared library" TRUE)
+OPTION(PHYSFS_BUILD_SHARED "Build shared library" FALSE)
 IF(PHYSFS_BUILD_SHARED)
     ADD_LIBRARY(physfs SHARED ${PHYSFS_SRCS})
     SET_TARGET_PROPERTIES(physfs PROPERTIES VERSION ${PHYSFS_VERSION})
@@ -299,7 +226,7 @@ IF(PHYSFS_BUILD_SHARED AND PHYSFS_BUILD_STATIC)
     SET_TARGET_PROPERTIES(physfs-static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
 ENDIF(PHYSFS_BUILD_SHARED AND PHYSFS_BUILD_STATIC)
 
-OPTION(PHYSFS_BUILD_TEST "Build stdio test program." TRUE)
+OPTION(PHYSFS_BUILD_TEST "Build stdio test program." FALSE)
 MARK_AS_ADVANCED(PHYSFS_BUILD_TEST)
 IF(PHYSFS_BUILD_TEST)
     FIND_PATH(READLINE_H readline/readline.h)
