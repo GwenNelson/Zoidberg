@@ -5,7 +5,25 @@ EFI_AR ?= x86_64-w64-mingw32-ar
 
 CFLAGS = -Iinc -Iefi -Iefi/inc -Iefi/inc/x86_64 -Iefi/inc/protocol -Wall -Wextra -Wno-long-long -g -ffreestanding
 
-OBJS = console.o data.o file.o malloc.o printf.o string.o strtod.o strtol.o strtoll.o strtoull.o scanf.o abort.o serial.o efilibc.o atof.o misc.o strncmp.o
+OBJS = console.o \
+       data.o \
+       file.o \
+       malloc.o \
+       printf.o \
+       string.o \
+       strtod.o \
+       strtol.o \
+       strtoll.o \
+       strtoull.o \
+       scanf.o \
+       abort.o \
+       serial.o \
+       efilibc.o \
+       atof.o \
+       misc.o \
+       strncmp.o \
+       strrchr.o \
+       strstr.o
 
 all: $(OUTPUT)
 

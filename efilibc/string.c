@@ -365,3 +365,4 @@ char *strcat(char *dest, const char *src)
 	strcpy(&dest[dlen], src);
 	return dest;
 }
+
