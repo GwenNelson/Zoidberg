@@ -1,5 +1,5 @@
 OVMFPATH=/home/gareth/edk2/Build/OvmfX64/DEBUG_GCC46/FV
-INCLUDES=-Iefilibc/inc -Iefilibc/efi/inc -Iefilibc/efi/inc/protocol -Iefilibc/efi/inc/x86_64
+INCLUDES=-Iefilibc/inc -Iefilibc/efi/inc -Iefilibc/efi/inc/protocol -Iefilibc/efi/inc/x86_64 -Iphysfs-2.0.3
 ROMPATH=/usr/lib/ipxe/qemu/efi-e1000.rom
 
 all: BOOTX64.EFI boot.img boot.iso
