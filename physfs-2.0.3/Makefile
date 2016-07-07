@@ -6,7 +6,7 @@ CFLAGS=-ffreestanding -Wall -DPHYSFS_NO_CDROM_SUPPORT=1 -DPHYSFS_NO_THREAD_SUPPO
 ZLIB_OBJS=
 PHYSFS_OBJS=physfs.o \
             physfs_byteorder.o \
-            physfs_unicode.c \
+            physfs_unicode.o \
             platform/zoidberg.o \
             archivers/dir.o
 

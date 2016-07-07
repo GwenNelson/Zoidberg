@@ -40,5 +40,7 @@ void *memchr(const void *s, int c, size_t n);
 char *strcat(char *dest, const char *src);
 char *strrchr(const char *p, int ch);
 int strncmp(const char *s1, const char *s2, size_t n);
+char *strstr(const char *s, const char *find);
+void *memmove(void *dest, const void *src, size_t n);
 
 #endif

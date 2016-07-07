@@ -89,4 +89,37 @@ int __PHYSFS_platformDeinit(void)
     return(1);  /* always succeed. */
 } /* __PHYSFS_platformDeinit */
 
+void *__PHYSFS_platformOpenRead(const char *filename)
+{
+    return((void*)fopen(filename, "r+"));
+} /* __PHYSFS_platformOpenRead */
+
+void *__PHYSFS_platformOpenWrite(const char *filename)
+{
+    return((void*)fopen(filename, "w+"));
+} /* __PHYSFS_platformOpenWrite */
+
+
+void *__PHYSFS_platformOpenAppend(const char *filename)
+{
+    return((void*)fopen(filename,"a" ));
+} /* __PHYSFS_platformOpenAppend */
+
+
+PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
+                                    PHYSFS_uint32 size, PHYSFS_uint32 count)
+{
+    int rc = fread(buffer, size, count, opaque);
+    int max = size * count;
+
+    BAIL_IF_MACRO(rc == -1, strerror(errno), rc);
+    assert(rc <= max);
+
+    if ((rc < max) && (size > 1))
+        fseek(opaque, -(rc % size), SEEK_CUR);
+
+    return(rc / size);
+} /* __PHYSFS_platformRead */
+
+
 #endif
