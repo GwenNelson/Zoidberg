@@ -1,0 +1,23 @@
+This design document is messy and full of fucking swearwords, you cunts
+
+UEFI BootServices for drivers
+VFS layer
+  Copy PhysFS and add new archive formats representing actual filesystems
+VM userland
+  Processes are simply virtual machines, implemented with pawn bytecode for now
+  Kernel executes them in round robin style, executing a pile of operations per cycle
+Syscall API
+  *nix style syscalls with numbers and shit (even with VMs, madness)
+  Direct function calls from the VMs
+Process model
+  Fork-exec style
+  Basically posix-y as much as possible
+
+Startup:
+   Setup all relevant UEFI protocols
+   Setup networking
+   Init VFS layer
+   Init first VM
+   Load init process into first VM
+   init process sets up screen for graphical shit
+
