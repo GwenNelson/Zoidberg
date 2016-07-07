@@ -15,6 +15,8 @@
 #include <string.h>
 #include <errno.h>
 
+const char *__PHYSFS_platformDirSeparator = "/";
+
 // Your kernel threading support is bad and you should feel bad
 #if (defined PHYSFS_NO_THREAD_SUPPORT)
 void *__PHYSFS_platformGetThreadID(void) { return((void *) 0x0001); }
@@ -147,5 +149,32 @@ int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
     if(retval==0) return 0;
     return 1;
 } /* __PHYSFS_platformSeek */
+
+PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
+{
+    PHYSFS_sint64 retval;
+    retval = (PHYSFS_sint64)ftell(opaque);
+    return(retval);
+} /* __PHYSFS_platformTell */
+
+PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
+{
+    return (PHYSFS_sint64)fsize(opaque);
+} /* __PHYSFS_platformFileLength */
+
+int __PHYSFS_platformFlush(void *opaque)
+{
+    int retval = fflush(opaque);
+    if(retval==0) return 0;
+    return 1;
+} /* __PHYSFS_platformFlush */
+
+
+int __PHYSFS_platformClose(void *opaque)
+{
+    int retval = fclose(opaque);
+    if(retval==0) return 0;
+    return 1;
+} /* __PHYSFS_platformClose */
 
 #endif
