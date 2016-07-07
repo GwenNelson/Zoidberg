@@ -27,26 +27,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}
 
 
 # Add some gcc-specific command lines.
-IF(CMAKE_COMPILER_IS_GNUCC)
-    # Always build with debug symbols...you can strip it later.
-    ADD_DEFINITIONS(-g -pipe -Wall -fsigned-char -ffreestanding)
-
-
-    CHECK_C_SOURCE_COMPILES("
-        #if ((defined(__GNUC__)) && (__GNUC__ >= 4))
-        int main(int argc, char **argv) { int is_gcc4 = 1; return 0; }
-        #else
-        #error This is not gcc4.
-        #endif
-    " PHYSFS_IS_GCC4)
-
-    IF(PHYSFS_IS_GCC4)
-        # Not supported on several operating systems at this time.
-        IF(NOT OS2 AND NOT SOLARIS AND NOT WINDOWS)
-             ADD_DEFINITIONS(-fvisibility=hidden)
-        ENDIF(NOT OS2 AND NOT SOLARIS AND NOT WINDOWS)
-    ENDIF(PHYSFS_IS_GCC4)
-ENDIF(CMAKE_COMPILER_IS_GNUCC)
+ADD_DEFINITIONS(-ffreestanding)
 
 # Basic chunks of source code ...
 

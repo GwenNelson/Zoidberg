@@ -15,7 +15,7 @@
 
 #define __PHYSICSFS_INTERNAL__
 #include "physfs_internal.h"
-
+#include <assert.h>
 
 typedef struct __PHYSFS_DIRHANDLE__
 {

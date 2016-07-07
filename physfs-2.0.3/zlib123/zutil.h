@@ -23,21 +23,7 @@
 #  include <string.h>
 #  include <stdlib.h>
 #endif
-#ifdef NO_ERRNO_H
-#   ifdef _WIN32_WCE
-      /* The Microsoft C Run-Time Library for Windows CE doesn't have
-       * errno.  We define it as a global variable to simplify porting.
-       * Its value is always 0 and should not be used.  We rename it to
-       * avoid conflict with other libraries that use the same workaround.
-       */
-#     define errno z_errno
-#   endif
-    extern int errno;
-#else
-#  ifndef _WIN32_WCE
-#    include <errno.h>
-#  endif
-#endif
+#include <errno.h>
 
 #ifndef local
 #  define local static

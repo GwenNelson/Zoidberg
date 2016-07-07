@@ -30,4 +30,6 @@
 #define assert(expr) do { if(!(expr)) { (fprintf(stderr, "assert: " __FILE__ ":%d : Assertion \'" #expr "\' failed.\n", __LINE__)); abort(); } } while(0)
 #endif
 
+#define _assert assert
+
 #endif

@@ -18,11 +18,7 @@
 
 #include <stdlib.h>  /* make sure NULL is defined... */
 
-#ifdef HAVE_ASSERT_H
 #include <assert.h>
-#elif (!defined assert)
-#define assert(x)
-#endif
 
 /* !!! FIXME: remove this when revamping stack allocation code... */
 #if defined(_MSC_VER) || defined(__MINGW32__)
