@@ -16,6 +16,12 @@ INCLUDE(CheckLibraryExists)
 INCLUDE(CheckCSourceCompiles)
 
 INCLUDE_DIRECTORIES(.)
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}
+                    ${CMAKE_CURRENT_SOURCE_DIR}/efilibc/inc 
+                    ${CMAKE_CURRENT_SOURCE_DIR}/efilibc/efi/inc 
+                    ${CMAKE_CURRENT_SOURCE_DIR}/efilibc/efi/inc/protocol
+                    ${CMAKE_CURRENT_SOURCE_DIR}/efilibc/efi/inc/x86_64)
+
 #INCLUDE_DIRECTORIES(platform)
 #INCLUDE_DIRECTORIES(archivers)
 
@@ -23,12 +29,8 @@ INCLUDE_DIRECTORIES(.)
 # Add some gcc-specific command lines.
 IF(CMAKE_COMPILER_IS_GNUCC)
     # Always build with debug symbols...you can strip it later.
-    ADD_DEFINITIONS(-g -pipe -Werror -fsigned-char)
+    ADD_DEFINITIONS(-g -pipe -Wall -fsigned-char)
 
-    # Stupid BeOS generates warnings in the system headers.
-    IF(NOT BEOS)
-        ADD_DEFINITIONS(-Wall)
-    ENDIF(NOT BEOS)
 
     CHECK_C_SOURCE_COMPILES("
         #if ((defined(__GNUC__)) && (__GNUC__ >= 4))

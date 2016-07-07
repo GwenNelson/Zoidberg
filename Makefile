@@ -13,9 +13,10 @@ efilibc/efilibc.a:
 physfs:
 	mkdir -p physfs-2.0.3/build
 	cd physfs-2.0.3/build; cmake -DCMAKE_TOOLCHAIN_FILE=CMakeFiles/x86_64-w64-mingw32.cmake ..
+	make -C physfs-2.0.3/build
 
 BOOTX64.EFI: efilibc/efilibc.a physfs kernel.o
-	x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $@ kernel.o efilibc/efilibc.a -lgcc
+	x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $@ kernel.o efilibc/efilibc.a physfs-2.0.3/build/libphysfs.a -lgcc
 
 boot.img: BOOTX64.EFI
 	dd if=/dev/zero of=$@ bs=1M count=33
