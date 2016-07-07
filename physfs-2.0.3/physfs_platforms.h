@@ -7,6 +7,8 @@
 
 // why not zoidberg?
 #define PHYSFS_PLATFORM_ZOIDBERG
+#define PHYSFS_PLATFORM_POSIX
+#define PHYSFS_PLATFORM_UNIX
 #define PHYSFS_NO_THREAD_SUPPORT
 
 

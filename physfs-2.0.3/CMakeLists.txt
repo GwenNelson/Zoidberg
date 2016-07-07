@@ -87,6 +87,7 @@ SET(PHYSFS_SRCS
     physfs_unicode.c
     platform/posix.c
     platform/unix.c
+    platform/zoidberg.c
     archivers/dir.c
     archivers/grp.c
     archivers/hog.c
