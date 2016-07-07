@@ -38,6 +38,7 @@ size_t strcspn(const char *s, const char *reject);
 char *strerror(int errnum);
 void *memchr(const void *s, int c, size_t n);
 char *strcat(char *dest, const char *src);
+char *strrchr(const char *p, int ch);
 int strncmp(const char *s1, const char *s2, size_t n);
 
 #endif
