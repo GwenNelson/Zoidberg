@@ -24,7 +24,8 @@ OBJS = console.o \
        misc.o \
        strncmp.o \
        strrchr.o \
-       strstr.o
+       strstr.o \
+       memmove.o
 
 all: $(OUTPUT)
 
