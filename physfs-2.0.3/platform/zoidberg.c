@@ -121,5 +121,31 @@ PHYSFS_sint64 __PHYSFS_platformRead(void *opaque, void *buffer,
     return(rc / size);
 } /* __PHYSFS_platformRead */
 
+PHYSFS_sint64 __PHYSFS_platformWrite(void *opaque, const void *buffer,
+                                     PHYSFS_uint32 size, PHYSFS_uint32 count)
+{
+    int max = size * count;
+    int rc = fwrite((void *) buffer, size, count, opaque);
+
+    BAIL_IF_MACRO(rc == -1, strerror(errno), rc);
+    assert(rc <= max);
+
+    if ((rc < max) && (size > 1))
+        fseek(opaque, -(rc % size), SEEK_CUR); /* rollback to object boundary. */
+
+    return(rc / size);
+} /* __PHYSFS_platformWrite */
+
+int __PHYSFS_platformEOF(void *opaque)
+{
+    return feof(opaque);
+} /* __PHYSFS_platformEOF */
+
+int __PHYSFS_platformSeek(void *opaque, PHYSFS_uint64 pos)
+{
+    int retval = fseek((FILE*)opaque,pos,SEEK_SET);
+    if(retval==0) return 0;
+    return 1;
+} /* __PHYSFS_platformSeek */
 
 #endif
