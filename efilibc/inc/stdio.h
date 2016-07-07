@@ -80,6 +80,9 @@ void rewind(FILE *stream);
 int fgetpos(FILE *stream, fpos_t *pos);
 int fsetpos(FILE *stream, fpos_t *pos);
 
+// non standard crap
+int f_is_dir(FILE *stream);
+
 #ifndef POSIXLY_CORRECT
 long fsize(FILE *stream);
 #endif

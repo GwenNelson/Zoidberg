@@ -40,6 +40,7 @@ long long int strtoll(const char *nptr, char **endptr, int base);
 unsigned long long int strtoull(const char *nptr, char **endptr, int base);
 int abs(int j);
 
+
 #define abort() do { fprintf(stderr, "abort() called from " __FILE__ ":%d\n", __LINE__); while(1) getchar(); } while(0)
 
 #endif

@@ -177,4 +177,13 @@ int __PHYSFS_platformClose(void *opaque)
     return 1;
 } /* __PHYSFS_platformClose */
 
+int __PHYSFS_platformIsDirectory(const char *fname)
+{
+    FILE* fd = fopen(fname,"r");
+    int is_dir = f_is_dir(fd);
+    fclose(fd);
+    return is_dir;
+} /* __PHYSFS_platformIsDirectory */
+
+
 #endif

@@ -435,6 +435,37 @@ int remove(const char *pathname)
 	return 0;
 }
 
+int f_is_dir(FILE *stream)
+{
+        UINTN buf_size = 0;
+        EFI_STATUS s = stream->f->GetInfo(stream->f, &GenericFileInfo, &buf_size, NULL);
+        if(s != EFI_BUFFER_TOO_SMALL)
+        {
+                errno = EFAULT;
+                return -1;
+        }
+        EFI_FILE_INFO *fi = (EFI_FILE_INFO *)malloc(buf_size);
+        if(fi == NULL)
+        {
+                errno = ENOMEM;
+                return -1;
+        }
+        s = stream->f->GetInfo(stream->f, &GenericFileInfo, &buf_size, fi);
+        if(EFI_ERROR(s))
+        {
+                free(fi);
+                errno = EFAULT;
+                return -1;
+        }
+        UINT64 attr_vals = fi->Attribute;
+        int retval=0;
+        if((attr_vals & EFI_FILE_DIRECTORY) != 0) {
+          retval=1;
+        }
+        free(fi);
+        return retval;
+}
+
 #ifndef POSIXLY_CORRECT
 long fsize(FILE *stream)
 {
@@ -462,4 +493,6 @@ long fsize(FILE *stream)
 	free(fi);
 	return len;
 }
+
+
 #endif
