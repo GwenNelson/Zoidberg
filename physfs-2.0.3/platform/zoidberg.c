@@ -12,8 +12,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <string.h>
+#include <errno.h>
 
 // Your kernel threading support is bad and you should feel bad
 #if (defined PHYSFS_NO_THREAD_SUPPORT)
@@ -60,6 +60,23 @@ char *__PHYSFS_platformGetUserDir(void)
 {
     return(__PHYSFS_platformCalcBaseDir(NULL));
 } /* __PHYSFS_platformGetUserDir */
+
+char *__PHYSFS_platformRealPath(const char *path)
+{
+    char *retval = (char *) allocator.Malloc(strlen(path) + 1);
+    strcpy(retval,path);
+    return(retval);
+} /* __PHYSFS_platformRealPath */
+
+int __PHYSFS_platformSetDefaultAllocator(PHYSFS_Allocator *a)
+{
+    return(0);  /* just use malloc() and friends. */
+} /* __PHYSFS_platformSetDefaultAllocator */
+
+void __PHYSFS_platformDetectAvailableCDs(PHYSFS_StringCallback cb, void *data)
+{
+    /* no-op on this platform. */
+} /* __PHYSFS_platformDetectAvailableCDs */
 
 int __PHYSFS_platformInit(void)
 {

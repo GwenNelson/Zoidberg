@@ -29,7 +29,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}
 # Add some gcc-specific command lines.
 IF(CMAKE_COMPILER_IS_GNUCC)
     # Always build with debug symbols...you can strip it later.
-    ADD_DEFINITIONS(-g -pipe -Wall -fsigned-char)
+    ADD_DEFINITIONS(-g -pipe -Wall -fsigned-char -ffreestanding)
 
 
     CHECK_C_SOURCE_COMPILES("
