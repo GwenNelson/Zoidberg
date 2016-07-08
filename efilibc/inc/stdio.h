@@ -95,7 +95,6 @@ int fsetpos(FILE *stream, fpos_t *pos);
 int mkdir(const char *pathname, int mode);
 
 // non standard crap
-int f_is_dir(FILE *stream);
 time_t f_mod_time(FILE* stream);
 
 #ifndef POSIXLY_CORRECT

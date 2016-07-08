@@ -28,6 +28,19 @@ int __PHYSFS_platformGrabMutex(void *mutex) { return(1); }
 void __PHYSFS_platformReleaseMutex(void *mutex) {}
 #endif
 
+typedef struct ZOIDBERG_FILE
+{
+       EFI_FILE *f;
+       int eof;
+       int error;
+       int fileno;
+       int istty;
+       int ttyno;
+} ZOIDBERG_FILE;
+ZOIDBERG_FILE *zoidberg_fopen(const char *path, const char *mode);
+int zoidberg_fclose(ZOIDBERG_FILE *stream);
+int f_is_dir(ZOIDBERG_FILE *stream);
+
 int __PHYSFS_platformExists(const char *fname)
 {
     FILE* fd = fopen(fname,"r");
@@ -182,9 +195,9 @@ int __PHYSFS_platformClose(void *opaque)
 
 int __PHYSFS_platformIsDirectory(const char *fname)
 {
-    FILE* fd = fopen(fname,"r");
+    ZOIDBERG_FILE* fd = zoidberg_fopen(fname,"r");
     int is_dir = f_is_dir(fd);
-    fclose(fd);
+    zoidberg_fclose(fd);
     return is_dir;
 } /* __PHYSFS_platformIsDirectory */
 
