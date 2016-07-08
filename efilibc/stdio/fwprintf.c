@@ -29,13 +29,10 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD: release/10.3.0/lib/libc/stdio/fwprintf.c 227753 2011-11-20 14:45:42Z theraven $");
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <wchar.h>
-#include <xlocale.h>
 
 int
 fwprintf(FILE * __restrict fp, const wchar_t * __restrict fmt, ...)
@@ -49,7 +46,7 @@ fwprintf(FILE * __restrict fp, const wchar_t * __restrict fmt, ...)
 
 	return (ret);
 }
-int
+/*int
 fwprintf_l(FILE * __restrict fp, locale_t locale, const wchar_t * __restrict fmt, ...)
 {
 	int ret;
@@ -60,4 +57,4 @@ fwprintf_l(FILE * __restrict fp, locale_t locale, const wchar_t * __restrict fmt
 	va_end(ap);
 
 	return (ret);
-}
+}*/

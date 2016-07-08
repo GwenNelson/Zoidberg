@@ -10,7 +10,7 @@ stdio/dprintf.o \
 stdio/fprintf.o \
 stdio/fwprintf.o \
 stdio/printf.o \
-stdio/snprintf.o \
+#stdio/snprintf.o \
 stdio/sprintf.o \
 stdio/swprintf.o \
 stdio/vasprintf.o \

@@ -35,19 +35,13 @@
  * SUCH DAMAGE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)snprintf.c	8.1 (Berkeley) 6/4/93";
-#endif /* LIBC_SCCS and not lint */
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD: release/10.3.0/lib/libc/stdio/snprintf.c 249808 2013-04-23 13:33:13Z emaste $");
 
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include "xlocale_private.h"
 
-#include "local.h"
+
 
 int
 snprintf(char * __restrict str, size_t n, char const * __restrict fmt, ...)
@@ -70,34 +64,6 @@ snprintf(char * __restrict str, size_t n, char const * __restrict fmt, ...)
 	f._bf._base = f._p = (unsigned char *)str;
 	f._bf._size = f._w = n;
 	ret = __vfprintf(&f, __get_locale(), fmt, ap);
-	if (on > 0)
-		*f._p = '\0';
-	va_end(ap);
-	return (ret);
-}
-int
-snprintf_l(char * __restrict str, size_t n, locale_t locale,
-		char const * __restrict fmt, ...)
-{
-	size_t on;
-	int ret;
-	va_list ap;
-	FILE f = FAKE_FILE;
-	FIX_LOCALE(locale);
-
-	on = n;
-	if (n != 0)
-		n--;
-	if (n > INT_MAX) {
-		errno = EOVERFLOW;
-		*str = '\0';
-		return (EOF);
-	}
-	va_start(ap, fmt);
-	f._flags = __SWR | __SSTR;
-	f._bf._base = f._p = (unsigned char *)str;
-	f._bf._size = f._w = n;
-	ret = __vfprintf(&f, locale, fmt, ap);
 	if (on > 0)
 		*f._p = '\0';
 	va_end(ap);

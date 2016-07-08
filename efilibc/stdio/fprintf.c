@@ -35,15 +35,9 @@
  * SUCH DAMAGE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)fprintf.c	8.1 (Berkeley) 6/4/93";
-#endif /* LIBC_SCCS and not lint */
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD: release/10.3.0/lib/libc/stdio/fprintf.c 249808 2013-04-23 13:33:13Z emaste $");
 
 #include <stdio.h>
 #include <stdarg.h>
-#include "xlocale_private.h"
 
 int
 fprintf(FILE * __restrict fp, const char * __restrict fmt, ...)
@@ -56,7 +50,7 @@ fprintf(FILE * __restrict fp, const char * __restrict fmt, ...)
 	va_end(ap);
 	return (ret);
 }
-int
+/*int
 fprintf_l(FILE * __restrict fp, locale_t locale, const char * __restrict fmt, ...)
 {
 	int ret;
@@ -67,4 +61,4 @@ fprintf_l(FILE * __restrict fp, locale_t locale, const char * __restrict fmt, ..
 	ret = vfprintf_l(fp, locale, fmt, ap);
 	va_end(ap);
 	return (ret);
-}
+}*/

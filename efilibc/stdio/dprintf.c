@@ -25,13 +25,10 @@
  */
 
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: release/10.3.0/lib/libc/stdio/dprintf.c 189356 2009-03-04 03:38:51Z das $");
 
 #define	_WITH_DPRINTF
-#include "namespace.h"
 #include <stdarg.h>
 #include <stdio.h>
-#include "un-namespace.h"
 
 int
 dprintf(int fd, const char * __restrict fmt, ...)
