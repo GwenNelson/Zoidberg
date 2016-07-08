@@ -194,10 +194,10 @@ AUTOMAKE_OPTIONS = cygnus
 INCLUDES = $(NEWLIB_CFLAGS) $(CROSS_CFLAGS) $(TARGET_CFLAGS)
 AM_CCASFLAGS = $(INCLUDES)
 noinst_LIBRARIES = lib.a
-extra_objs = file.o syscalls.o efilibc.o data.o console.o
+extra_objs = file.o syscalls.o efilibc.o data.o console.o serial.o
 lib_a_SOURCES = 
 lib_a_LIBADD = $(extra_objs)
-EXTRA_lib_a_SOURCES = file.c syscalls.c crt0.c efilibc.c data.c console.c
+EXTRA_lib_a_SOURCES = file.c syscalls.c crt0.c efilibc.c data.c console.c serial.c
 lib_a_DEPENDENCIES = $(extra_objs)      
 lib_a_CCASFLAGS = $(AM_CCASFLAGS)
 lib_a_CFLAGS = $(AM_CFLAGS)
@@ -296,6 +296,12 @@ lib_a-console.o: console.c
 
 lib_a-console.obj: console.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_a_CFLAGS) $(CFLAGS) -c -o lib_a-console.obj `if test -f 'console.c'; then $(CYGPATH_W) 'console.c'; else $(CYGPATH_W) '$(srcdir)/console.c'; fi`
+
+lib_a-serial.o: serial.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_a_CFLAGS) $(CFLAGS) -c -o lib_a-serial.o `test -f 'serial.c' || echo '$(srcdir)/'`serial.c
+
+lib_a-serial.obj: serial.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_a_CFLAGS) $(CFLAGS) -c -o lib_a-serial.obj `if test -f 'serial.c'; then $(CYGPATH_W) 'serial.c'; else $(CYGPATH_W) '$(srcdir)/serial.c'; fi`
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
