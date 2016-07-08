@@ -41,6 +41,8 @@ typedef struct ZOIDBERG_FILE
 #include <assert.h>
 #include <efilibc.h>
 
+long zoidberg_fsize(ZOIDBERG_FILE *stream);
+
 #define zoidberg_stdin   ((ZOIDBERG_FILE *)0)
 #define zoidberg_stdout  ((ZOIDBERG_FILE *)1)
 #define zoidberg_stderr  ((ZOIDBERG_FILE *)2)
@@ -367,7 +369,7 @@ int zoidberg_fseek(ZOIDBERG_FILE *stream, long pos, int whence)
 			}
 			break;
 		case SEEK_END:
-			new_pos = fsize(stream) + (UINT64)pos;
+			new_pos = zoidberg_fsize(stream) + (UINT64)pos;
 			break;
 		default:
 			errno = EINVAL;
