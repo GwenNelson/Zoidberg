@@ -155,7 +155,37 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
     printf("Setting up VFS\n");
 
-    PHYSFS_init(NULL);
+    printf("Checking current dir\n");
+
+    FILE* root_fd = fopen("EFI","r");
+    if(root_fd==NULL) printf("Error!\n");
+    int is_d = f_is_dir(root_fd);
+    if(is_d==1) {
+       printf("OK!\n");
+    } else {
+       printf("wtf? /EFI is not a directory?\n");
+    }
+
+    int is_ok=1;
+    EFI_FILE_INFO *FileInfo = malloc(sizeof(EFI_FILE_INFO));
+    UINTN FileInfoSize = sizeof(EFI_FILE_INFO);
+    char filename[1024];
+    int i=0;
+    while(is_ok==1) {
+         EFI_STATUS s = ((_FILE*)root_fd)->f->Read( ((_FILE*)root_fd)->f, &FileInfoSize, FileInfo);
+         if(s == EFI_SUCCESS) {
+            printf("%d bytes in FILE_INFO\n",FileInfo->Size);
+            printf("%d bytes in actual file\n",FileInfo->FileSize);
+            wcstombs(filename,FileInfo->FileName,1024);
+            printf("%s\n",filename);
+         } else if(s == EFI_BUFFER_TOO_SMALL) {
+            FileInfo = realloc((void*)FileInfo,FileInfoSize);
+         } else {
+            is_ok=0;
+         }
+         if(FileInfoSize==0) is_ok=0;
+    }
+   // PHYSFS_init(NULL);
     
     printf("Ready to do stuff\n");
 

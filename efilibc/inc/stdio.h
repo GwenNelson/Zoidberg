@@ -27,6 +27,17 @@
 #ifndef IN_FILE_C
 typedef void FILE;
 #endif
+#include <efi.h>
+#include <efilib.h>
+typedef struct _FILE
+{
+        EFI_FILE *f;
+        int eof;
+        int error;
+        int fileno;
+        int istty;
+        int ttyno;
+} _FILE;
 
 #define stdin	((FILE *)0)
 #define stdout	((FILE *)1)
