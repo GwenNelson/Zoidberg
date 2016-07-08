@@ -13,13 +13,13 @@ efilibc/efilibc.a:
 physfs:
 	make -C physfs-2.0.3
 
-newlib_libc:
+newlib/build/x86_64-zoidberg/newlib/libc.a:
 	mkdir -p newlib/build
 	cd newlib/build; ../configure --target=x86_64-zoidberg
 	CFLAGS=-nostdinc make -C newlib/build
 
-BOOTX64.EFI: efilibc/efilibc.a physfs kernel.o
-	x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $@ kernel.o efilibc/efilibc.a physfs-2.0.3/build/libphysfs.a efilibc/efilibc.a -lgcc
+BOOTX64.EFI:newlib/build/x86_64-zoidberg/newlib/libc.a physfs kernel.o
+	x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $@ kernel.o newlib/build/x86_64-zoidberg/newlib/libc.a physfs-2.0.3/build/libphysfs.a  -lgcc
 
 boot.img: BOOTX64.EFI
 	dd if=/dev/zero of=$@ bs=1M count=33
