@@ -4,11 +4,11 @@ AM_CCASFLAGS = $(INCLUDES)
  
 noinst_LIBRARIES = lib.a
  
-extra_objs = syscalls.o efilibc.o
+extra_objs = syscalls.o efilibc.o data.o
  
 lib_a_SOURCES =
 lib_a_LIBADD = $(extra_objs)
-EXTRA_lib_a_SOURCES = syscalls.c crt0.c efilibc.c
+EXTRA_lib_a_SOURCES = syscalls.c crt0.c efilibc.c data.c
 lib_a_DEPENDENCIES = $(extra_objs)      
 lib_a_CCASFLAGS = $(AM_CCASFLAGS)
 lib_a_CFLAGS = $(AM_CFLAGS)
