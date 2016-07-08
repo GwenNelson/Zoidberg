@@ -222,16 +222,20 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
     
     FILE* dir_fd = fopen(dirname,"r");
     if(dir_fd == NULL) return;
-    if(f_is_dir(dir_fd)==0) return;
+    if(f_is_dir(dir_fd)==0) {
+       fclose(dir_fd);
+       return;
+    }
 
     EFI_FILE_INFO* FileInfo = allocator.Malloc(sizeof(EFI_FILE_INFO));
     UINTN FileInfoSize = sizeof(EFI_FILE_INFO);
 
     char entry_filename[1024];
-    while(FileInfoSize >= 0) {
+    while(FileInfoSize > 0) {
        EFI_STATUS s = ((_FILE*)dir_fd)->f->Read( ((_FILE*)dir_fd)->f, &FileInfoSize, FileInfo);
        if(s == EFI_SUCCESS) {
             wcstombs(entry_filename,FileInfo->FileName,1024);
+            printf("entry_filename: %s\n",entry_filename);
             if (strcmp(entry_filename, ".") == 0) {
             } else if (strcmp(entry_filename, "..") == 0) {
             } else {

@@ -127,6 +127,27 @@ void handle_syscall() {
 
 void timer_func(EFI_EVENT Event, void *ctx) {
 }
+
+void dump_vfs(const char* path);
+void dump_vfs(const char* path) {
+     char **rc;
+     char **i;
+
+     rc = PHYSFS_enumerateFiles(path);
+     char buf[1024];
+     for(i=rc; *i !=NULL; i++) {
+         sprintf(buf,"%s/%s\0",path,*i);
+         if(PHYSFS_isDirectory(buf)) {
+           printf("dump_vfs %s\n",buf);
+           dump_vfs(buf);
+         } else {
+           printf("%s\n",buf,*i);
+         }
+     }
+     PHYSFS_freeList(rc);
+
+
+}
  
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     ST = SystemTable;
@@ -155,38 +176,16 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
     printf("Setting up VFS\n");
 
-    printf("Checking current dir\n");
 
-    FILE* root_fd = fopen("EFI","r");
-    if(root_fd==NULL) printf("Error!\n");
-    int is_d = f_is_dir(root_fd);
-    if(is_d==1) {
-       printf("OK!\n");
-    } else {
-       printf("wtf? /EFI is not a directory?\n");
-    }
-
-    int is_ok=1;
-    EFI_FILE_INFO *FileInfo = malloc(sizeof(EFI_FILE_INFO));
-    UINTN FileInfoSize = sizeof(EFI_FILE_INFO);
-    char filename[1024];
-    int i=0;
-    while(is_ok==1) {
-         EFI_STATUS s = ((_FILE*)root_fd)->f->Read( ((_FILE*)root_fd)->f, &FileInfoSize, FileInfo);
-         if(s == EFI_SUCCESS) {
-            printf("%d bytes in FILE_INFO\n",FileInfo->Size);
-            printf("%d bytes in actual file\n",FileInfo->FileSize);
-            wcstombs(filename,FileInfo->FileName,1024);
-            printf("%s\n",filename);
-         } else if(s == EFI_BUFFER_TOO_SMALL) {
-            FileInfo = realloc((void*)FileInfo,FileInfoSize);
-         } else {
-            is_ok=0;
-         }
-         if(FileInfoSize==0) is_ok=0;
-    }
     PHYSFS_init(NULL);
+
+    printf("Mounting EFI filesystem\n");   
+    int retval=0;
+    retval = PHYSFS_mount("/","/efi",0);
     
+    printf("Dumping VFS:\n");
+    dump_vfs("/");
+ 
     printf("Ready to do stuff\n");
 
     while(1) {
