@@ -185,7 +185,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
          }
          if(FileInfoSize==0) is_ok=0;
     }
-   // PHYSFS_init(NULL);
+    PHYSFS_init(NULL);
     
     printf("Ready to do stuff\n");
 

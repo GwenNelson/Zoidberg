@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <efi.h>
+#include <efilib.h>
 
 const char *__PHYSFS_platformDirSeparator = "/";
 
@@ -210,5 +212,46 @@ char *__PHYSFS_platformCvtToDependent(const char *prepend,
 
     return(retval);
 } /* __PHYSFS_platformCvtToDependent */
+
+void __PHYSFS_platformEnumerateFiles(const char *dirname,
+                                     int omitSymLinks,
+                                     PHYSFS_EnumFilesCallback callback,
+                                     const char *origdir,
+                                     void *callbackdata)
+{   
+    
+    FILE* dir_fd = fopen(dirname,"r");
+    if(dir_fd == NULL) return;
+    if(f_is_dir(dir_fd)==0) return;
+
+    EFI_FILE_INFO* FileInfo = allocator.Malloc(sizeof(EFI_FILE_INFO));
+    UINTN FileInfoSize = sizeof(EFI_FILE_INFO);
+
+    char entry_filename[1024];
+    while(FileInfoSize >= 0) {
+       EFI_STATUS s = ((_FILE*)dir_fd)->f->Read( ((_FILE*)dir_fd)->f, &FileInfoSize, FileInfo);
+       if(s == EFI_SUCCESS) {
+            wcstombs(entry_filename,FileInfo->FileName,1024);
+            if (strcmp(entry_filename, ".") == 0) {
+            } else if (strcmp(entry_filename, "..") == 0) {
+            } else {
+              callback(callbackdata, origdir, entry_filename);
+            }
+
+       } else if(s == EFI_BUFFER_TOO_SMALL) {
+            FileInfo = allocator.Realloc((void*)FileInfo,FileInfoSize);
+       } 
+
+    }
+    allocator.Free(FileInfo);
+    fclose(dir_fd);
+    
+} /* __PHYSFS_platformEnumerateFiles */
+
+int __PHYSFS_platformIsSymLink(const char *fname)
+{
+    return 0; // there are no symlinks in EFI
+} /* __PHYSFS_platformIsSymlink */
+
 
 #endif
