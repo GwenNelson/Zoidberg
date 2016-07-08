@@ -72,10 +72,10 @@ int close(int file) {
     return zoidberg_fclose(fd);
 }
 int read(int file, char *ptr, int len) {
-    
+    ZOIDBERG_FILE* fd=zoidberg_fromfd(file);
+    return zoidberg_fread(ptr,1,len,fd);
 }
-caddr_t sbrk(int incr) {
-}
+caddr_t sbrk(int incr) {}
 int stat(const char *file, struct stat *st) {
 }
 clock_t times(struct tms *buf) {
