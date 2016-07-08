@@ -161,7 +161,8 @@ PHYSFS_sint64 __PHYSFS_platformTell(void *opaque)
 
 PHYSFS_sint64 __PHYSFS_platformFileLength(void *opaque)
 {
-    return (PHYSFS_sint64)fsize(opaque);
+ 	return 0;
+//    return (PHYSFS_sint64)fsize(opaque);
 } /* __PHYSFS_platformFileLength */
 
 int __PHYSFS_platformFlush(void *opaque)
@@ -264,10 +265,10 @@ int __PHYSFS_platformDelete(const char *path)
 
 int __PHYSFS_platformMkDir(const char *path)
 {
-    int rc;
+/*    int rc;
     errno = 0;
     rc = mkdir(path, 0);
-    BAIL_IF_MACRO(rc == -1, strerror(errno), 0);
+    BAIL_IF_MACRO(rc == -1, strerror(errno), 0);*/
     return(1);
 } /* __PHYSFS_platformMkDir */
 
