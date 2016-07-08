@@ -234,10 +234,11 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
                                      void *callbackdata)
 {   
     
-    FILE* dir_fd = fopen(dirname,"r");
+    printf("Enumerate files called\n");
+    ZOIDBERG_FILE* dir_fd = zoidberg_fopen(dirname,"r");
     if(dir_fd == NULL) return;
     if(f_is_dir(dir_fd)==0) {
-       fclose(dir_fd);
+       zoidberg_fclose(dir_fd);
        return;
     }
 
@@ -261,7 +262,7 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
 
     }
     allocator.Free(FileInfo);
-    fclose(dir_fd);
+    zoidberg_fclose(dir_fd);
     
 } /* __PHYSFS_platformEnumerateFiles */
 

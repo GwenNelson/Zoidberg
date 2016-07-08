@@ -391,11 +391,9 @@ static const char *find_filename_extension(const char *fname)
 static DirHandle *tryOpenDir(const PHYSFS_Archiver *funcs,
                              const char *d, int forWriting)
 {
-    printf("tryOpenDir called for %s\n",d);
     DirHandle *retval = NULL;
     if (funcs->isArchive(d, forWriting))
     {
-        printf("trying openArchive\n");
         void *opaque = funcs->openArchive(d, forWriting);
         if (opaque != NULL)
         {
@@ -418,16 +416,13 @@ static DirHandle *tryOpenDir(const PHYSFS_Archiver *funcs,
 
 static DirHandle *openDirectory(const char *d, int forWriting)
 {
-    printf("openDirectory called\n");
     DirHandle *retval = NULL;
     const PHYSFS_Archiver * const *i;
     const char *ext;
 
     BAIL_IF_MACRO(!__PHYSFS_platformExists(d), ERR_NO_SUCH_FILE, NULL);
-    printf("PHYSFS platformExists\n");
 
     ext = find_filename_extension(d);
-    printf("find_filename_extension: %s\n",ext);
     if (ext != NULL)
     {
         /* Look for archivers with matching file extensions first... */
@@ -448,13 +443,10 @@ static DirHandle *openDirectory(const char *d, int forWriting)
     else  /* no extension? Try them all. */
     {
         for (i = archivers; (*i != NULL) && (retval == NULL); i++) {
-            printf("Trying archiver %s\n",(*i)->info->description);
             retval = tryOpenDir(*i, d, forWriting);
-            printf("Tried\n");
         }
     } /* else */
 
-    printf("exiting openDirectory\n");
     BAIL_IF_MACRO(retval == NULL, ERR_UNSUPPORTED_ARCHIVE, NULL);
     return(retval);
 } /* openDirectory */
@@ -548,7 +540,6 @@ static DirHandle *createDirHandle(const char *newDir,
                                   const char *mountPoint,
                                   int forWriting)
 {
-    printf("PHYSFS createDirHandle: %s %s\n",newDir,mountPoint);
     DirHandle *dirHandle = NULL;
     char *tmpmntpnt = NULL;
 
@@ -556,19 +547,14 @@ static DirHandle *createDirHandle(const char *newDir,
     if (mountPoint != NULL)
     {
         const size_t len = strlen(mountPoint) + 1;
-        printf("PHYSFS about to smallAlloc\n");
         tmpmntpnt = (char *) __PHYSFS_smallAlloc(len);
-        printf("PHYSFS done smallAlloc\n");
         GOTO_IF_MACRO(!tmpmntpnt, ERR_OUT_OF_MEMORY, badDirHandle);
-        printf("About to sanitize\n");
         if (!sanitizePlatformIndependentPath(mountPoint, tmpmntpnt))
             goto badDirHandle;
         mountPoint = tmpmntpnt;  /* sanitized version. */
     } /* if */
 
-    printf("about to openDirectory %s with writing flag %d\n",newDir,forWriting);
     dirHandle = openDirectory(newDir, forWriting);
-    printf("done openDirectory\n");
     GOTO_IF_MACRO(!dirHandle, NULL, badDirHandle);
 
     dirHandle->dirName = (char *) allocator.Malloc(strlen(newDir) + 1);
@@ -653,19 +639,14 @@ static char *calculateUserDir(void)
 
 static int appendDirSep(char **dir)
 {
-    printf("PHYSFS appendDirSep called\n");
     const char *dirsep = PHYSFS_getDirSeparator();
     char *ptr;
-    printf("PHYSFS getDirSeparator\n");
 
     if (strcmp((*dir + strlen(*dir)) - strlen(dirsep), dirsep) == 0) {
-        printf("PHYSFS appendDirSep returning 1\n");
         return(1);
     }
 
-    printf("About to realloc %s for %d\n", *dir, strlen(*dir)+strlen(dirsep)+1);
     ptr = (char *) allocator.Realloc(*dir, strlen(*dir) + strlen(dirsep) + 1);
-    printf("Realloc\n");
     if (!ptr)
     {
         allocator.Free(*dir);
@@ -753,31 +734,26 @@ static void setDefaultAllocator(void);
 
 int PHYSFS_init(const char *argv0)
 {
-    printf("PHYSFS_init\n");
     char *ptr;
 
     BAIL_IF_MACRO(initialized, ERR_IS_INITIALIZED, 0);
 
     if (!externalAllocator)
         setDefaultAllocator();
-    printf("PHYSFS setDefaultAllocator\n");
 
 
     if (allocator.Init != NULL)
         BAIL_IF_MACRO(!allocator.Init(), NULL, 0);
-    printf("PHYSFS allocator.Init\n");
 
 
     BAIL_IF_MACRO(!__PHYSFS_platformInit(), NULL, 0);
 
-    printf("PHYSFS platformInit\n");
 
     BAIL_IF_MACRO(!initializeMutexes(), NULL, 0);
 
     baseDir = calculateBaseDir(argv0);
     BAIL_IF_MACRO(baseDir == NULL, NULL, 0);
 
-    printf("PHYSFS calculateBaseDir\n");
 
 
     /* !!! FIXME: only call this if we got this from argv0 (unreliable). */
@@ -786,11 +762,9 @@ int PHYSFS_init(const char *argv0)
     BAIL_IF_MACRO(ptr == NULL, NULL, 0);
     baseDir = ptr;
 
-    printf("PHYSFS free baseDir\n");
 
     BAIL_IF_MACRO(!appendDirSep(&baseDir), NULL, 0);
 
-    printf("PHYSFS appendDirSep\n");
 
     userDir = calculateUserDir();
     if ((userDir == NULL) || (!appendDirSep(&userDir)))
@@ -800,7 +774,6 @@ int PHYSFS_init(const char *argv0)
         return(0);
     } /* if */
 
-    printf("PHYSFS calculateUserDir\n");
 
     initialized = 1;
 
@@ -992,20 +965,16 @@ int PHYSFS_mount(const char *newDir, const char *mountPoint, int appendToPath)
     if (mountPoint == NULL)
         mountPoint = "/";
 
-    printf("PHYSFS_mount grab mutex\n");
     __PHYSFS_platformGrabMutex(stateLock);
 
-    printf("PHYSFS searching searchPath\n");
     for (i = searchPath; i != NULL; i = i->next)
     {
         /* already in search path? */
         BAIL_IF_MACRO_MUTEX(strcmp(newDir, i->dirName)==0, NULL, stateLock, 1);
         prev = i;
     } /* for */
-    printf("PHYSFS searched\n");
 
     dh = createDirHandle(newDir, mountPoint, 0);
-    printf("PHYSFS createDirHandle done\n");
     BAIL_IF_MACRO_MUTEX(dh == NULL, NULL, stateLock, 0);
 
     if (appendToPath)
