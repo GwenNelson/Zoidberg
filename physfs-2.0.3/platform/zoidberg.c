@@ -253,5 +253,28 @@ int __PHYSFS_platformIsSymLink(const char *fname)
     return 0; // there are no symlinks in EFI
 } /* __PHYSFS_platformIsSymlink */
 
+int __PHYSFS_platformDelete(const char *path)
+{
+    BAIL_IF_MACRO(remove(path) == -1, strerror(errno), 0);
+    return(1);
+} /* __PHYSFS_platformDelete */
+
+int __PHYSFS_platformMkDir(const char *path)
+{
+    int rc;
+    errno = 0;
+    rc = mkdir(path, 0);
+    BAIL_IF_MACRO(rc == -1, strerror(errno), 0);
+    return(1);
+} /* __PHYSFS_platformMkDir */
+
+PHYSFS_sint64 __PHYSFS_platformGetLastModTime(const char *fname)
+{
+    FILE* fd = fopen(fname,"r");
+    PHYSFS_sint64 retval = (PHYSFS_sint64)f_mod_time(fd);
+    fclose(fd);
+    return retval;
+    
+} /* __PHYSFS_platformGetLastModTime */
 
 #endif

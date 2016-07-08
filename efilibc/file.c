@@ -25,12 +25,12 @@
 #define IN_FILE_C
 typedef struct _FILE
 {
-	EFI_FILE *f;
-	int eof;
-	int error;
-	int fileno;
-	int istty;
-	int ttyno;
+       EFI_FILE *f;
+       int eof;
+       int error;
+       int fileno;
+       int istty;
+       int ttyno;
 } FILE;
 
 #include <stddef.h>
@@ -88,6 +88,40 @@ void conv_backslashes(CHAR16 *s)
 			*s = '\\';
 		s++;
 	}
+}
+
+int mkdir(const char *pathname, int mode)
+{
+        mode = mode+1; // make the compiler shutup about unused param
+        /* Attempt to open the file */
+        EFI_FILE *f;
+        CHAR16 *wfname = (CHAR16 *)malloc((strlen(pathname) + 1) * sizeof(CHAR16));
+        if(wfname == NULL)
+        {
+                errno = ENOMEM;
+                return -1;
+        }
+        mbstowcs((wchar_t *)wfname, pathname, strlen(pathname) + 1);
+
+        /* Convert backslashes to forward slashes */
+        conv_backslashes(wfname);
+
+        EFI_STATUS s = fopen_root->Open(fopen_root, &f, wfname, EFI_FILE_MODE_CREATE, EFI_FILE_DIRECTORY);
+        free(wfname);
+        if(s == EFI_NOT_FOUND)
+        {
+                fprintf(stderr, "efilibc: fopen(%s): EFI_NOT_FOUND\n", pathname);
+                errno = ENOENT;
+                return -1;
+        }
+        else if(EFI_ERROR(s))
+        {
+                fprintf(stderr, "efilibc: fopen(): error %i\n", s);
+                errno = EFAULT;
+                return -1;
+        }
+        f->Close(f);
+        return 0;
 }
 
 FILE *fopen(const char *path, const char *mode)
@@ -465,6 +499,143 @@ int f_is_dir(FILE *stream)
         free(fi);
         return retval;
 }
+
+#define isleap(y)	(((y) % 4) == 0 && (((y) % 100) != 0 || ((y) % 400) == 0))
+#define SECSPERHOUR ( 60*60 )
+#define SECSPERDAY	(24 * SECSPERHOUR)
+time_t
+efi_time(EFI_TIME *ETime)
+{
+    /*
+    //  These arrays give the cumulative number of days up to the first of the
+    //  month number used as the index (1 -> 12) for regular and leap years.
+    //  The value at index 13 is for the whole year.
+    */
+    static time_t CumulativeDays[2][14] = {
+    {0,
+     0,
+     31,
+     31 + 28,
+     31 + 28 + 31,
+     31 + 28 + 31 + 30,
+     31 + 28 + 31 + 30 + 31,
+     31 + 28 + 31 + 30 + 31 + 30,
+     31 + 28 + 31 + 30 + 31 + 30 + 31,
+     31 + 28 + 31 + 30 + 31 + 30 + 31 + 31,
+     31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30,
+     31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31,
+     31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30,
+     31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30 + 31 },
+    {0,
+     0,
+     31,
+     31 + 29,
+     31 + 29 + 31,
+     31 + 29 + 31 + 30,
+     31 + 29 + 31 + 30 + 31,
+     31 + 29 + 31 + 30 + 31 + 30,
+     31 + 29 + 31 + 30 + 31 + 30 + 31,
+     31 + 29 + 31 + 30 + 31 + 30 + 31 + 31,
+     31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 + 30,
+     31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31,
+     31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30,
+     31 + 29 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30 + 31 }};
+
+    time_t  UTime; 
+    int     Year;
+
+    /*
+    //  Do a santity check
+    */
+    if ( ETime->Year  <  1998 || ETime->Year   > 2099 ||
+    	 ETime->Month ==    0 || ETime->Month  >   12 ||
+    	 ETime->Day   ==    0 || ETime->Month  >   31 ||
+    	                         ETime->Hour   >   23 ||
+    	                         ETime->Minute >   59 ||
+    	                         ETime->Second >   59 ||
+    	 ETime->TimeZone  < -1440                     ||
+    	 (ETime->TimeZone >  1440 && ETime->TimeZone != 2047) ) {
+    	return (0);
+    }
+
+    /*
+    // Years
+    */
+    UTime = 0;
+    for (Year = 1970; Year != ETime->Year; ++Year) {
+        UTime += (CumulativeDays[isleap(Year)][13] * SECSPERDAY);
+    }
+
+    /*
+    // UTime should now be set to 00:00:00 on Jan 1 of the file's year.
+    //
+    // Months  
+    */
+    UTime += (CumulativeDays[isleap(ETime->Year)][ETime->Month] * SECSPERDAY);
+
+    /*
+    // UTime should now be set to 00:00:00 on the first of the file's month and year
+    //
+    // Days -- Don't count the file's day
+    */
+    UTime += (((ETime->Day > 0) ? ETime->Day-1:0) * SECSPERDAY);
+
+    /*
+    // Hours
+    */
+    UTime += (ETime->Hour * SECSPERHOUR);
+
+    /*
+    // Minutes
+    */
+    UTime += (ETime->Minute * 60);
+
+    /*
+    // Seconds
+    */
+    UTime += ETime->Second;
+
+    /*
+    //  EFI time is repored in local time.  Adjust for any time zone offset to
+    //  get true UT
+    */
+    if ( ETime->TimeZone != EFI_UNSPECIFIED_TIMEZONE ) {
+    	/*
+    	//  TimeZone is kept in minues...
+    	*/
+    	UTime += (ETime->TimeZone * 60);
+    }
+    
+    return UTime;
+}
+
+time_t f_mod_time(FILE* stream)
+{
+ UINTN buf_size = 0;
+        EFI_STATUS s = stream->f->GetInfo(stream->f, &GenericFileInfo, &buf_size, NULL);
+        if(s != EFI_BUFFER_TOO_SMALL)
+        {
+                errno = EFAULT;
+                return -1;
+        }
+        EFI_FILE_INFO *fi = (EFI_FILE_INFO *)malloc(buf_size);
+        if(fi == NULL)
+        {
+                errno = ENOMEM;
+                return -1;
+        }
+        s = stream->f->GetInfo(stream->f, &GenericFileInfo, &buf_size, fi);
+        if(EFI_ERROR(s))
+        {
+                free(fi);
+                errno = EFAULT;
+                return -1;
+        }
+        EFI_TIME t = fi->ModificationTime;
+        free(fi);
+        return efi_time(&t);
+}
+
 
 #ifndef POSIXLY_CORRECT
 long fsize(FILE *stream)

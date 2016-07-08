@@ -26,9 +26,10 @@
 
 #ifndef IN_FILE_C
 typedef void FILE;
-#endif
 #include <efi.h>
 #include <efilib.h>
+
+
 typedef struct _FILE
 {
         EFI_FILE *f;
@@ -38,6 +39,7 @@ typedef struct _FILE
         int istty;
         int ttyno;
 } _FILE;
+#endif
 
 #define stdin	((FILE *)0)
 #define stdout	((FILE *)1)
@@ -90,9 +92,11 @@ long ftell(FILE *stream);
 void rewind(FILE *stream);
 int fgetpos(FILE *stream, fpos_t *pos);
 int fsetpos(FILE *stream, fpos_t *pos);
+int mkdir(const char *pathname, int mode);
 
 // non standard crap
 int f_is_dir(FILE *stream);
+time_t f_mod_time(FILE* stream);
 
 #ifndef POSIXLY_CORRECT
 long fsize(FILE *stream);
