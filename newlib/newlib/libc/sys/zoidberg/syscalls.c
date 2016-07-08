@@ -7,12 +7,22 @@
 #include <sys/time.h>
 #include <stdio.h>
 #include "efilibc.h"
+
+typedef struct ZOIDBERG_FILE
+{
+       EFI_FILE *f;
+       int eof;
+       int error;
+       int fileno;
+       int istty;
+       int ttyno;
+} ZOIDBERG_FILE;
+
+ZOIDBERG_FILE* zoidberg_fromfd(int fd);
  
 void _exit() {
 }
-int close(int file) {
 
-}
 char **environ; /* pointer to array of char * strings that define the current environment variables */
 int execve(char *name, char **argv, char **env) {
 }
@@ -36,9 +46,33 @@ int link(char *old, char *new) {
 }
 int lseek(int file, int ptr, int dir) {
 }
+
+ZOIDBERG_FILE *zoidberg_fopen(const char *path, const char *mode);
+
 int open(const char *name, int flags, ...) {
+    char access_mode[3];
+    if((flags & O_RDONLY) != 0) {
+       access_mode[0]='r';
+       access_mode[1]=0;
+    } else if((flags & O_WRONLY) != 0) {
+       access_mode[0]='w';
+       if((flags & O_CREAT) != 0) {
+          access_mode[1]='+';
+          access_mode[2]=0; 
+       } else {
+          access_mode[1]=0;
+       }
+    }
+    ZOIDBERG_FILE* fd = zoidberg_fopen(name,(const char*)access_mode);
+    if(fd==NULL) return -1;
+    return fd->fileno;
+}
+int close(int file) {
+    ZOIDBERG_FILE* fd =zoidberg_fromfd(file);
+    return zoidberg_fclose(fd);
 }
 int read(int file, char *ptr, int len) {
+    
 }
 caddr_t sbrk(int incr) {
 }
@@ -51,4 +85,6 @@ int unlink(char *name) {
 int wait(int *status) {
 }
 int write(int file, char *ptr, int len) {
+    ZOIDBERG_FILE* fd =zoidberg_fromfd(file);
+    return zoidberg_fwrite(ptr,len,1,fd);
 }

@@ -311,6 +311,26 @@ int zoidberg_fileno(ZOIDBERG_FILE *stream)
 	return stream->fileno;
 }
 
+ZOIDBERG_FILE* zoidberg_fromfd(int fd)
+{
+	if((fd < 0) || (fd > MAX_FILENO))
+        {
+                errno = EBADF;
+                return 0;
+        }
+
+        if((fd == 0) || (fd == 1) || (fd == 2))
+                return 1;
+
+        if(fileno_map[fd] == NULL)
+        {
+                errno = EBADF;
+                return 0;
+        }
+
+	return fileno_map[fd];
+}
+
 int zoidberg_isatty(int fd)
 {
 	if((fd < 0) || (fd > MAX_FILENO))
