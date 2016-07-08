@@ -178,7 +178,6 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
     printf("Setting up VFS\n");
 
-
     PHYSFS_init(NULL);
 
     printf("Mounting EFI filesystem\n");   
