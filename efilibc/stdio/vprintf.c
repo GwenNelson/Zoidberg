@@ -35,22 +35,11 @@
  * SUCH DAMAGE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)vprintf.c	8.1 (Berkeley) 6/4/93";
-#endif /* LIBC_SCCS and not lint */
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD: release/10.3.0/lib/libc/stdio/vprintf.c 249808 2013-04-23 13:33:13Z emaste $");
 
 #include <stdio.h>
-#include <xlocale.h>
 
 int
 vprintf(const char * __restrict fmt, __va_list ap)
 {
 	return (vfprintf(stdout, fmt, ap));
-}
-int
-vprintf_l(locale_t locale, const char * __restrict fmt, __va_list ap)
-{
-	return (vfprintf_l(stdout, locale, fmt, ap));
 }

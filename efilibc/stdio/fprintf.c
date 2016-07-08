@@ -39,26 +39,13 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-int
-fprintf(FILE * __restrict fp, const char * __restrict fmt, ...)
+int fprintf(void *arg, const char *fmt, ...)
 {
-	int ret;
-	va_list ap;
+        va_list ap;
 
-	va_start(ap, fmt);
-	ret = vfprintf_l(fp, __get_locale(), fmt, ap);
-	va_end(ap);
-	return (ret);
+        va_start(ap, fmt);
+        int ret = vprintf(fmt, fputc, arg, 10, ap);
+        va_end(ap);
+        return ret;
 }
-/*int
-fprintf_l(FILE * __restrict fp, locale_t locale, const char * __restrict fmt, ...)
-{
-	int ret;
-	va_list ap;
-	FIX_LOCALE(locale);
 
-	va_start(ap, fmt);
-	ret = vfprintf_l(fp, locale, fmt, ap);
-	va_end(ap);
-	return (ret);
-}*/

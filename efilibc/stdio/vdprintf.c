@@ -30,17 +30,12 @@
  */
 
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: release/10.3.0/lib/libc/stdio/vdprintf.c 227753 2011-11-20 14:45:42Z theraven $");
 
-#include "namespace.h"
 #include <errno.h>
 #include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include "un-namespace.h"
 
-#include "local.h"
-#include "xlocale_private.h"
 
 int
 vdprintf(int fd, const char * __restrict fmt, va_list ap)

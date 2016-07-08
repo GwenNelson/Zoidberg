@@ -35,17 +35,10 @@
  * SUCH DAMAGE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)sprintf.c	8.1 (Berkeley) 6/4/93";
-#endif /* LIBC_SCCS and not lint */
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD: release/10.3.0/lib/libc/stdio/sprintf.c 249808 2013-04-23 13:33:13Z emaste $");
 
 #include <stdio.h>
 #include <stdarg.h>
 #include <limits.h>
-#include "local.h"
-#include "xlocale_private.h"
 
 int
 sprintf(char * __restrict str, char const * __restrict fmt, ...)
@@ -55,19 +48,6 @@ sprintf(char * __restrict str, char const * __restrict fmt, ...)
 
 	va_start(ap, fmt);
 	ret = vsprintf(str, fmt, ap);
-	va_end(ap);
-	return (ret);
-}
-int
-sprintf_l(char * __restrict str, locale_t locale, char const * __restrict fmt,
-		...)
-{
-	int ret;
-	va_list ap;
-	FIX_LOCALE(locale);
-
-	va_start(ap, fmt);
-	ret = vsprintf_l(str, locale, fmt, ap);
 	va_end(ap);
 	return (ret);
 }
