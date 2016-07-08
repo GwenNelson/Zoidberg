@@ -13,7 +13,7 @@ efilibc/efilibc.a:
 physfs:
 	make -C physfs-2.0.3
 
-newlib:
+newlib_libc:
 	mkdir -p newlib/build
 	cd newlib/build; ../configure --target=x86_64-zoidberg
 	make -C newlib/build
