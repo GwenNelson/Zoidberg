@@ -19,7 +19,7 @@ newlib/build/x86_64-zoidberg/newlib/libc.a:
 	CFLAGS=-nostdinc make -C newlib/build
 
 BOOTX64.EFI:newlib/build/x86_64-zoidberg/newlib/libc.a physfs kernel.o
-	x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $@ kernel.o newlib/build/x86_64-zoidberg/newlib/libc.a physfs-2.0.3/build/libphysfs.a  -lgcc
+	x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $@ kernel.o newlib/build/x86_64-zoidberg/newlib/libc.a physfs-2.0.3/build/libphysfs.a newlib/build/x86_64-zoidberg/newlib/libc.a -lgcc
 
 boot.img: BOOTX64.EFI
 	dd if=/dev/zero of=$@ bs=1M count=33
