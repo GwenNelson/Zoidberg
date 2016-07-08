@@ -13,9 +13,7 @@ lib_a_DEPENDENCIES = $(extra_objs)
 lib_a_CCASFLAGS = $(AM_CCASFLAGS)
 lib_a_CFLAGS = $(AM_CFLAGS)
  
-if MAY_SUPPLY_SYSCALLS
-all: crt0.o
-endif
+all: crt0.o ${extra_objs}
  
 ACLOCAL_AMFLAGS = -I ../../..
 CONFIG_STATUS_DEPENDENCIES = $(newlib_basedir)/configure.host

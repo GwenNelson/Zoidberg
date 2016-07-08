@@ -2,6 +2,7 @@
 # define _LIBC_LIMITS_H_	1
 
 #include <newlib.h>
+#include <sys/cdefs.h>
 
 # ifdef _MB_LEN_MAX
 #  define MB_LEN_MAX	_MB_LEN_MAX
@@ -16,8 +17,7 @@
 
 /* if do not have #include_next support, then we
    have to define the limits here. */
-#define limits_h_hack
-#ifdef limits_h_hack
+# if !defined __GNUC__ || __GNUC__ < 2
 
 #  ifndef _LIMITS_H
 #   define _LIMITS_H	1
@@ -97,8 +97,7 @@
 #    define __LONG_LONG_MAX__ 9223372036854775807LL
 #   endif
 
-#   if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) ||   \
-  (defined(__cplusplus) && __cplusplus >= 201103L)
+#   if __ISO_C_VISIBLE >= 1999
 /* Minimum and maximum values a `signed long long int' can hold.  */
 #    undef LLONG_MIN
 #    define LLONG_MIN (-LLONG_MAX-1)
@@ -110,7 +109,7 @@
 #    define ULLONG_MAX (LLONG_MAX * 2ULL + 1)
 #   endif
 
-#  if defined (__GNU_LIBRARY__) ? defined (__USE_GNU) : !defined (__STRICT_ANSI__)
+#  if __GNU_VISIBLE
 /* Minimum and maximum values a `signed long long int' can hold.  */
 #    undef LONG_LONG_MIN
 #    define LONG_LONG_MIN (-LONG_LONG_MAX-1)
@@ -129,7 +128,7 @@
 
 #if defined __GNUC__ && !defined _GCC_LIMITS_H_
 /* `_GCC_LIMITS_H_' is what GCC's file defines.  */
-// include_next <limits.h>
+# include_next <limits.h>
 #endif /* __GNUC__ && !_GCC_LIMITS_H_ */
 
 #ifndef _POSIX2_RE_DUP_MAX

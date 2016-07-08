@@ -1,7 +1,8 @@
-# generated automatically by aclocal 1.12.2 -*- Autoconf -*-
+# generated automatically by aclocal 1.12 -*- Autoconf -*-
 
-# Copyright (C) 1996-2012 Free Software Foundation, Inc.
-
+# Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
+# 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation,
+# Inc.
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
@@ -13,8 +14,8 @@
 
 m4_ifndef([AC_AUTOCONF_VERSION],
   [m4_copy([m4_PACKAGE_VERSION], [AC_AUTOCONF_VERSION])])dnl
-m4_if(m4_defn([AC_AUTOCONF_VERSION]), [2.69],,
-[m4_warning([this file was generated for autoconf 2.69.
+m4_if(m4_defn([AC_AUTOCONF_VERSION]), [2.65],,
+[m4_warning([this file was generated for autoconf 2.65.
 You have another version of autoconf.  It may work, but is not guaranteed to.
 If you have problems, you may need to regenerate the build system entirely.
 To do so, use the procedure documented by the package, typically 'autoreconf'.])])
@@ -36,7 +37,7 @@ AC_DEFUN([AM_AUTOMAKE_VERSION],
 [am__api_version='1.12'
 dnl Some users find AM_AUTOMAKE_VERSION and mistake it for a way to
 dnl require some minimum version.  Point them to the right macro.
-m4_if([$1], [1.12.2], [],
+m4_if([$1], [1.12], [],
       [AC_FATAL([Do not call $0, use AM_INIT_AUTOMAKE([$1]).])])dnl
 ])
 
@@ -52,7 +53,7 @@ m4_define([_AM_AUTOCONF_VERSION], [])
 # Call AM_AUTOMAKE_VERSION and AM_AUTOMAKE_VERSION so they can be traced.
 # This function is AC_REQUIREd by AM_INIT_AUTOMAKE.
 AC_DEFUN([AM_SET_CURRENT_AUTOMAKE_VERSION],
-[AM_AUTOMAKE_VERSION([1.12.2])dnl
+[AM_AUTOMAKE_VERSION([1.12])dnl
 m4_ifndef([AC_AUTOCONF_VERSION],
   [m4_copy([m4_PACKAGE_VERSION], [AC_AUTOCONF_VERSION])])dnl
 _AM_AUTOCONF_VERSION(m4_defn([AC_AUTOCONF_VERSION]))])
@@ -153,7 +154,7 @@ fi])])
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
 
-# serial 17
+# serial 16
 
 # There are a few dirty hacks below to avoid letting 'AC_PROG_CC' be
 # written in clear, in which case automake, when reading aclocal.m4,
@@ -165,7 +166,7 @@ fi])])
 # _AM_DEPENDENCIES(NAME)
 # ----------------------
 # See how the compiler implements dependency checking.
-# NAME is "CC", "CXX", "OBJC", "OBJCXX", "UPC", or "GJC".
+# NAME is "CC", "CXX", "GCJ", or "OBJC".
 # We try a few techniques and use that to set a single cache variable.
 #
 # We don't AC_REQUIRE the corresponding AC_PROG_CC since the latter was
@@ -181,7 +182,6 @@ AC_REQUIRE([AM_DEP_TRACK])dnl
 m4_if([$1], [CC],   [depcc="$CC"   am_compiler_list=],
       [$1], [CXX],  [depcc="$CXX"  am_compiler_list=],
       [$1], [OBJC], [depcc="$OBJC" am_compiler_list='gcc3 gcc'],
-      [$1], [OBJCXX], [depcc="$OBJCXX" am_compiler_list='gcc3 gcc'],
       [$1], [UPC],  [depcc="$UPC"  am_compiler_list=],
       [$1], [GCJ],  [depcc="$GCJ"  am_compiler_list='gcc3 gcc'],
                     [depcc="$$1"   am_compiler_list=])
@@ -422,7 +422,7 @@ AC_DEFUN([AM_OUTPUT_DEPENDENCY_COMMANDS],
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
 
-# serial 19
+# serial 18
 
 # This macro actually does too much.  Some checks are only needed if
 # your package does certain things.  But this isn't really a big deal.
@@ -468,10 +468,7 @@ AC_SUBST([CYGPATH_W])
 # Define the identity of the package.
 dnl Distinguish between old-style and new-style calls.
 m4_ifval([$2],
-[AC_DIAGNOSE([obsolete],
-[$0: two- and three-arguments forms are deprecated.  For more info, see:
-http://www.gnu.org/software/automake/manual/automake.html#Modernize-AM_INIT_AUTOMAKE-invocation])
-m4_ifval([$3], [_AM_SET_OPTION([no-define])])dnl
+[m4_ifval([$3], [_AM_SET_OPTION([no-define])])dnl
  AC_SUBST([PACKAGE], [$1])dnl
  AC_SUBST([VERSION], [$2])],
 [_AM_SET_OPTIONS([$1])dnl
@@ -497,12 +494,7 @@ AM_MISSING_PROG([AUTOHEADER], [autoheader])
 AM_MISSING_PROG([MAKEINFO], [makeinfo])
 AC_REQUIRE([AM_PROG_INSTALL_SH])dnl
 AC_REQUIRE([AM_PROG_INSTALL_STRIP])dnl
-AC_REQUIRE([AC_PROG_MKDIR_P])dnl
-# For better backward compatibility.  To be removed once Automake 1.9.x
-# dies out for good.  For more background, see:
-# <http://lists.gnu.org/archive/html/automake/2012-07/msg00001.html>
-# <http://lists.gnu.org/archive/html/automake/2012-07/msg00014.html>
-AC_SUBST([mkdir_p], ['$(MKDIR_P)'])
+AC_REQUIRE([AM_PROG_MKDIR_P])dnl
 # We need awk for the "check" target.  The system "awk" is bad on
 # some platforms.
 AC_REQUIRE([AC_PROG_AWK])dnl
@@ -514,23 +506,16 @@ _AM_IF_OPTION([tar-ustar], [_AM_PROG_TAR([ustar])],
 _AM_IF_OPTION([no-dependencies],,
 [AC_PROVIDE_IFELSE([AC_PROG_CC],
 		  [_AM_DEPENDENCIES([CC])],
-		  [m4_define([AC_PROG_CC],
-			     m4_defn([AC_PROG_CC])[_AM_DEPENDENCIES([CC])])])dnl
+		  [define([AC_PROG_CC],
+			  defn([AC_PROG_CC])[_AM_DEPENDENCIES([CC])])])dnl
 AC_PROVIDE_IFELSE([AC_PROG_CXX],
 		  [_AM_DEPENDENCIES([CXX])],
-		  [m4_define([AC_PROG_CXX],
-			     m4_defn([AC_PROG_CXX])[_AM_DEPENDENCIES([CXX])])])dnl
+		  [define([AC_PROG_CXX],
+			  defn([AC_PROG_CXX])[_AM_DEPENDENCIES([CXX])])])dnl
 AC_PROVIDE_IFELSE([AC_PROG_OBJC],
 		  [_AM_DEPENDENCIES([OBJC])],
-		  [m4_define([AC_PROG_OBJC],
-			     m4_defn([AC_PROG_OBJC])[_AM_DEPENDENCIES([OBJC])])])dnl
-dnl Support for Objective C++ was only introduced in Autoconf 2.65,
-dnl but we still cater to Autoconf 2.62.
-m4_ifdef([AC_PROG_OBJCXX],
-[AC_PROVIDE_IFELSE([AC_PROG_OBJCXX],
-		  [_AM_DEPENDENCIES([OBJCXX])],
-		  [m4_define([AC_PROG_OBJCXX],
-			     m4_defn([AC_PROG_OBJCXX])[_AM_DEPENDENCIES([OBJCXX])])])])dnl
+		  [define([AC_PROG_OBJC],
+			  defn([AC_PROG_OBJC])[_AM_DEPENDENCIES([OBJC])])])dnl
 ])
 _AM_IF_OPTION([silent-rules], [AC_REQUIRE([AM_SILENT_RULES])])dnl
 dnl The 'parallel-tests' driver may need to know about EXEEXT, so add the
@@ -745,6 +730,34 @@ else
   am_missing_run=
   AC_MSG_WARN(['missing' script is too old or missing])
 fi
+])
+
+# Copyright (C) 2003-2012 Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# serial 2
+
+# AM_PROG_MKDIR_P
+# ---------------
+# Check for 'mkdir -p'.
+AC_DEFUN([AM_PROG_MKDIR_P],
+[AC_PREREQ([2.60])dnl
+AC_REQUIRE([AC_PROG_MKDIR_P])dnl
+dnl Automake 1.8 to 1.9.6 used to define mkdir_p.  We now use MKDIR_P,
+dnl while keeping a definition of mkdir_p for backward compatibility.
+dnl @MKDIR_P@ is magic: AC_OUTPUT adjusts its value for each Makefile.
+dnl However we cannot define mkdir_p as $(MKDIR_P) for the sake of
+dnl Makefile.ins that do not define MKDIR_P, so we do our own
+dnl adjustment using top_builddir (which is defined more often than
+dnl MKDIR_P).
+AC_SUBST([mkdir_p], ["$MKDIR_P"])dnl
+case $mkdir_p in
+  [[\\/$]]* | ?:[[\\/]]*) ;;
+  */*) mkdir_p="\$(top_builddir)/$mkdir_p" ;;
+esac
 ])
 
 # Helper functions for option handling.                     -*- Autoconf -*-
@@ -1011,238 +1024,4 @@ AC_SUBST([am__tar])
 AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
-dnl This provides configure definitions used by all the newlib
-dnl configure.in files.
-
-AC_DEFUN([DEF_NEWLIB_VERSION],
-m4_define([NEWLIB_VERSION],[2.2.0]))
-
-dnl Basic newlib configury.  This calls basic introductory stuff,
-dnl including AM_INIT_AUTOMAKE and AC_CANONICAL_HOST.  It also runs
-dnl configure.host.  The only argument is the relative path to the top
-dnl newlib directory.
-
-AC_DEFUN([NEWLIB_CONFIGURE],
-[AC_REQUIRE([DEF_NEWLIB_VERSION])
-dnl Default to --enable-multilib
-AC_ARG_ENABLE(multilib,
-[  --enable-multilib         build many library versions (default)],
-[case "${enableval}" in
-  yes) multilib=yes ;;
-  no)  multilib=no ;;
-  *)   AC_MSG_ERROR(bad value ${enableval} for multilib option) ;;
- esac], [multilib=yes])dnl
-
-dnl Support --enable-target-optspace
-AC_ARG_ENABLE(target-optspace,
-[  --enable-target-optspace  optimize for space],
-[case "${enableval}" in
-  yes) target_optspace=yes ;;
-  no)  target_optspace=no ;;
-  *)   AC_MSG_ERROR(bad value ${enableval} for target-optspace option) ;;
- esac], [target_optspace=])dnl
-
-dnl Support --enable-malloc-debugging - currently only supported for Cygwin
-AC_ARG_ENABLE(malloc-debugging,
-[  --enable-malloc-debugging indicate malloc debugging requested],
-[case "${enableval}" in
-  yes) malloc_debugging=yes ;;
-  no)  malloc_debugging=no ;;
-  *)   AC_MSG_ERROR(bad value ${enableval} for malloc-debugging option) ;;
- esac], [malloc_debugging=])dnl
-
-dnl Support --enable-newlib-multithread
-AC_ARG_ENABLE(newlib-multithread,
-[  --enable-newlib-multithread        enable support for multiple threads],
-[case "${enableval}" in
-  yes) newlib_multithread=yes ;;
-  no)  newlib_multithread=no ;;
-  *)   AC_MSG_ERROR(bad value ${enableval} for newlib-multithread option) ;;
- esac], [newlib_multithread=yes])dnl
-
-dnl Support --enable-newlib-iconv
-AC_ARG_ENABLE(newlib-iconv,
-[  --enable-newlib-iconv     enable iconv library support],
-[if test "${newlib_iconv+set}" != set; then
-   case "${enableval}" in
-     yes) newlib_iconv=yes ;;
-     no)  newlib_iconv=no ;;
-     *)   AC_MSG_ERROR(bad value ${enableval} for newlib-iconv option) ;;
-   esac
- fi], [newlib_iconv=${newlib_iconv}])dnl
-
-dnl Support --enable-newlib-elix-level
-AC_ARG_ENABLE(newlib-elix-level,
-[  --enable-newlib-elix-level         supply desired elix library level (1-4)],
-[case "${enableval}" in
-  0)   newlib_elix_level=0 ;;
-  1)   newlib_elix_level=1 ;;
-  2)   newlib_elix_level=2 ;;
-  3)   newlib_elix_level=3 ;;
-  4)   newlib_elix_level=4 ;;
-  *)   AC_MSG_ERROR(bad value ${enableval} for newlib-elix-level option) ;;
- esac], [newlib_elix_level=0])dnl
-
-dnl Support --disable-newlib-io-float
-AC_ARG_ENABLE(newlib-io-float,
-[  --disable-newlib-io-float disable printf/scanf family float support],
-[case "${enableval}" in
-  yes) newlib_io_float=yes ;;
-  no)  newlib_io_float=no ;;
-  *)   AC_MSG_ERROR(bad value ${enableval} for newlib-io-float option) ;;
- esac], [newlib_io_float=yes])dnl
-
-dnl Support --disable-newlib-supplied-syscalls
-AC_ARG_ENABLE(newlib-supplied-syscalls,
-[  --disable-newlib-supplied-syscalls disable newlib from supplying syscalls],
-[case "${enableval}" in
-  yes) newlib_may_supply_syscalls=yes ;;
-  no)  newlib_may_supply_syscalls=no ;;
-  *)   AC_MSG_ERROR(bad value ${enableval} for newlib-supplied-syscalls option) ;;
- esac], [newlib_may_supply_syscalls=yes])dnl
-
-AM_CONDITIONAL(MAY_SUPPLY_SYSCALLS, test x[$]{newlib_may_supply_syscalls} = xyes)
-
-dnl We may get other options which we don't document:
-dnl --with-target-subdir, --with-multisrctop, --with-multisubdir
-
-test -z "[$]{with_target_subdir}" && with_target_subdir=.
-
-if test "[$]{srcdir}" = "."; then
-  if test "[$]{with_target_subdir}" != "."; then
-    newlib_basedir="[$]{srcdir}/[$]{with_multisrctop}../$1"
-  else
-    newlib_basedir="[$]{srcdir}/[$]{with_multisrctop}$1"
-  fi
-else
-  newlib_basedir="[$]{srcdir}/$1"
-fi
-AC_SUBST(newlib_basedir)
-
-AC_CANONICAL_HOST
-
-AM_INIT_AUTOMAKE([cygnus no-define 1.9.5])
-
-# FIXME: We temporarily define our own version of AC_PROG_CC.  This is
-# copied from autoconf 2.12, but does not call AC_PROG_CC_WORKS.  We
-# are probably using a cross compiler, which will not be able to fully
-# link an executable.  This should really be fixed in autoconf
-# itself.
-
-AC_DEFUN([LIB_AC_PROG_CC_GNU],
-[AC_CACHE_CHECK(whether we are using GNU C, ac_cv_prog_gcc,
-[dnl The semicolon is to pacify NeXT's syntax-checking cpp.
-cat > conftest.c <<EOF
-#ifdef __GNUC__
-  yes;
-#endif
-EOF
-if AC_TRY_COMMAND(${CC-cc} -E conftest.c) | egrep yes >/dev/null 2>&1; then
-  ac_cv_prog_gcc=yes
-else
-  ac_cv_prog_gcc=no
-fi])])
-
-AC_DEFUN([LIB_AM_PROG_AS],
-[# By default we simply use the C compiler to build assembly code.
-AC_REQUIRE([LIB_AC_PROG_CC])
-test "${CCAS+set}" = set || CCAS=$CC
-test "${CCASFLAGS+set}" = set || CCASFLAGS=$CFLAGS
-AC_ARG_VAR([CCAS],      [assembler compiler command (defaults to CC)])
-AC_ARG_VAR([CCASFLAGS], [assembler compiler flags (defaults to CFLAGS)])
-])
-
-AC_DEFUN([LIB_AC_PROG_CC],
-[AC_BEFORE([$0], [AC_PROG_CPP])dnl
-AC_CHECK_PROG(CC, gcc, gcc)
-_AM_DEPENDENCIES(CC)
-if test -z "$CC"; then
-  AC_CHECK_PROG(CC, cc, cc, , , /usr/ucb/cc)
-  test -z "$CC" && AC_MSG_ERROR([no acceptable cc found in \$PATH])
-fi
-
-LIB_AC_PROG_CC_GNU
-
-if test $ac_cv_prog_gcc = yes; then
-  GCC=yes
-dnl Check whether -g works, even if CFLAGS is set, in case the package
-dnl plays around with CFLAGS (such as to build both debugging and
-dnl normal versions of a library), tasteless as that idea is.
-  ac_test_CFLAGS="${CFLAGS+set}"
-  ac_save_CFLAGS="$CFLAGS"
-  _AC_PROG_CC_G
-  if test "$ac_test_CFLAGS" = set; then
-    CFLAGS="$ac_save_CFLAGS"
-  elif test $ac_cv_prog_cc_g = yes; then
-    CFLAGS="-g -O2"
-  else
-    CFLAGS="-O2"
-  fi
-else
-  GCC=
-  test "${CFLAGS+set}" = set || CFLAGS="-g"
-fi
-])
-
-LIB_AC_PROG_CC
-
-AC_CHECK_TOOL(AS, as)
-AC_CHECK_TOOL(AR, ar)
-AC_CHECK_TOOL(RANLIB, ranlib, :)
-AC_CHECK_TOOL(READELF, readelf, :)
-
-AC_PROG_INSTALL
-
-# Hack to ensure that INSTALL won't be set to "../" with autoconf 2.13.  */
-ac_given_INSTALL=$INSTALL
-
-AM_MAINTAINER_MODE
-LIB_AM_PROG_AS
-
-# We need AC_EXEEXT to keep automake happy in cygnus mode.  However,
-# at least currently, we never actually build a program, so we never
-# need to use $(EXEEXT).  Moreover, the test for EXEEXT normally
-# fails, because we are probably configuring with a cross compiler
-# which can't create executables.  So we include AC_EXEEXT to keep
-# automake happy, but we don't execute it, since we don't care about
-# the result.
-if false; then
-  AC_EXEEXT
-  dummy_var=1
-fi
-
-. [$]{newlib_basedir}/configure.host
-
-newlib_cflags="[$]{newlib_cflags} -fno-builtin"
-
-NEWLIB_CFLAGS=${newlib_cflags}
-AC_SUBST(NEWLIB_CFLAGS)
-
-NO_INCLUDE_LIST=${noinclude}
-AC_SUBST(NO_INCLUDE_LIST)
-
-LDFLAGS=${ldflags}
-AC_SUBST(LDFLAGS)
-
-AM_CONDITIONAL(ELIX_LEVEL_0, test x[$]{newlib_elix_level} = x0)
-AM_CONDITIONAL(ELIX_LEVEL_1, test x[$]{newlib_elix_level} = x1)
-AM_CONDITIONAL(ELIX_LEVEL_2, test x[$]{newlib_elix_level} = x2)
-AM_CONDITIONAL(ELIX_LEVEL_3, test x[$]{newlib_elix_level} = x3)
-AM_CONDITIONAL(ELIX_LEVEL_4, test x[$]{newlib_elix_level} = x4)
-
-AM_CONDITIONAL(USE_LIBTOOL, test x[$]{use_libtool} = xyes)
-
-# Hard-code OBJEXT.  Normally it is set by AC_OBJEXT, but we
-# use oext, which is set in configure.host based on the target platform.
-OBJEXT=${oext}
-
-AC_SUBST(OBJEXT)
-AC_SUBST(oext)
-AC_SUBST(aext)
-AC_SUBST(lpfx)
-
-AC_SUBST(libm_machine_dir)
-AC_SUBST(machine_dir)
-AC_SUBST(sys_dir)
-])
-
+m4_include([../../../acinclude.m4])

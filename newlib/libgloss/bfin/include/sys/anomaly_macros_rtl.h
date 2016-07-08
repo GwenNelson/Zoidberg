@@ -12,7 +12,7 @@
 
 /************************************************************************
  *
- * anomaly_macros_rtl.h : $Revision: 1.4 $
+ * anomaly_macros_rtl.h : $Revision$
  *
  * (c) Copyright 2005-2011 Analog Devices, Inc.  All rights reserved.
  *

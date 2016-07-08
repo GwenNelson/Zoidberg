@@ -38,6 +38,9 @@ case "${target}" in
 	AC_CONFIG_SUBDIRS(aarch64)
 	config_testsuite=true
 	;;
+  arc*-*-*)
+	AC_CONFIG_SUBDIRS(arc)
+	;;
   epiphany-*-*)
 	AC_CONFIG_SUBDIRS(epiphany)
 	config_testsuite=true
@@ -105,6 +108,9 @@ case "${target}" in
   frv*-*-*)
 	AC_CONFIG_SUBDIRS([frv])
 	;;
+  ft32*-*-*)
+	AC_CONFIG_SUBDIRS([ft32])
+	;;
   lm32*-*-*)
 	AC_CONFIG_SUBDIRS([lm32])
 	;;
@@ -126,6 +132,10 @@ case "${target}" in
   v850*-*-*)
         AC_CONFIG_SUBDIRS([v850])
         ;;
+  visium-*-*)
+	AC_CONFIG_SUBDIRS([visium])
+	config_testsuite=false
+	;;
   xc16x-*-*)
 	AC_CONFIG_SUBDIRS([xc16x])
 	;;
@@ -137,6 +147,7 @@ case "${target}" in
 	;;
   msp430*-*-elf)
 	AC_CONFIG_SUBDIRS([msp430])
+	config_libnosys=false
 	;;
   rl78*-*-elf)
 	AC_CONFIG_SUBDIRS([rl78])

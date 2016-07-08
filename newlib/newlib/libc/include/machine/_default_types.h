@@ -1,5 +1,5 @@
 /*
- *  $Id: _default_types.h,v 1.7 2014/03/04 08:05:39 corinna Exp $
+ *  $Id$
  */
 
 #ifndef _MACHINE__DEFAULT_TYPES_H

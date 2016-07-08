@@ -4,7 +4,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.59)
 AC_INIT([newlib],[NEWLIB_VERSION])
 AC_CONFIG_SRCDIR([libc])
-AC_CONFIG_HEADER(newlib.h:newlib.hin)
+AC_CONFIG_HEADERS([_newlib_version.h:_newlib_version.hin newlib.h:newlib.hin])
 
 dnl Can't be done in NEWLIB_CONFIGURE because that confuses automake. 
 AC_CONFIG_AUX_DIR(..)
@@ -384,7 +384,10 @@ if test "${newlib_iconv_external_ccs}" = "yes"; then
 AC_DEFINE_UNQUOTED(_ICONV_ENABLE_EXTERNAL_CCS)
 fi
 
-AC_DEFINE_UNQUOTED(_NEWLIB_VERSION,"NEWLIB_VERSION")
+AC_DEFINE(_NEWLIB_VERSION,"NEWLIB_VERSION","The newlib version in string format.")
+AC_DEFINE(__NEWLIB__,NEWLIB_MAJOR_VERSION,"The newlib major version number.")
+AC_DEFINE(__NEWLIB_MINOR__,NEWLIB_MINOR_VERSION,"The newlib minor version number.")
+AC_DEFINE(__NEWLIB_PATCHLEVEL__,NEWLIB_PATCHLEVEL_VERSION,"The newlib patch level.")
 
 if test "${multilib}" = "yes"; then
   multilib_arg="--enable-multilib"
@@ -616,47 +619,6 @@ rm -f conftest*])
 if test $newlib_cv_ldbl_eq_dbl = yes; then
   AC_DEFINE_UNQUOTED(_LDBL_EQ_DBL)
 fi
-
-#### Determine if uintptr_t is unsigned long long
-AC_CACHE_CHECK(whether uintptr_t equals unsigned long long,
-	       newlib_cv_uintptr_eq_ulonglong, [dnl
-cat > conftest.c <<EOF
-#include <inttypes.h>
-extern int foo(uintptr_t);
-extern int foo(unsigned long long);
-EOF
-if AC_TRY_COMMAND([${CC} $CFLAGS $CPPFLAGS -c -o conftest.o conftest.c
-							1>&AS_MESSAGE_LOG_FD])
-then
-  newlib_cv_uintptr_eq_ulonglong=yes;
-else
-  newlib_cv_uintptr_eq_ulonglong=no;
-fi
-rm -f conftest*])
-if test $newlib_cv_uintptr_eq_ulonglong = yes; then
-  AC_DEFINE_UNQUOTED(_UINTPTR_EQ_ULONGLONG)
-else
-#### Determine if uintptr_t is unsigned long
-AC_CACHE_CHECK(whether uintptr_t equals unsigned long,
-	       newlib_cv_uintptr_eq_ulong, [dnl
-cat > conftest.c <<EOF
-#include <inttypes.h>
-extern int foo(uintptr_t);
-extern int foo(unsigned long);
-EOF
-if AC_TRY_COMMAND([${CC} $CFLAGS $CPPFLAGS -c -o conftest.o conftest.c
-							1>&AS_MESSAGE_LOG_FD])
-then
-  newlib_cv_uintptr_eq_ulong=yes;
-else
-  newlib_cv_uintptr_eq_ulong=no;
-fi
-rm -f conftest*])
-if test $newlib_cv_uintptr_eq_ulong = yes; then
-  AC_DEFINE_UNQUOTED(_UINTPTR_EQ_ULONG)
-fi
-fi
-
 
 AC_SUBST(CFLAGS)
 

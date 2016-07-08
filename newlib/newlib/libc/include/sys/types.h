@@ -18,20 +18,12 @@
 #ifndef _SYS_TYPES_H
 
 #include <_ansi.h>
-
-#ifndef __INTTYPES_DEFINED__
-#define __INTTYPES_DEFINED__
-
+#include <sys/cdefs.h>
 #include <machine/_types.h>
 
-#if defined(__rtems__) || defined(__XMK__)
-/*
- *  The following section is RTEMS specific and is needed to more
- *  closely match the types defined in the BSD sys/types.h.
- *  This is needed to let the RTEMS/BSD TCP/IP stack compile.
- */
-
-/* deprecated */
+/* BSD types permitted by POSIX and always exposed as in Glibc.  Only provided
+   for backward compatibility with BSD code.  The uintN_t standard types should
+   be preferred in new code. */
 #if ___int8_t_defined
 typedef __uint8_t	u_int8_t;
 #endif
@@ -41,52 +33,54 @@ typedef __uint16_t	u_int16_t;
 #if ___int32_t_defined
 typedef __uint32_t	u_int32_t;
 #endif
-
 #if ___int64_t_defined
 typedef __uint64_t	u_int64_t;
+#endif
+typedef int register_t;
+#define __BIT_TYPES_DEFINED__ 1
+
+#if defined(__rtems__) || defined(__XMK__)
+/*
+ *  The following section is RTEMS specific and is needed to more
+ *  closely match the types defined in the BSD sys/types.h.
+ *  This is needed to let the RTEMS/BSD TCP/IP stack compile.
+ */
 
 /* deprecated */
+#if ___int64_t_defined
 typedef	__uint64_t	u_quad_t;
 typedef	__int64_t	quad_t;
 typedef	quad_t *	qaddr_t;
 #endif
 
-#endif
-
-#endif /* ! __INTTYPES_DEFINED */
+#endif /* __rtems__ || __XMK__ */
 
 #ifndef __need_inttypes
 
 #define _SYS_TYPES_H
+/* <stddef.h> must be before <sys/_types.h> for __size_t considerations */
+#include <stddef.h>
 #include <sys/_types.h>
+#include <sys/_stdint.h>
 
-#ifdef __i386__
-#if defined (GO32) || defined (__MSDOS__)
-#define __MS_types__
-#endif
-#endif
-
-# include <stddef.h>
-# include <machine/types.h>
-
-/* To ensure the stat struct's layout doesn't change when sizeof(int), etc.
-   changes, we assume sizeof short and long never change and have all types
-   used to define struct stat use them and not int where possible.
-   Where not possible, _ST_INTxx are used.  It would be preferable to not have
-   such assumptions, but until the extra fluff is necessary, it's avoided.
-   No 64 bit targets use stat yet.  What to do about them is postponed
-   until necessary.  */
-#ifdef __GNUC__
-#define _ST_INT32 __attribute__ ((__mode__ (__SI__)))
-#else
-#define _ST_INT32
-#endif
-
-# ifndef	_POSIX_SOURCE
-
+#if __BSD_VISIBLE
+#include <machine/endian.h>
+#include <sys/select.h>
 #  define	physadr		physadr_t
 #  define	quad		quad_t
 
+#ifndef _IN_ADDR_T_DECLARED
+typedef	__uint32_t	in_addr_t;	/* base type for internet address */
+#define	_IN_ADDR_T_DECLARED
+#endif
+
+#ifndef _IN_PORT_T_DECLARED
+typedef	__uint16_t	in_port_t;
+#define	_IN_PORT_T_DECLARED
+#endif
+#endif /* __BSD_VISIBLE */
+
+#if __MISC_VISIBLE
 #ifndef _BSDTYPES_DEFINED
 /* also defined in mingw/gmon.h and in w32api/winsock[2].h */
 #ifndef __u_char_defined
@@ -107,36 +101,35 @@ typedef	unsigned long	u_long;
 #endif
 #define _BSDTYPES_DEFINED
 #endif
+#endif	/*__BSD_VISIBLE || __CYGWIN__ */
 
+#if __MISC_VISIBLE
 typedef	unsigned short	ushort;		/* System V compatibility */
 typedef	unsigned int	uint;		/* System V compatibility */
 typedef	unsigned long	ulong;		/* System V compatibility */
-# endif	/*!_POSIX_SOURCE */
-
-#ifndef __clock_t_defined
-typedef _CLOCK_T_ clock_t;
-#define __clock_t_defined
 #endif
 
-#ifndef __time_t_defined
-typedef _TIME_T_ time_t;
-#define __time_t_defined
+#ifndef _BLKCNT_T_DECLARED
+typedef	__blkcnt_t	blkcnt_t;
+#define	_BLKCNT_T_DECLARED
 #endif
 
-#ifndef __timespec_defined
-#define __timespec_defined
-/* Time Value Specification Structures, P1003.1b-1993, p. 261 */
-
-struct timespec {
-  time_t  tv_sec;   /* Seconds */
-  long    tv_nsec;  /* Nanoseconds */
-};
+#ifndef _BLKSIZE_T_DECLARED
+typedef	__blksize_t	blksize_t;
+#define	_BLKSIZE_T_DECLARED
 #endif
 
-struct itimerspec {
-  struct timespec  it_interval;  /* Timer period */
-  struct timespec  it_value;     /* Timer expiration */
-};
+#if !defined(__clock_t_defined) && !defined(_CLOCK_T_DECLARED)
+typedef	_CLOCK_T_	clock_t;
+#define	__clock_t_defined
+#define	_CLOCK_T_DECLARED
+#endif
+
+#if !defined(__time_t_defined) && !defined(_TIME_T_DECLARED)
+typedef	_TIME_T_	time_t;
+#define	__time_t_defined
+#define	_TIME_T_DECLARED
+#endif
 
 #ifndef __daddr_t_defined
 typedef	long	daddr_t;
@@ -147,31 +140,27 @@ typedef	char *	caddr_t;
 #define __caddr_t_defined
 #endif
 
-#ifndef __CYGWIN__
-#if defined(__MS_types__) || defined(__rtems__) || \
-    defined(__sparc__) || defined(__SPU__)
-typedef	unsigned long	ino_t;
-#else
-typedef	unsigned short	ino_t;
+#ifndef _FSBLKCNT_T_DECLARED		/* for statvfs() */
+typedef	__fsblkcnt_t	fsblkcnt_t;
+typedef	__fsfilcnt_t	fsfilcnt_t;
+#define	_FSBLKCNT_T_DECLARED
 #endif
-#endif /*__CYGWIN__*/
 
-#ifdef __MS_types__
+#ifndef _ID_T_DECLARED
+typedef	__id_t		id_t;		/* can hold a uid_t or pid_t */
+#define	_ID_T_DECLARED
+#endif
+
+#ifndef _INO_T_DECLARED
+typedef	__ino_t		ino_t;		/* inode number */
+#define	_INO_T_DECLARED
+#endif
+
+#if defined(__i386__) && (defined(GO32) || defined(__MSDOS__))
+typedef	char *		addr_t;
 typedef unsigned long vm_offset_t;
 typedef unsigned long vm_size_t;
-
-#define __BIT_TYPES_DEFINED__
-
-typedef signed char int8_t;
-typedef unsigned char u_int8_t;
-typedef short int16_t;
-typedef unsigned short u_int16_t;
-typedef int int32_t;
-typedef unsigned int u_int32_t;
-typedef long long int64_t;
-typedef unsigned long long u_int64_t;
-typedef int32_t register_t;
-#endif /* __MS_types__ */
+#endif /* __i386__ && (GO32 || __MSDOS__) */
 
 /*
  * All these should be machine specific - right now they are all broken.
@@ -180,121 +169,83 @@ typedef int32_t register_t;
  * how the file was compiled (e.g. -mint16 vs -mint32, etc.).
  */
 
-#ifndef __CYGWIN__	/* which defines these types in it's own types.h. */
-typedef _off_t	off_t;
-typedef __dev_t dev_t;
-typedef __uid_t uid_t;
-typedef __gid_t gid_t;
+#ifndef _OFF_T_DECLARED
+typedef	__off_t		off_t;		/* file offset */
+#define	_OFF_T_DECLARED
+#endif
+#ifndef _DEV_T_DECLARED
+typedef	__dev_t		dev_t;		/* device number or struct cdev */
+#define	_DEV_T_DECLARED
+#endif
+#ifndef _UID_T_DECLARED
+typedef	__uid_t		uid_t;		/* user id */
+#define	_UID_T_DECLARED
+#endif
+#ifndef _GID_T_DECLARED
+typedef	__gid_t		gid_t;		/* group id */
+#define	_GID_T_DECLARED
 #endif
 
-#if defined(__XMK__)
-typedef signed char pid_t;
-#else
-typedef int pid_t;
+#ifndef _PID_T_DECLARED
+typedef	__pid_t		pid_t;		/* process id */
+#define	_PID_T_DECLARED
 #endif
 
-#if defined(__rtems__)
-typedef _mode_t mode_t;
+#ifndef _KEY_T_DECLARED
+typedef	__key_t		key_t;		/* IPC key */
+#define	_KEY_T_DECLARED
 #endif
 
-#ifndef __CYGWIN__
-typedef	long key_t;
-#endif
+#ifndef _SSIZE_T_DECLARED
 typedef _ssize_t ssize_t;
-
-#if !defined(__CYGWIN__) && !defined(__rtems__)
-#ifdef __MS_types__
-typedef	char *	addr_t;
-typedef int mode_t;
-#else
-#if defined (__sparc__) && !defined (__sparc_v9__)
-#ifdef __svr4__
-typedef unsigned long mode_t;
-#else
-typedef unsigned short mode_t;
-#endif
-#else
-typedef unsigned int mode_t _ST_INT32;
-#endif
-#endif /* ! __MS_types__ */
-#endif /*__CYGWIN__*/
-
-typedef unsigned short nlink_t;
-
-/* We don't define fd_set and friends if we are compiling POSIX
-   source, or if we have included (or may include as indicated
-   by __USE_W32_SOCKETS) the W32api winsock[2].h header which
-   defines Windows versions of them.   Note that a program which
-   includes the W32api winsock[2].h header must know what it is doing;
-   it must not call the cygwin32 select function.
-*/
-# if !(defined (_POSIX_SOURCE) || defined (_WINSOCK_H) || defined (_WINSOCKAPI_) || defined (__USE_W32_SOCKETS)) 
-#  define _SYS_TYPES_FD_SET
-#  define	NBBY	8		/* number of bits in a byte */
-/*
- * Select uses bit masks of file descriptors in longs.
- * These macros manipulate such bit fields (the filesystem macros use chars).
- * FD_SETSIZE may be defined by the user, but the default here
- * should be >= NOFILE (param.h).
- */
-#  ifndef	FD_SETSIZE
-#	define	FD_SETSIZE	64
-#  endif
-
-typedef	long	fd_mask;
-#  define	NFDBITS	(sizeof (fd_mask) * NBBY)	/* bits per mask */
-#  ifndef	howmany
-#	define	howmany(x,y)	(((x)+((y)-1))/(y))
-#  endif
-
-/* We use a macro for fd_set so that including Sockets.h afterwards
-   can work.  */
-typedef	struct _types_fd_set {
-	fd_mask	fds_bits[howmany(FD_SETSIZE, NFDBITS)];
-} _types_fd_set;
-
-#define fd_set _types_fd_set
-
-#  define	FD_SET(n, p)	((p)->fds_bits[(n)/NFDBITS] |= (1L << ((n) % NFDBITS)))
-#  define	FD_CLR(n, p)	((p)->fds_bits[(n)/NFDBITS] &= ~(1L << ((n) % NFDBITS)))
-#  define	FD_ISSET(n, p)	((p)->fds_bits[(n)/NFDBITS] & (1L << ((n) % NFDBITS)))
-#  define	FD_ZERO(p)	(__extension__ (void)({ \
-     size_t __i; \
-     char *__tmp = (char *)p; \
-     for (__i = 0; __i < sizeof (*(p)); ++__i) \
-       *__tmp++ = 0; \
-}))
-
-# endif	/* !(defined (_POSIX_SOURCE) || defined (_WINSOCK_H) || defined (_WINSOCKAPI_) || defined (__USE_W32_SOCKETS)) */
-
-#undef __MS_types__
-#undef _ST_INT32
-
-
-#ifndef __clockid_t_defined
-typedef _CLOCKID_T_ clockid_t;
-#define __clockid_t_defined
+#define	_SSIZE_T_DECLARED
 #endif
 
-#ifndef __timer_t_defined
-typedef _TIMER_T_ timer_t;
-#define __timer_t_defined
+#ifndef _MODE_T_DECLARED
+typedef	__mode_t	mode_t;		/* permissions */
+#define	_MODE_T_DECLARED
 #endif
 
-typedef unsigned long useconds_t;
-typedef long suseconds_t;
+#ifndef _NLINK_T_DECLARED
+typedef	__nlink_t	nlink_t;	/* link count */
+#define	_NLINK_T_DECLARED
+#endif
+
+#if !defined(__clockid_t_defined) && !defined(_CLOCKID_T_DECLARED)
+typedef	__clockid_t	clockid_t;
+#define	__clockid_t_defined
+#define	_CLOCKID_T_DECLARED
+#endif
+
+#if !defined(__timer_t_defined) && !defined(_TIMER_T_DECLARED)
+typedef	__timer_t	timer_t;
+#define	__timer_t_defined
+#define	_TIMER_T_DECLARED
+#endif
+
+#ifndef _USECONDS_T_DECLARED
+typedef	__useconds_t	useconds_t;	/* microseconds (unsigned) */
+#define	_USECONDS_T_DECLARED
+#endif
+
+#ifndef _SUSECONDS_T_DECLARED
+typedef	__suseconds_t	suseconds_t;
+#define	_SUSECONDS_T_DECLARED
+#endif
+
+typedef	__int64_t	sbintime_t;
 
 #include <sys/features.h>
 
 
-/* Cygwin will probably never have full posix compliance due to little things
- * like an inability to set the stackaddress. Cygwin is also using void *  
- * pointers rather than structs to ensure maximum binary compatability with
- * previous releases.
- * This means that we don't use the types defined here, but rather in
- * <cygwin/types.h>
+/*
+ * Cygwin is using a complete distinct implementation of pthread objects and
+ * pointers rather than structs.  This means we can't use the types defined
+ * here, but rather in <machine/types.h>.
  */
-#if defined(_POSIX_THREADS) && !defined(__CYGWIN__)
+#if !defined(__CYGWIN__)
+
+#if defined(_POSIX_THREADS)
 
 #include <sys/sched.h>
 
@@ -462,9 +413,10 @@ typedef struct {
 typedef __uint32_t pthread_cond_t;       /* identify a condition variable */
 
 typedef struct {
-  int   is_initialized;
+  int      is_initialized;
+  clock_t  clock;             /* specifiy clock for timeouts */
 #if defined(_POSIX_THREAD_PROCESS_SHARED)
-  int   process_shared;       /* allow this to be shared amongst processes */
+  int      process_shared;    /* allow this to be shared amongst processes */
 #endif
 } pthread_condattr_t;         /* a condition attribute object */
 
@@ -476,10 +428,6 @@ typedef struct {
   int   is_initialized;  /* is this structure initialized? */
   int   init_executed;   /* has the initialization routine been run? */
 } pthread_once_t;       /* dynamic package initialization */
-#else
-#if defined (__CYGWIN__)
-#include <cygwin/types.h>
-#endif
 #endif /* defined(_POSIX_THREADS) */
 
 /* POSIX Barrier Types */
@@ -496,7 +444,6 @@ typedef struct {
 
 /* POSIX Spin Lock Types */
 
-#if !defined (__CYGWIN__)
 #if defined(_POSIX_SPIN_LOCKS)
 typedef __uint32_t pthread_spinlock_t;        /* POSIX Spin Lock Object */
 #endif /* defined(_POSIX_SPIN_LOCKS) */
@@ -512,7 +459,10 @@ typedef struct {
 #endif
 } pthread_rwlockattr_t;
 #endif /* defined(_POSIX_READER_WRITER_LOCKS) */
+
 #endif /* __CYGWIN__ */
+
+#include <machine/types.h>
 
 #endif  /* !__need_inttypes */
 
