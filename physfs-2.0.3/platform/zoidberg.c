@@ -235,7 +235,6 @@ void __PHYSFS_platformEnumerateFiles(const char *dirname,
        EFI_STATUS s = ((_FILE*)dir_fd)->f->Read( ((_FILE*)dir_fd)->f, &FileInfoSize, FileInfo);
        if(s == EFI_SUCCESS) {
             wcstombs(entry_filename,FileInfo->FileName,1024);
-            printf("entry_filename: %s\n",entry_filename);
             if (strcmp(entry_filename, ".") == 0) {
             } else if (strcmp(entry_filename, "..") == 0) {
             } else {

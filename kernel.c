@@ -136,7 +136,10 @@ void dump_vfs(const char* path) {
      rc = PHYSFS_enumerateFiles(path);
      char buf[1024];
      for(i=rc; *i !=NULL; i++) {
-         sprintf(buf,"%s/%s\0",path,*i);
+         sprintf(buf,"%s/%s",path,*i);
+         printf("path is %s\n",path);
+         printf("*i is %s\n",*i);
+         printf("buf is %s\n",buf);
          if(PHYSFS_isDirectory(buf)) {
            printf("dump_vfs %s\n",buf);
            dump_vfs(buf);
