@@ -63,11 +63,7 @@ AM_MAKEFLAGS = \
 
 FLAGS_TO_PASS=$(AM_MAKEFLAGS)
 
-if HAVE_DOC
-DOCDIR = doc
-else
 DOCDIR =
-endif
 
 SUBDIRS = libc libm \
 	$(DOCDIR) . $(EXTRA_DIRS)
@@ -342,10 +338,8 @@ endif
 	else true; fi
 
 # Force makedoc to be built before building info files.
-info-recursive: doc/makedoc
-dvi-recursive: doc/makedoc
-doc/makedoc:
-	cd doc && $(MAKE) all
+info-recursive:
+dvi-recursive:
 
 CONFIG_STATUS_DEPENDENCIES = $(newlib_basedir)/configure.host
 

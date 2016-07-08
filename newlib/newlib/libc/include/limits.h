@@ -16,7 +16,8 @@
 
 /* if do not have #include_next support, then we
    have to define the limits here. */
-# if !defined __GNUC__ || __GNUC__ < 2
+#define limits_h_hack
+#ifdef limits_h_hack
 
 #  ifndef _LIMITS_H
 #   define _LIMITS_H	1

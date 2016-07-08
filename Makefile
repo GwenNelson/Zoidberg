@@ -16,7 +16,7 @@ physfs:
 newlib_libc:
 	mkdir -p newlib/build
 	cd newlib/build; ../configure --target=x86_64-zoidberg
-	make -C newlib/build
+	CFLAGS=-nostdinc make -C newlib/build
 
 BOOTX64.EFI: efilibc/efilibc.a physfs kernel.o
 	x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $@ kernel.o efilibc/efilibc.a physfs-2.0.3/build/libphysfs.a efilibc/efilibc.a -lgcc
