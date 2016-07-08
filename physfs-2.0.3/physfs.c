@@ -638,13 +638,19 @@ static char *calculateUserDir(void)
 
 static int appendDirSep(char **dir)
 {
+    printf("PHYSFS appendDirSep called\n");
     const char *dirsep = PHYSFS_getDirSeparator();
     char *ptr;
+    printf("PHYSFS getDirSeparator\n");
 
-    if (strcmp((*dir + strlen(*dir)) - strlen(dirsep), dirsep) == 0)
+    if (strcmp((*dir + strlen(*dir)) - strlen(dirsep), dirsep) == 0) {
+        printf("PHYSFS appendDirSep returning 1\n");
         return(1);
+    }
 
+    printf("About to realloc %s for %d\n", *dir, strlen(*dir)+strlen(dirsep)+1);
     ptr = (char *) allocator.Realloc(*dir, strlen(*dir) + strlen(dirsep) + 1);
+    printf("Realloc\n");
     if (!ptr)
     {
         allocator.Free(*dir);
@@ -732,22 +738,32 @@ static void setDefaultAllocator(void);
 
 int PHYSFS_init(const char *argv0)
 {
+    printf("PHYSFS_init\n");
     char *ptr;
 
     BAIL_IF_MACRO(initialized, ERR_IS_INITIALIZED, 0);
 
     if (!externalAllocator)
         setDefaultAllocator();
+    printf("PHYSFS setDefaultAllocator\n");
+
 
     if (allocator.Init != NULL)
         BAIL_IF_MACRO(!allocator.Init(), NULL, 0);
+    printf("PHYSFS allocator.Init\n");
+
 
     BAIL_IF_MACRO(!__PHYSFS_platformInit(), NULL, 0);
+
+    printf("PHYSFS platformInit\n");
 
     BAIL_IF_MACRO(!initializeMutexes(), NULL, 0);
 
     baseDir = calculateBaseDir(argv0);
     BAIL_IF_MACRO(baseDir == NULL, NULL, 0);
+
+    printf("PHYSFS calculateBaseDir\n");
+
 
     /* !!! FIXME: only call this if we got this from argv0 (unreliable). */
     ptr = __PHYSFS_platformRealPath(baseDir);
@@ -755,7 +771,11 @@ int PHYSFS_init(const char *argv0)
     BAIL_IF_MACRO(ptr == NULL, NULL, 0);
     baseDir = ptr;
 
+    printf("PHYSFS free baseDir\n");
+
     BAIL_IF_MACRO(!appendDirSep(&baseDir), NULL, 0);
+
+    printf("PHYSFS appendDirSep\n");
 
     userDir = calculateUserDir();
     if ((userDir == NULL) || (!appendDirSep(&userDir)))
@@ -764,6 +784,8 @@ int PHYSFS_init(const char *argv0)
         baseDir = NULL;
         return(0);
     } /* if */
+
+    printf("PHYSFS calculateUserDir\n");
 
     initialized = 1;
 

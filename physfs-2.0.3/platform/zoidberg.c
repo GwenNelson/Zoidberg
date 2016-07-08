@@ -42,7 +42,7 @@ int __PHYSFS_platformExists(const char *fname)
     return retval;
 } /* __PHYSFS_platformExists */
 
-static char *baseDir = NULL;
+static char *baseDir = "/";
 
 // TODO - fix this to actually get it from EFI in platformInit function
 char *__PHYSFS_platformCalcBaseDir(const char *argv0)
