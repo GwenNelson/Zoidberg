@@ -22,8 +22,7 @@
 #include <efi.h>
 #include <efilib.h>
 
-#define IN_FILE_C
-typedef struct _FILE
+typedef struct ZOIDBERG_FILE
 {
        EFI_FILE *f;
        int eof;
@@ -31,7 +30,7 @@ typedef struct _FILE
        int fileno;
        int istty;
        int ttyno;
-} FILE;
+} ZOIDBERG_FILE;
 
 #include <stddef.h>
 #include <stdint.h>
@@ -42,9 +41,13 @@ typedef struct _FILE
 #include <assert.h>
 #include <efilibc.h>
 
+#define zoidberg_stdin   ((ZOIDBERG_FILE *)0)
+#define zoidberg_stdout  ((ZOIDBERG_FILE *)1)
+#define zoidberg_stderr  ((ZOIDBERG_FILE *)2)
+
 /* fileno -> FILE * mappings */
 #define MAX_FILENO		1024
-static FILE* fileno_map[MAX_FILENO] = { stdin, stdout, stderr };
+static ZOIDBERG_FILE* fileno_map[MAX_FILENO] = { zoidberg_stdin, zoidberg_stdout, zoidberg_stderr };
 static int next_fileno = 3;
 
 size_t console_fread(void *ptr, size_t size, size_t nmemb, void *data);
@@ -90,7 +93,7 @@ void conv_backslashes(CHAR16 *s)
 	}
 }
 
-int mkdir(const char *pathname, int mode)
+int zoidberg_mkdir(const char *pathname, int mode)
 {
         mode = mode+1; // make the compiler shutup about unused param
         /* Attempt to open the file */
@@ -124,7 +127,7 @@ int mkdir(const char *pathname, int mode)
         return 0;
 }
 
-FILE *fopen(const char *path, const char *mode)
+ZOIDBERG_FILE *zoidberg_fopen(const char *path, const char *mode)
 {
 	if(fopen_root == NULL)
 	{
@@ -183,9 +186,9 @@ FILE *fopen(const char *path, const char *mode)
 		errno = EFAULT;
 		return NULL;
 	}
-	FILE *ret = (FILE *)malloc(sizeof(FILE));
+	ZOIDBERG_FILE *ret = (ZOIDBERG_FILE *)malloc(sizeof(FILE));
 	assert(ret);
-	memset(ret, 0, sizeof(FILE));
+	memset(ret, 0, sizeof(ZOIDBERG_FILE));
 	ret->f = f;
 	ret->fileno = next_fileno++;
 
@@ -193,11 +196,11 @@ FILE *fopen(const char *path, const char *mode)
 	return ret;
 }
 
-size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
+size_t zoidberg_fread(void *ptr, size_t size, size_t nmemb, ZOIDBERG_FILE *stream)
 {
-	if(stream == stdin)
+	if(stream == zoidberg_stdin)
 		return stdin_fread(ptr, size, nmemb, stdin_data);
-	else if((stream == stdout) || (stream == stderr))
+	else if((stream == zoidberg_stdout) || (stream == zoidberg_stderr))
 		return 0;
 
 	if((stream == NULL) || (ptr == NULL))
@@ -218,13 +221,13 @@ size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 	return buf_size / size;
 }
 
-size_t fwrite(void *ptr, size_t size, size_t nmemb, FILE *stream)
+size_t zoidberg_fwrite(void *ptr, size_t size, size_t nmemb, ZOIDBERG_FILE *stream)
 {
-	if(stream == stdin)
+	if(stream == zoidberg_stdin)
 		return 0;
-	else if(stream == stdout)
+	else if(stream == zoidberg_stdout)
 		return stdout_fwrite(ptr, size, nmemb, stdout_data);
-	else if(stream == stderr)
+	else if(stream == zoidberg_stderr)
 		return stderr_fwrite(ptr, size, nmemb, stderr_data);
 
 	if((stream == NULL) || (ptr == NULL))
@@ -245,24 +248,24 @@ size_t fwrite(void *ptr, size_t size, size_t nmemb, FILE *stream)
 	return buf_size / size;
 }
 
-int fgetc(FILE *stream)
+int zoidberg_fgetc(ZOIDBERG_FILE *stream)
 {
 	char ret;
-	if(fread(&ret, 1, 1, stream) != 1)
+	if(zoidberg_fread(&ret, 1, 1, stream) != 1)
 		return EOF;
 	return (int)ret;
 }
 
-int fputc(int c, FILE *stream)
+int zoidberg_fputc(int c, ZOIDBERG_FILE *stream)
 {
-	if(fwrite(&c, 1, 1, stream) != 1)
+	if(zoidberg_fwrite(&c, 1, 1, stream) != 1)
 		return EOF;
 	return c;
 }
 
-int fclose(FILE *stream)
+int zoidberg_fclose(ZOIDBERG_FILE *stream)
 {
-	if((stream == NULL) || (stream == stdin) || (stream == stdout) || (stream == stderr))
+	if((stream == NULL) || (stream == zoidberg_stdin) || (stream == zoidberg_stdout) || (stream == zoidberg_stderr))
 	{
 		errno = EBADF;
 		return EOF;
@@ -275,38 +278,38 @@ int fclose(FILE *stream)
 	return 0;
 }
 
-void clearerr(FILE *stream)
+void zoidberg_clearerr(ZOIDBERG_FILE *stream)
 {
-	if((stream == NULL) || (stream == stdin) || (stream == stdout) || (stream == stderr))
+	if((stream == NULL) || (stream == zoidberg_stdin) || (stream == zoidberg_stdout) || (stream == zoidberg_stderr))
 		return;
 	stream->error = 0;
 	stream->eof = 0;
 }
 
-int feof(FILE *stream)
+int zoidberg_feof(ZOIDBERG_FILE *stream)
 {
-	if((stream == NULL) || (stream == stdin))
+	if((stream == NULL) || (stream == zoidberg_stdin))
 		return 0;
-	if((stream == stdout) || (stream == stderr))
+	if((stream == zoidberg_stdout) || (stream == zoidberg_stderr))
 		return 1;
 	return stream->eof;
 }
 
-int ferror(FILE *stream)
+int zoidberg_ferror(ZOIDBERG_FILE *stream)
 {
 	if(stream == NULL)
 		return 1;
-	if((stream == stdin) || (stream == stdout) || (stream == stderr))
+	if((stream == zoidberg_stdin) || (stream == zoidberg_stdout) || (stream == zoidberg_stderr))
 		return 0;
 	return stream->error;
 }
 
-int fileno(FILE *stream)
+int zoidberg_fileno(ZOIDBERG_FILE *stream)
 {
 	return stream->fileno;
 }
 
-int isatty(int fd)
+int zoidberg_isatty(int fd)
 {
 	if((fd < 0) || (fd > MAX_FILENO))
 	{
@@ -333,9 +336,9 @@ int isatty(int fd)
 	}
 }
 
-int fseek(FILE *stream, long pos, int whence)
+int zoidberg_fseek(ZOIDBERG_FILE *stream, long pos, int whence)
 {
-	if((stream == stdin) || (stream == stdout) || (stream == stderr) || (stream == NULL))
+	if((stream == zoidberg_stdin) || (stream == zoidberg_stdout) || (stream == zoidberg_stderr) || (stream == NULL))
 	{
 		errno = EBADF;
 		return -1;
@@ -381,15 +384,15 @@ int fseek(FILE *stream, long pos, int whence)
 	return 0;
 }
 
-void rewind(FILE *stream)
+void zoidberg_rewind(ZOIDBERG_FILE *stream)
 {
-	if(fseek(stream, 0, SEEK_SET) == 0)
+	if(zoidberg_fseek(stream, 0, SEEK_SET) == 0)
 		stream->error = 0;
 }
 
-long ftell(FILE *stream)
+long zoidberg_ftell(ZOIDBERG_FILE *stream)
 {
-	if((stream == stdin) || (stream == stdout) || (stream == stderr) || (stream == NULL))
+	if((stream == zoidberg_stdin) || (stream == zoidberg_stdout) || (stream == zoidberg_stderr) || (stream == NULL))
 	{
 		errno = EBADF;
 		return -1;
@@ -405,9 +408,9 @@ long ftell(FILE *stream)
 	return (long)pos;
 }
 
-int fgetpos(FILE *stream, fpos_t *pos)
+int zoidberg_fgetpos(ZOIDBERG_FILE *stream, fpos_t *pos)
 {
-	long p = ftell(stream);
+	long p = zoidberg_ftell(stream);
 	if(p == -1)
 		return -1;
 	
@@ -415,20 +418,20 @@ int fgetpos(FILE *stream, fpos_t *pos)
 	return 0;
 }
 
-int fsetpos(FILE *stream, fpos_t *pos)
+int zoidberg_fsetpos(ZOIDBERG_FILE *stream, fpos_t *pos)
 {
-	return fseek(stream, *pos, SEEK_SET);
+	return zoidberg_fseek(stream, *pos, SEEK_SET);
 }
 
-int fflush(FILE *stream)
+int zoidberg_fflush(ZOIDBERG_FILE *stream)
 {
-	if((stream == stdin) || (stream == NULL))
+	if((stream == zoidberg_stdin) || (stream == NULL))
 	{
 		errno = EBADF;
 		return EOF;
 	}
 
-	if((stream == stderr) || (stream == stdout))
+	if((stream == zoidberg_stderr) || (stream == zoidberg_stdout))
 		return 0;
 
 	EFI_STATUS s = stream->f->Flush(stream->f);
@@ -442,7 +445,7 @@ int fflush(FILE *stream)
 	return 0;
 }
 
-int remove(const char *pathname)
+int zoidberg_remove(const char *pathname)
 {
 	if(pathname == NULL)
 	{
@@ -450,7 +453,7 @@ int remove(const char *pathname)
 		return -1;
 	}
 
-	FILE *f = fopen(pathname, "r");
+	ZOIDBERG_FILE *f = zoidberg_fopen(pathname, "r");
 	if(f == NULL)
 		return -1;
 
@@ -469,7 +472,7 @@ int remove(const char *pathname)
 	return 0;
 }
 
-int f_is_dir(FILE *stream)
+int f_is_dir(ZOIDBERG_FILE *stream)
 {
         UINTN buf_size = 0;
         EFI_STATUS s = stream->f->GetInfo(stream->f, &GenericFileInfo, &buf_size, NULL);
@@ -609,7 +612,7 @@ efi_time(EFI_TIME *ETime)
     return UTime;
 }
 
-time_t f_mod_time(FILE* stream)
+time_t f_mod_time(ZOIDBERG_FILE* stream)
 {
  UINTN buf_size = 0;
         EFI_STATUS s = stream->f->GetInfo(stream->f, &GenericFileInfo, &buf_size, NULL);
@@ -638,7 +641,7 @@ time_t f_mod_time(FILE* stream)
 
 
 #ifndef POSIXLY_CORRECT
-long fsize(FILE *stream)
+long zoidberg_fsize(ZOIDBERG_FILE *stream)
 {
 	UINTN buf_size = 0;
 	EFI_STATUS s = stream->f->GetInfo(stream->f, &GenericFileInfo, &buf_size, NULL);
