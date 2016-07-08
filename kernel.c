@@ -164,7 +164,6 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     BS->HandleProtocol(ImageHandle, &LoadedImageProtocol, (void**)&li);
     printf("Kernel loaded at: %#llx\n", (uint64_t)li->ImageBase);
     printf("Kernel entry point (efi_main) located at: %#11x\n", (uint64_t)efi_main);
-
     init_ram();
 
     printf("Disabling UEFI Watchdog\n");

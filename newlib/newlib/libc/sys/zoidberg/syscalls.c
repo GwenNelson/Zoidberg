@@ -86,5 +86,5 @@ int wait(int *status) {
 }
 int write(int file, char *ptr, int len) {
     ZOIDBERG_FILE* fd =zoidberg_fromfd(file);
-    return zoidberg_fwrite(ptr,len,1,fd);
+    return zoidberg_fwrite(ptr,1,len,fd);
 }
