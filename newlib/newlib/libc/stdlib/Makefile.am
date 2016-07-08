@@ -20,7 +20,6 @@ GENERAL_SOURCES = \
 	atoff.c		\
 	atoi.c  	\
 	atol.c		\
-	calloc.c	\
 	div.c  		\
 	dtoa.c 		\
 	dtoastub.c 	\
@@ -36,7 +35,6 @@ GENERAL_SOURCES = \
 	labs.c 		\
 	ldiv.c  	\
 	ldtoa.c		\
-	malloc.c  	\
 	mblen.c		\
 	mblen_r.c	\
 	mbstowcs.c	\
@@ -51,7 +49,6 @@ GENERAL_SOURCES = \
 	rand.c		\
 	rand_r.c	\
 	random.c	\
-	realloc.c	\
 	reallocf.c	\
 	sb_charsets.c	\
 	strtod.c	\
