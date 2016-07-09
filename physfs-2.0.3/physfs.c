@@ -1507,6 +1507,7 @@ static int locateInStringList(const char *str,
 
 static void enumFilesCallback(void *data, const char *origdir, const char *str)
 {
+    printf("enumFilesCallback for %s with str=%s\n",origdir,str);
     PHYSFS_uint32 pos;
     void *ptr;
     char *newstr;
@@ -1517,21 +1518,34 @@ static void enumFilesCallback(void *data, const char *origdir, const char *str)
      *  alphabetically...
      */
     pos = pecd->size;
-    if (locateInStringList(str, pecd->list, &pos))
+    if (locateInStringList(str, pecd->list, &pos)) {
         return;  /* already in the list. */
+    }
+    
+    printf("enumFilesCallback: about to do Realloc\n");
 
+    printf("old ptr: %s, old pecd->list %s\n",(char*)ptr,(char*)(pecd->list));
+    printf("%d bytes needed\n",pecd->size);
     ptr = allocator.Realloc(pecd->list, (pecd->size + 2) * sizeof (char *));
+    printf("new ptr: %s\n",ptr);
+
     newstr = (char *) allocator.Malloc(strlen(str) + 1);
-    if (ptr != NULL)
+    printf("done Realloc\n");
+    if (ptr != NULL) {
+        printf("About to access pecd->list\n");
         pecd->list = (char **) ptr;
+    }
+    printf("Value of ptr: %s\n",(char*)ptr);
 
     if ((ptr == NULL) || (newstr == NULL))
         return;  /* better luck next time. */
 
+    printf("About to do strcpy\n");
     strcpy(newstr, str);
 
     if (pos != pecd->size)
     {
+        printf("About to do memmove\n");
         memmove(&pecd->list[pos+1], &pecd->list[pos],
                  sizeof (char *) * ((pecd->size) - pos));
     } /* if */
@@ -1574,6 +1588,7 @@ static void enumerateFromMountPoint(DirHandle *i, const char *arcfname,
     end = strchr(ptr, '/');
     assert(end);  /* should always find a terminating '/'. */
     *end = '\0';
+    printf("About to callback\n");
     callback(data, _fname, ptr);
     __PHYSFS_smallFree(mountPoint);
 } /* enumerateFromMountPoint */
@@ -1584,6 +1599,7 @@ void PHYSFS_enumerateFilesCallback(const char *_fname,
                                    PHYSFS_EnumFilesCallback callback,
                                    void *data)
 {
+    printf("enumerate files callback for %s\n",_fname);
     size_t len;
     char *fname;
 
@@ -1604,11 +1620,13 @@ void PHYSFS_enumerateFilesCallback(const char *_fname,
         for (i = searchPath; i != NULL; i = i->next)
         {
             char *arcfname = fname;
-            if (partOfMountPoint(i, arcfname))
+            if (partOfMountPoint(i, arcfname)) {
+                printf("trying from mount point\n");
                 enumerateFromMountPoint(i, arcfname, callback, _fname, data);
 
-            else if (verifyPath(i, &arcfname, 0))
+            } else if (verifyPath(i, &arcfname, 0))
             {
+                printf("trying funcs->enumerateFiles\n");
                 i->funcs->enumerateFiles(i->opaque, arcfname, noSyms,
                                          callback, _fname, data);
             } /* else if */

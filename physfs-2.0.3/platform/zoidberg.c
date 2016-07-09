@@ -43,6 +43,7 @@ int f_is_dir(ZOIDBERG_FILE *stream);
 
 int __PHYSFS_platformExists(const char *fname)
 {
+    printf("zoidberg.c: platformExists\n");
     FILE* fd = fopen(fname,"r");
     int retval=0;
     if(fd==NULL) {

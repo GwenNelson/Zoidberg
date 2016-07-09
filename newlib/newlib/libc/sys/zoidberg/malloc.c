@@ -25,18 +25,21 @@
 #include <efi.h>
 #include <efilib.h>
 
+extern int gStartupFreePages;
+
 void *malloc(size_t size)
 {
 	void *buf;
 	EFI_STATUS s = BS->AllocatePool(EfiLoaderCode, (UINTN)(size + sizeof(size_t)), &buf);
 	if(EFI_ERROR(s))
 	{
-		fprintf(stderr, "malloc(%d) failed: %d\n", size, s);
+		fprintf(stderr, "malloc(%i) failed: %d\n", size, s);
 		return NULL;
 	}
 	else
 	{
 		//fprintf(stderr, "malloc(%d) succeeded: returning %x\n", size, buf);
+		gStartupFreePages -= (size/EFI_PAGE_SIZE);
 		*(size_t *)buf = size;
 		return (void *)((uintptr_t)buf + sizeof(size_t));
 	}
@@ -69,15 +72,18 @@ void *realloc(void *ptr, size_t size)
 	if(size <= cur_buf_size)
 		return ptr;
 
+	gStartupFreePages -= cur_buf_size/EFI_PAGE_SIZE;
+
 	/* Else, allocate a new buffer and copy the data there */
 	void *buf;
-	EFI_STATUS s = BS->AllocatePool(EfiLoaderData, (UINTN)size + sizeof(size_t), &buf);
-	if(EFI_ERROR(s))
-		return NULL;
+	buf = malloc(size);
+	if(buf==NULL) return NULL;
+	printf("Direct malloc() worked!\n");
 
 	*(size_t *)buf = size;
 	memcpy((void *)((uintptr_t)buf + sizeof(size_t)), ptr, cur_buf_size);
 	free(ptr);
+	gStartupFreePages += size/EFI_PAGE_SIZE;
 	return (void *)((uintptr_t)buf + sizeof(size_t));
 }
 

@@ -180,6 +180,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
     PHYSFS_init(NULL);
 
+
     printf("Mounting EFI filesystem\n");   
     int retval=0;
     retval = PHYSFS_mount("/","/efi",0);
