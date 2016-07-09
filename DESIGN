@@ -53,8 +53,9 @@ Startup:
    EFI boilerplate (setup ST, BS, RT etc)
    use statically allocated kmsg buffer
    dump version info and kernel load address etc
-   setup heap and dump memory info - allocate any temporary buffers directly via UEFI protocol
-   allocate dynamic kmsg buffer
+   setup heap and dump memory info - allocate any temporary buffers directly via UEFI protocol using EfiLoaderData pool
+     main heap goes into conventional memory
+   allocate dynamic kmsg buffer in main heap
    copy contents of static kmsg buffer into new dynamic kmsg buffer
    disable UEFI watchdog
    mount /efi and /dev
@@ -66,13 +67,9 @@ Startup:
    setup scheduler timer to start multitasking
    run idle loop forever (or rather, until shutdown)
       alternatively, use permanent loop and no timer (i.e run the scheduler in the while(1) loop in kmain.c)
+   scheduler (or main loop)
+     get list of runnable processes
+     for each process, run a single iteration of the VM (perhaps modify later to give more iterations to higher priority processes?)
 
 
-Startup:
-   Setup all relevant UEFI protocols
-   Setup networking
-   Init VFS layer
-   Init first VM
-   Load init process into first VM
-   init process sets up screen for graphical shit
 
