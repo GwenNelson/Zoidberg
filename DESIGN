@@ -13,6 +13,61 @@ Process model
   Fork-exec style
   Basically posix-y as much as possible
 
+new VFS design:
+    node tree
+     each node contains function pointers to do primitive operations (open, read, write, delete etc)
+     directory nodes contain a function pointer to return a linked list of child nodes
+     directory nodes also contain a function pointer for retrieving a single child node
+     node has arbitary data (for use by FS driver)
+
+mounting filesystems:
+1 - /    root_node created by kernel
+2 - /efi efi_node created by mounter
+3 - efi_node->data set to EFI root volume
+4 - efi_node function pointers setup by EFI driver
+
+VFS layout:
+ /            VFS root node
+ /efi         mountpoint for EFI partition we booted from
+ /dev         mountpoint for devfs-like filesystem
+ /dev/kmsg    readonly, dmesg style dump of kernel output
+
+process model:
+ pid 0 - kernel task
+     not a real process, but a struct is still present inside kernel
+ pid 1 - init
+     forked from pid 0
+     first userland process
+
+source files:
+ k_main.c      - kernel entry point
+ k_vfs.c       - VFS API
+ k_syscalls.c  - syscall tables
+ k_proc.c      - process/VM API
+ vm/pawn.c     - implementation of pawn VMs
+ vm/whatever.c - implementation of whatever other VMs
+ fs/uefi.c     - FS driver for UEFI
+ fs/devfs.c    - FS driver for devfs
+
+Startup:
+   EFI boilerplate (setup ST, BS, RT etc)
+   use statically allocated kmsg buffer
+   dump version info and kernel load address etc
+   setup heap and dump memory info - allocate any temporary buffers directly via UEFI protocol
+   allocate dynamic kmsg buffer
+   copy contents of static kmsg buffer into new dynamic kmsg buffer
+   disable UEFI watchdog
+   mount /efi and /dev
+   dump VFS tree
+   create process table (uthash?)
+   create PID 0 structure, permanently idle
+   "fork" PID 0 into PID1 by copying structure
+   initialize VM for PID1 and set to runnable state
+   setup scheduler timer to start multitasking
+   run idle loop forever (or rather, until shutdown)
+      alternatively, use permanent loop and no timer (i.e run the scheduler in the while(1) loop in kmain.c)
+
+
 Startup:
    Setup all relevant UEFI protocols
    Setup networking
