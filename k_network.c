@@ -95,7 +95,19 @@ void configure_net_dhcp() {
      
 
      kprintf("k_network:configure_net_dhcp() - Transmitting request\n");
-     EFI_STATUS send_s = simple_net->Transmit(simple_net,0,pack_size+(sizeof(struct iphdr))+(sizeof(struct udphdr)),buf,NULL,&anywhere,NULL);
+     UINTN tx_size=pack_size+(sizeof(struct iphdr))+(sizeof(struct udphdr));
+     UINT16 ether_type = 0x8000;
+//     EFI_STATUS send_s = simple_net->Transmit(simple_net,0,pack_size+(sizeof(struct iphdr))+(sizeof(struct udphdr)),buf,NULL,NULL,NULL);
+     EFI_STATUS send_s = simple_net->Transmit(simple_net,simple_net->Mode->MediaHeaderSize,tx_size,buf,NULL,&anywhere,&ether_type);
+
+     kprintf("k_network:configure_net_dhcp() - Waiting for transmission\n");
+     void* tx_buf=NULL;
+     while(tx_buf==NULL && (send_s==0)) {
+       tx_buf=NULL;
+       send_s = simple_net->GetStatus(simple_net,0,&tx_buf);
+       if(send_s != 0) kprintf("!\n");
+     }
+     kprintf("k_network:configure_net_dhcp() - Transmitted, tx_buf at  %#llx \n",tx_buf);
 }
 
 
@@ -129,6 +141,18 @@ void dump_net_status() {
         kprintf("%x:",m->CurrentAddress.Addr[i]);
      }
      kprintf("\n");
+
+     EFI_NETWORK_STATISTICS *stats;
+     stats = (void*)malloc(sizeof(EFI_NETWORK_STATISTICS));
+     UINTN stats_size=0;
+     simple_net->Statistics(simple_net,FALSE,&stats_size,stats);
+     free(stats);
+     stats = (void*)malloc(stats_size);
+     simple_net->Statistics(simple_net,FALSE,&stats_size,stats);
+
+     kprintf("Transmitted %d bytes\n",stats->TxTotalBytes);
+
+     free(stats);
 }
 
 void init_net() {
@@ -200,7 +224,7 @@ void init_net() {
      }
 
      kprintf("k_network: init_net() - init network interface\n");
-     EFI_STATUS init_stat = simple_net->Initialize(simple_net,0,0);
+     EFI_STATUS init_stat = simple_net->Initialize(simple_net,4096,4096);
 
      if(init_stat==0) {
        kprintf("k_network: init_net() - network interface init ok\n");

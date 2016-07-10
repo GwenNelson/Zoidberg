@@ -46,4 +46,4 @@ boot.iso: boot.img
 	xorriso -as mkisofs -R -f -e boot.img -no-emul-boot -o boot.iso iso
 
 run-qemu:
-	qemu-system-x86_64 -bios ${OVMFPATH}/OVMF.fd -usb -usbdevice disk::boot.img -netdev user,id=mynet0,net=192.168.76.0/24,dhcpstart=192.168.76.9 -device e1000,romfile=${ROMPATH},netdev=mynet0,mac=DE:AD:BE:EF:FC:E6 -nographic -serial stdio -m 1G -net dump,file=./dump.pcap
+	qemu-system-x86_64 -bios ${OVMFPATH}/OVMF.fd -usb -usbdevice disk::boot.img -netdev user,id=mynet0,net=192.168.76.0/24,dhcpstart=192.168.76.9 -device e1000,netdev=mynet0,mac=DE:AD:BE:EF:FC:E6 -nographic -serial stdio -m 1G -net dump,file=./dump.pcap
