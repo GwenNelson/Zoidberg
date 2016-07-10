@@ -26,7 +26,7 @@ OBJS = console.o \
        strrchr.o \
        strstr.o \
        memmove.o \
-stdio/asprintf.o \
+#stdio/asprintf.o \
 stdio/dprintf.o \
 stdio/fprintf.o \
 stdio/fwprintf.o \

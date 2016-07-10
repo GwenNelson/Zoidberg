@@ -6,9 +6,10 @@
 
 extern EFI_BOOT_SERVICES *BS;
 
+EFI_SIMPLE_NETWORK *simple_net = NULL;
+
 void init_net() {
      EFI_NETWORK_INTERFACE_IDENTIFIER_INTERFACE *nii;
-     EFI_SIMPLE_NETWORK *simple_net=NULL;   
      EFI_HANDLE handles[100];
      int handles_count;
 
@@ -40,5 +41,21 @@ void init_net() {
         kprintf("k_network: init_net() - no networking support will be available\n");
         return;
      }
+     
+     kprintf("k_network: init_net() - starting networking\n");
+     
+     EFI_STATUS net_start_status = simple_net->Start(simple_net);
+     if(net_start_status == 0) {
+        kprintf("k_network: init_net() - started networking\n");
+     } else {
+        kprintf("k_network: init_net() - failed to start networking\n");
+        kprintf("k_network: init_net() - no networking support will be available\n");
+        return;
+     }
+     
+     kprintf("k_network: init_net() - probing interfaces\n");
+     handles_count = 0;
+     memset((void*)handles,0,100 * sizeof(EFI_HANDLE));
+     
 }
 
