@@ -43,6 +43,7 @@ source files:
  k_main.c      - kernel entry point
  kmsg.c        - kmsg implementation
  k_heap.c      - kernel heap stuff
+ k_network.c   - kernel networking driver
  k_vfs.c       - VFS API
  k_syscalls.c  - syscall tables
  k_proc.c      - process/VM API
@@ -60,6 +61,7 @@ Startup:
    allocate dynamic kmsg buffer in main heap
    copy contents of static kmsg buffer into new dynamic kmsg buffer
    disable UEFI watchdog
+   setup networking
    mount /efi and /dev
    dump VFS tree
    create process table (uthash?)
