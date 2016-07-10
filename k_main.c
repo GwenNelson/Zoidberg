@@ -4,6 +4,7 @@
 #include "efilibc.h"
 
 #include "kmsg.h"
+#include "k_heap.h"
 #include "zoidberg_version.h"
 
 EFI_SYSTEM_TABLE *ST;
@@ -29,6 +30,8 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     kprintf("Zoidberg kernel, build %s booting\n", build_no);
     kprintf("Kernel loaded at: %#llx\n", (uint64_t)li->ImageBase);
     kprintf("Kernel entry point (efi_main) located at: %#11x\n", (uint64_t)efi_main);
+
+    init_mem();
 
     while(1) {
     } 

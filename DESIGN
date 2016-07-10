@@ -41,6 +41,8 @@ process model:
 
 source files:
  k_main.c      - kernel entry point
+ kmsg.c        - kmsg implementation
+ k_heap.c      - kernel heap stuff
  k_vfs.c       - VFS API
  k_syscalls.c  - syscall tables
  k_proc.c      - process/VM API
@@ -53,7 +55,7 @@ Startup:
    EFI boilerplate (setup ST, BS, RT etc)
    use statically allocated kmsg buffer
    dump version info and kernel load address etc
-   setup heap and dump memory info - allocate any temporary buffers directly via UEFI protocol using EfiLoaderData pool
+   setup heap and dump memory info - allocate any temporary buffers directly via UEFI protocol using EfiBootServicesData pool
      main heap goes into conventional memory
    allocate dynamic kmsg buffer in main heap
    copy contents of static kmsg buffer into new dynamic kmsg buffer
