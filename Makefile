@@ -1,5 +1,5 @@
 OVMFPATH=/home/gareth/edk2/Build/OvmfX64/DEBUG_GCC46/FV
-INCLUDES=-Inewlib/newlib/libc/includec -Iefilibc/efi/inc -Iefilibc/efi/inc/protocol -Iefilibc/efi/inc/x86_64 
+INCLUDES=-Inewlib/newlib/libc/include -Iefilibc/efi/inc -Iefilibc/efi/inc/protocol -Iefilibc/efi/inc/x86_64 
 ROMPATH=/usr/lib/ipxe/qemu/efi-e1000.rom
 
 all: BOOTX64.EFI boot.img
@@ -46,4 +46,4 @@ boot.iso: boot.img
 	xorriso -as mkisofs -R -f -e boot.img -no-emul-boot -o boot.iso iso
 
 run-qemu:
-	qemu-system-x86_64 -bios ${OVMFPATH}/OVMF.fd -usb -usbdevice disk::boot.img -netdev user,id=mynet0,net=192.168.76.0/24,dhcpstart=192.168.76.9 -device e1000,romfile=${ROMPATH},netdev=mynet0,mac=DE:AD:BE:EF:FC:E6 -nographic -serial stdio -m 1G
+	qemu-system-x86_64 -bios ${OVMFPATH}/OVMF.fd -usb -usbdevice disk::boot.img -netdev user,id=mynet0,net=192.168.76.0/24,dhcpstart=192.168.76.9 -device e1000,romfile=${ROMPATH},netdev=mynet0,mac=DE:AD:BE:EF:FC:E6 -nographic -serial stdio -m 1G -net dump,file=./dump.pcap
