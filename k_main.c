@@ -55,6 +55,8 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     init_net();
 
 //    dump_net_status();
+//    configure_net_dhcp();
+
     while(1) {
     } 
 }

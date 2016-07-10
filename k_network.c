@@ -7,6 +7,33 @@
 extern EFI_BOOT_SERVICES *BS;
 
 EFI_SIMPLE_NETWORK *simple_net = NULL;
+EFI_PXE_BASE_CODE  *pxe_base   = NULL;
+
+void configure_net_dhcp() {
+     if(pxe_base==NULL) {
+        kprintf("k_network: configure_net_dhcp() - can not continue\n");
+        return;
+     }
+     EFI_STATUS s;
+
+     kprintf("k_network: configure_net_dhcp() - attempting DHCP configuration\n");
+     s = pxe_base->Start(pxe_base,0);
+     if(s == 0) {
+     } else {
+       kprintf("k_network: configure_net_dhcp() - could not start\n");
+       return;
+     }
+    
+     kprintf("k_network: configure_net_dhcp() - sending DHCP request\n"); 
+     s = pxe_base->Dhcp(pxe_base,0);
+     if(s == 0) {
+       kprintf("k_network: configure_net_dhcp() - got DHCP reply!\n");
+     } else if (s==EFI_TIMEOUT) {
+       kprintf("k_network: configure_net_dhcp() - DHCP request timed out, manual configuration required\n");
+     } else {
+       kprintf("k_network: configure_net_dhcp() - could not send DHCP request\n");
+     }
+}
 
 void dump_net_status() {
      EFI_SIMPLE_NETWORK_MODE *m = simple_net->Mode;
@@ -44,7 +71,7 @@ void init_net() {
      EFI_HANDLE handles[100];
      int handles_count;
 
-     UINTN buf_size = 100 * sizeof(EFI_HANDLE);
+     UINTN buf_size = sizeof(EFI_HANDLE);
 
      kprintf("k_network: init_net() - probing firmware for networking support\n");
      BS->LocateHandle(ByProtocol, &SimpleNetworkProtocol,NULL,&buf_size, handles);
@@ -85,8 +112,6 @@ void init_net() {
      }
      
      kprintf("k_network: init_net() - probing interfaces\n");
-     handles_count = 0;
-     memset((void*)handles,0,100 * sizeof(EFI_HANDLE));
      BS->LocateHandle(ByProtocol, &SimpleNetworkProtocol,NULL,&buf_size, handles);
      handles_count = buf_size == 0 ? 0 : buf_size / sizeof(EFI_HANDLE); 
      if(handles_count==0) {
@@ -120,6 +145,32 @@ void init_net() {
        return;
      }
 
+     kprintf("k_network: init_net() - grabbing PXE base code\n");
+
+     BS->LocateHandle(ByProtocol, &PxeBaseCodeProtocol,NULL,&buf_size, handles);
+     handles_count = buf_size == 0 ? 0 : buf_size / sizeof(EFI_HANDLE); 
+     if(handles_count==0) {
+        kprintf("k_network: init_net() - could not get PXE base code\n");
+        kprintf("DHCP support will not be available\n");
+     }
+     for(i=0; i < handles_count; i++) {
+         EFI_STATUS pxe_stat = BS->HandleProtocol(handles[i], &PxeBaseCodeProtocol, (void**)&pxe_base);
+         if(pxe_stat == 0) {
+            kprintf("k_network: init_net() - setup PXE base code on handle number %d\n",i);
+         } else {
+            kprintf("k_network: init_net() - failed to setup PXE base code on handle number %d\n",i);
+         }
+     }
+
+     if(pxe_base==NULL) {
+        kprintf("k_network: init_net() - no PXE base code!\n");
+        kprintf("k_network: init_net() - DHCP support will not be available\n");
+     }
+
+
+
+
+     configure_net_dhcp();
      dump_net_status();
 }
 
