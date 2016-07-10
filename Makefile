@@ -1,10 +1,16 @@
 OVMFPATH=/home/gareth/edk2/Build/OvmfX64/DEBUG_GCC46/FV
-INCLUDES=-Iefilibc/inc -Iefilibc/efi/inc -Iefilibc/efi/inc/protocol -Iefilibc/efi/inc/x86_64 -Iphysfs-2.0.3
+INCLUDES=-Inewlib/newlib/libc/includec -Iefilibc/efi/inc -Iefilibc/efi/inc/protocol -Iefilibc/efi/inc/x86_64 -Iphysfs-2.0.3
 ROMPATH=/usr/lib/ipxe/qemu/efi-e1000.rom
 
 all: BOOTX64.EFI boot.img
 
-kernel.o: kernel.c
+genversion:
+	./genversion.sh
+
+k_main.o: k_main.c genversion
+	x86_64-w64-mingw32-gcc -ffreestanding ${INCLUDES} -c $< -o $@
+
+kmsg.o: kmsg.c
 	x86_64-w64-mingw32-gcc -ffreestanding ${INCLUDES} -c $< -o $@
 
 efilibc/efilibc.a:
@@ -18,8 +24,8 @@ newlib/build/x86_64-zoidberg/newlib/libc.a:
 	cd newlib/build; ../configure --target=x86_64-zoidberg
 	CFLAGS=-nostdinc make -C newlib/build
 
-BOOTX64.EFI:newlib/build/x86_64-zoidberg/newlib/libc.a physfs kernel.o
-	x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $@ kernel.o newlib/build/x86_64-zoidberg/newlib/libc.a physfs-2.0.3/build/libphysfs.a newlib/build/x86_64-zoidberg/newlib/libc.a -lgcc
+BOOTX64.EFI:newlib/build/x86_64-zoidberg/newlib/libc.a physfs k_main.o kmsg.o
+	x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $@ kmsg.o k_main.o newlib/build/x86_64-zoidberg/newlib/libc.a physfs-2.0.3/build/libphysfs.a newlib/build/x86_64-zoidberg/newlib/libc.a -lgcc
 
 boot.img: BOOTX64.EFI
 	dd if=/dev/zero of=$@ bs=1M count=33

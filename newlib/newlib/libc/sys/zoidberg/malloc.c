@@ -25,7 +25,6 @@
 #include <efi.h>
 #include <efilib.h>
 
-extern int gStartupFreePages;
 
 void *malloc(size_t size)
 {
@@ -39,7 +38,6 @@ void *malloc(size_t size)
 	else
 	{
 		//fprintf(stderr, "malloc(%d) succeeded: returning %x\n", size, buf);
-		gStartupFreePages -= (size/EFI_PAGE_SIZE);
 		*(size_t *)buf = size;
 		return (void *)((uintptr_t)buf + sizeof(size_t));
 	}
@@ -72,7 +70,6 @@ void *realloc(void *ptr, size_t size)
 	if(size <= cur_buf_size)
 		return ptr;
 
-	gStartupFreePages -= cur_buf_size/EFI_PAGE_SIZE;
 
 	/* Else, allocate a new buffer and copy the data there */
 	void *buf;
@@ -83,7 +80,6 @@ void *realloc(void *ptr, size_t size)
 	*(size_t *)buf = size;
 	memcpy((void *)((uintptr_t)buf + sizeof(size_t)), ptr, cur_buf_size);
 	free(ptr);
-	gStartupFreePages += size/EFI_PAGE_SIZE;
 	return (void *)((uintptr_t)buf + sizeof(size_t));
 }
 
