@@ -11,6 +11,7 @@ EFI_SYSTEM_TABLE *ST;
 EFI_BOOT_SERVICES *BS;
 EFI_RUNTIME_SERVICES *RT;
 EFI_HANDLE gImageHandle;
+EFI_LOADED_IMAGE *g_li;
 
 char why_not_header[]=""\
 "*****************************************************\n"\

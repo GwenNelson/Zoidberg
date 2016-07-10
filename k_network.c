@@ -9,9 +9,13 @@
 
 extern EFI_BOOT_SERVICES *BS;
 extern EFI_GUID Udp4Protocol;
+extern EFI_HANDLE gImageHandle;
+extern EFI_LOADED_IMAGE *g_li;
+EFI_HANDLE netHandle;
 
 EFI_SIMPLE_NETWORK *simple_net = NULL;
 EFI_PXE_BASE_CODE  *pxe_base   = NULL;
+
 #define htonl __htonl
 
 unsigned short csum(unsigned short *ptr,int nbytes) 
@@ -151,8 +155,14 @@ void dump_net_status() {
      simple_net->Statistics(simple_net,FALSE,&stats_size,stats);
 
      kprintf("Transmitted %d bytes\n",stats->TxTotalBytes);
-
+     kprintf("CRC errors: %d\n",stats->TxCrcErrorFrames);
      free(stats);
+}
+
+void configure_net_pxe_basecode() {
+     EFI_STATUS s = BS->OpenProtocol(g_li->DeviceHandle, &PxeBaseCodeProtocol, (void**)&pxe_base, gImageHandle, NULL, EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+     kprintf("Status %d\n",s);
+     kprintf("Found PXE base code at %#llx\n",pxe_base);
 }
 
 void init_net() {
@@ -178,6 +188,7 @@ void init_net() {
          EFI_STATUS prot_stat = BS->HandleProtocol(handles[i], &SimpleNetworkProtocol, (void**)&simple_net);
          if(prot_stat == 0) {
             kprintf("k_network: init_net() - setup SNP on handle number %d\n", i);
+            netHandle = handles[i];
          } else {
             kprintf("k_network: init_net() - failed to setup SNP on handle number %d\n", i);
          }
@@ -212,6 +223,7 @@ void init_net() {
          EFI_STATUS nii_stat = BS->HandleProtocol(handles[i], &NetworkInterfaceIdentifierProtocol, (void**)&nii);
          if(nii_stat == 0) {
             kprintf("k_network: init_net() - setup NII on handle number %d\n",i);
+            netHandle = handles[i];
          } else {
             kprintf("n_network: init_net() - failed to setup NII on handle number %d\n",i);
          }
@@ -234,7 +246,7 @@ void init_net() {
        return;
      }
 
-
+     configure_net_pxe_basecode();
 
      configure_net_dhcp();
      dump_net_status();
