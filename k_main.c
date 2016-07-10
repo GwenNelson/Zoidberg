@@ -32,6 +32,8 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     kprintf("Kernel entry point (efi_main) located at: %#11x\n", (uint64_t)efi_main);
 
     init_mem();
+    
+    init_dynamic_kmsg();
 
     while(1) {
     } 

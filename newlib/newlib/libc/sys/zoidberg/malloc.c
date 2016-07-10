@@ -24,33 +24,17 @@
 #include <stdio.h>
 #include <efi.h>
 #include <efilib.h>
-
+#include "k_heap.h"
 
 void *malloc(size_t size)
 {
-	void *buf;
-	EFI_STATUS s = BS->AllocatePool(EfiLoaderCode, (UINTN)(size + sizeof(size_t)), &buf);
-	if(EFI_ERROR(s))
-	{
-		fprintf(stderr, "malloc(%i) failed: %d\n", size, s);
-		return NULL;
-	}
-	else
-	{
-		//fprintf(stderr, "malloc(%d) succeeded: returning %x\n", size, buf);
-		*(size_t *)buf = size;
-		return (void *)((uintptr_t)buf + sizeof(size_t));
-	}
+	return k_heap_malloc(size);
 }
 
 void *calloc(size_t nmemb, size_t size)
 {
-	void *buf = malloc(size * nmemb);
-	if(buf == NULL)
-		return NULL;
-
-	memset(buf, 0, size * nmemb);
-	return buf;
+	uint64_t s = (uint64_t)nmemb * (uint64_t)size;
+	return k_heap_malloc(s);
 }
 
 void *realloc(void *ptr, size_t size)
@@ -63,29 +47,16 @@ void *realloc(void *ptr, size_t size)
 		return NULL;
 	}
 
-	/* Get the size of the current buffer */
-	size_t cur_buf_size = *(size_t *)((uintptr_t)ptr - sizeof(size_t));
-	
-	/* If new size is smaller, do nothing */
-	if(size <= cur_buf_size)
-		return ptr;
-
-
-	/* Else, allocate a new buffer and copy the data there */
 	void *buf;
 	buf = malloc(size);
 	if(buf==NULL) return NULL;
-	printf("Direct malloc() worked!\n");
 
-	*(size_t *)buf = size;
-	memcpy((void *)((uintptr_t)buf + sizeof(size_t)), ptr, cur_buf_size);
+	memcpy(buf,ptr,size);
 	free(ptr);
-	return (void *)((uintptr_t)buf + sizeof(size_t));
+	return buf;
 }
 
-void free(void *buf)
+void free(void *ptr)
 {
-	if(buf == NULL)
-		return;
-	BS->FreePool((void *)((uintptr_t)buf - sizeof(size_t)));
+	return k_heap_free(ptr);
 }

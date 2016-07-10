@@ -11,10 +11,13 @@ void init_static_kmsg() {
      memset((void*)static_kmsg,0,4096);
 }
 
+int kprintf(const char *fmt, ...);
 void init_dynamic_kmsg() {
+	kprintf("kmsg: about to switch to dynamic buffer, if things go silent after this we have memory issues\n");
 	kmsg = realloc((void*)kmsg, strlen(4096));
 	memset((void*)kmsg, 0, 4096);
 	strcat(kmsg,static_kmsg);
+	kprintf("kmsg: allocated dynamic buffer!\n");
 }
 
 int kprintf(const char *fmt, ...)

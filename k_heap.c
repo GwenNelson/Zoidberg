@@ -9,6 +9,15 @@
 
 KHEAPBM     kheap;
 
+void* k_heap_malloc(size_t size) {
+      void* retval = k_heapBMAlloc(&kheap, (uint64_t)size);
+      return retval;
+}
+
+void* k_heap_free(void* ptr) {
+      k_heapBMFree(&kheap, ptr);
+}
+
 int init_mem() {
     EFI_MEMORY_DESCRIPTOR  *MMap = 0;
 
