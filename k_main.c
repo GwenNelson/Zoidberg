@@ -54,6 +54,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     
     init_net();
 
+//    dump_net_status();
     while(1) {
     } 
 }
