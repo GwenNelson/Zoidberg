@@ -53,7 +53,7 @@ void configure_net_dhcp() {
 
      UINTN pack_size = sizeof(EFI_PXE_BASE_CODE_DHCPV4_PACKET);
 //     EFI_PXE_BASE_CODE_DHCPV4_PACKET *dhcp_req = (EFI_PXE_BASE_CODE_DHCPV4_PACKET*)malloc(sizeof(EFI_PXE_BASE_CODE_DHCPV4_PACKET));
-     EFI_PXE_BASE_CODE_DHCPV4_PACKET *dhcp_req = (EFI_PXE_BASE_CODE_DHCPV4_PACKET*)(buf + (sizeof(struct iphdr) + sizeof(struct udphdr)));
+     EFI_PXE_BASE_CODE_DHCPV4_PACKET *dhcp_req = (EFI_PXE_BASE_CODE_DHCPV4_PACKET*)(buf +(m->MediaHeaderSize)+ (sizeof(struct iphdr) + sizeof(struct udphdr)));
 
      uint32_t req_id = (uint32_t)rand();
 
@@ -76,9 +76,8 @@ void configure_net_dhcp() {
      dhcp_req->DhcpOptions[1] = 1;
      dhcp_req->DhcpOptions[2] = 1;
 
-     struct iphdr *iph = (struct iphdr *)buf;
-     struct udphdr *udph = (struct udphdr *) (buf + sizeof (struct iphdr));
-     void* data = buf + (sizeof(struct iphdr) + sizeof(struct udphdr));
+     struct iphdr *iph = (struct iphdr *)(buf+(m->MediaHeaderSize));
+     struct udphdr *udph = (struct udphdr *) (buf + sizeof (struct iphdr)+(m->MediaHeaderSize));
      iph->ihl      = 5;
      iph->version  = 4;
      iph->tot_len  = sizeof(struct iphdr) + sizeof(struct udphdr) + pack_size;
@@ -90,7 +89,7 @@ void configure_net_dhcp() {
      iph->daddr    = INADDR_BROADCAST;
      iph->check    = csum ((unsigned short *) buf, iph->tot_len);
      udph->uh_ulen = sizeof(struct udphdr) + pack_size;
-     udph->uh_sum  = csum((unsigned short*)(data - sizeof(struct udphdr)),pack_size+sizeof(struct udphdr));
+     udph->uh_sum  = csum((unsigned short*)(buf - sizeof(struct udphdr)),pack_size+sizeof(struct udphdr));
 
      EFI_MAC_ADDRESS anywhere;
      for(i=0; i< m->HwAddressSize; i++) {
@@ -99,10 +98,10 @@ void configure_net_dhcp() {
      
 
      kprintf("k_network:configure_net_dhcp() - Transmitting request\n");
-     UINTN tx_size=pack_size+(sizeof(struct iphdr))+(sizeof(struct udphdr));
-     UINT16 ether_type = 0x8000;
-//     EFI_STATUS send_s = simple_net->Transmit(simple_net,0,pack_size+(sizeof(struct iphdr))+(sizeof(struct udphdr)),buf,NULL,NULL,NULL);
-     EFI_STATUS send_s = simple_net->Transmit(simple_net,simple_net->Mode->MediaHeaderSize,tx_size,buf,NULL,&anywhere,&ether_type);
+     UINTN tx_size=pack_size+(sizeof(struct iphdr))+(sizeof(struct udphdr))+(m->MediaHeaderSize);
+     UINT16 ether_type = 0x800;
+//     EFI_STATUS send_s = simple_net->Transmit(simple_net,0,tx_size,buf,NULL,&anywhere,&ether_type);
+     EFI_STATUS send_s = simple_net->Transmit(simple_net,m->MediaHeaderSize,tx_size,buf,NULL,&anywhere,&ether_type);
 
      kprintf("k_network:configure_net_dhcp() - Waiting for transmission\n");
      void* tx_buf=NULL;
@@ -154,8 +153,8 @@ void dump_net_status() {
      stats = (void*)malloc(stats_size);
      simple_net->Statistics(simple_net,FALSE,&stats_size,stats);
 
-     kprintf("Transmitted %d bytes\n",stats->TxTotalBytes);
-     kprintf("CRC errors: %d\n",stats->TxCrcErrorFrames);
+     kprintf("Transmitted %llu bytes\n",stats->TxTotalBytes);
+     kprintf("CRC errors: %llu\n",stats->TxCrcErrorFrames);
      free(stats);
 }
 
@@ -222,7 +221,7 @@ void init_net() {
        return;
      }
 
-
+     simple_net->Statistics(simple_net,TRUE,NULL,NULL);
      configure_net_dhcp();
      dump_net_status();
 }
