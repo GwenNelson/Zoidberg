@@ -210,30 +210,6 @@ void init_net() {
         kprintf("k_network: init_net() - no networking support will be available\n");
         return;
      }
-     
-     kprintf("k_network: init_net() - probing interfaces\n");
-     BS->LocateHandle(ByProtocol, &SimpleNetworkProtocol,NULL,&buf_size, handles);
-     handles_count = buf_size == 0 ? 0 : buf_size / sizeof(EFI_HANDLE); 
-     if(handles_count==0) {
-        kprintf("k_network: init_net() - could not probe network interfaces\n");
-        kprintf("no networking support will be available\n");
-        return;
-     }
-     for(i=0; i < handles_count; i++) {
-         EFI_STATUS nii_stat = BS->HandleProtocol(handles[i], &NetworkInterfaceIdentifierProtocol, (void**)&nii);
-         if(nii_stat == 0) {
-            kprintf("k_network: init_net() - setup NII on handle number %d\n",i);
-            netHandle = handles[i];
-         } else {
-            kprintf("n_network: init_net() - failed to setup NII on handle number %d\n",i);
-         }
-     }
-
-     if(nii==NULL) {
-        kprintf("k_network: init_net() - no network interfaces!\n");
-        kprintf("k_network: init_net() - no networking support will be available\n");
-        return;
-     }
 
      kprintf("k_network: init_net() - init network interface\n");
      EFI_STATUS init_stat = simple_net->Initialize(simple_net,4096,4096);
@@ -246,7 +222,6 @@ void init_net() {
        return;
      }
 
-     configure_net_pxe_basecode();
 
      configure_net_dhcp();
      dump_net_status();
