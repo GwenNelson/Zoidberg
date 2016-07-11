@@ -253,9 +253,6 @@ void cr_reset(void)
 void cr_init(CR_CONTEXT* cr_context, size_t cr_context_count)
 {
 	// Init the array of CR_CONTEXT structs as well as the globals.
-	assert(cr_context && "user param cr_context must be non-zero!\n" );
-	assert((cr_context_count > 0) &&
-		"user param cr_context_count must be non-zero!\n" );
 
 	memset(cr_context, 0, cr_context_count * sizeof(CR_CONTEXT));
 
@@ -263,7 +260,7 @@ void cr_init(CR_CONTEXT* cr_context, size_t cr_context_count)
 	cr_g_context_cnt = (uint32_t)cr_context_count;
 
 	// Register the idle thread, which should _always_ be the first coroutine registered.
-	cr_register_thread(cr_idle);
+//	cr_register_thread(cr_idle);
 }
 
 /** \brief The internal system's coroutine thread.
@@ -282,8 +279,6 @@ void cr_idle(void)
 
 	CR_THREAD_INIT();
 
-	assert((this_id__ == CR_IDLE_THREAD_ID) &&
-		"cr_idle: this_id__ != CR_IDLE_THREAD_ID!\n");
 
 	// This will be the entry point when longjump is called with cr_idle's context.
 	// No need to perform another setjmp from within the loop; not much happening.
@@ -291,13 +286,6 @@ void cr_idle(void)
 		// Spin until a non-idle thread is activated.
 		if (cr_g_activate_id == CR_IDLE_THREAD_ID)
 			continue;
-
-		assert((cr_g_activate_id != CR_INVALID_ID) &&
-			"cr_idle: cr_g_activate_id == CR_INVALID_ID!\n");
-		assert(((uint32_t) cr_g_activate_id <= cr_g_context_cnt) &&
-			"cr_idle: cr_g_activate_id out of bounds!\n");
-		assert((cr_g_activate_id != this_id__) &&
-			"cr_idle: recursive coroutine call!\n");
 
 		temp_id = cr_g_activate_id;
 		cr_g_activate_id = CR_IDLE_THREAD_ID;
@@ -329,16 +317,6 @@ cr_id_t cr_register_thread(void(*pFunc)(void))
 	// Increase the coroutine count.
 	cr_g_thread_cnt += 1;
 
-	if (cr_g_thread_cnt == CR_IDLE_THREAD_ID)
-		if (pFunc != cr_idle)
-			perror("cr_idle error: cr_g_thread_cnt != CR_IDLE_THREAD_ID. \
-				Note, coroutines shouldn't be registered prior to calling cr_init.");
-
-	assert(pFunc && "cr_register_thread: pFunc is invalid!\n");
-
-	// Account fot the cr_idle coroutine (one reserved index in the array) in the assert check.
-	assert((cr_g_thread_cnt < cr_g_context_cnt) &&
-		"cr_register_thread: [ cr_g_thread_cnt < cr_g_context_cnt ] failed\n");
 
 	// Assign the coroutine's ID and function pointer to its context structure
 	cr_g_context[cr_g_thread_cnt].id = cr_g_thread_cnt;
@@ -376,8 +354,6 @@ cr_id_t cr_register_thread(void(*pFunc)(void))
 
 		// Look at the cr_g_current_cr_id variable in a debugger to see the ID
 		// of the exiting coroutine.
-		assert(CR_ERROR_CR_EXITING &&
-			"cr_register_thread: coruotine exiting!\n");
 
 		// Pass EXIT_SUCCESS; we want any user registered clean-up functions to be called.
 	}
