@@ -19,6 +19,10 @@ typedef struct ZOIDBERG_FILE
 } ZOIDBERG_FILE;
 
 ZOIDBERG_FILE* zoidberg_fromfd(int fd);
+
+// this is just to make libgcc happy
+int atexit(void (*function)(void)) {
+}
  
 void _exit() {
 }

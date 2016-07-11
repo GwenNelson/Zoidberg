@@ -6,6 +6,7 @@
 #include "kmsg.h"
 #include "k_heap.h"
 #include "zoidberg_version.h"
+#include "k_thread.h"
 
 EFI_SYSTEM_TABLE *ST;
 EFI_BOOT_SERVICES *BS;
@@ -53,11 +54,12 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     kprintf("Disabling UEFI Watchdog\n");
     BS->SetWatchdogTimer(0, 0, 0, NULL);
     
-    init_net();
+//    init_net();
 
 //    dump_net_status();
 //    configure_net_dhcp();
 
-    while(1) {
-    } 
+    scheduler_start();
+//    while(1) {
+//    } 
 }

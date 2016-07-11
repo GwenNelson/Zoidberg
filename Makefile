@@ -7,6 +7,9 @@ all: zoidberg.efi boot.img
 genversion:
 	./genversion.sh
 
+k_thread.o: k_thread.c
+	x86_64-w64-mingw32-gcc -ffreestanding ${INCLUDES} -c $< -o $@
+
 k_network.o: k_network.c
 	x86_64-w64-mingw32-gcc -ffreestanding ${INCLUDES} -c $< -o $@
 
@@ -28,8 +31,8 @@ newlib/build/x86_64-zoidberg/newlib/libc.a:
 	cd newlib/build; ../configure --target=x86_64-zoidberg
 	CFLAGS=-nostdinc make -C newlib/build
 
-zoidberg.efi:newlib/build/x86_64-zoidberg/newlib/libc.a  k_main.o kmsg.o k_heap.o k_network.o
-	x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $@ kmsg.o k_heap.o k_network.o k_main.o newlib/build/x86_64-zoidberg/newlib/libc.a  -lgcc
+zoidberg.efi:newlib/build/x86_64-zoidberg/newlib/libc.a  k_main.o kmsg.o k_heap.o k_network.o k_thread.o
+	x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $@ kmsg.o k_thread.o k_heap.o k_network.o k_main.o newlib/build/x86_64-zoidberg/newlib/libc.a  -lgcc
 
 boot.img: zoidberg.efi
 	dd if=/dev/zero of=$@ bs=1M count=33
