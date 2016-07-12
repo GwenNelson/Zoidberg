@@ -3,64 +3,55 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <setjmp.h>
+#include "uthash.h"
 
 #include "kmsg.h"
+#include "k_thread.h"
 
 extern EFI_BOOT_SERVICES *BS;
 EFI_EVENT timer_ev;
 
-typedef struct task_def_t {
-    void* stack_pointer;
-    jmp_buf env;
-} task_def_t;
 
-task_def_t *tasks       = NULL;
-uint64_t    task_count  = 0;
-uint64_t    active_task = 0;
+struct task_def_t *tasks  = NULL;
+uint64_t    last_task_id  = 0;
 
 void timer_func(EFI_EVENT Event, void *ctx) {
-//     register void *esp __asm__ ("rsp");
-//     tasks[active_task].stack_pointer = esp;
-     if(setjmp(tasks[active_task].env)==0) {
-        active_task++;
-        if(active_task > task_count) active_task=0;
-//     esp = tasks[active_task].stack_pointer;
-        longjmp(tasks[active_task].env,1);
+     struct task_def_t *i, *tmp;
+     HASH_ITER(hh, tasks, i, tmp) {
+         i->iter_loop(i->ctx);
      }
 }
 
-void init_task() {
-     task_count++;
-     tasks = realloc((void*)tasks,sizeof(task_def_t)*task_count);
-     active_task = task_count-1;
+void init_task(void (*init_ctx)(void* ctx), void (*cleanup)(void* ctx), void (*iter_loop)(void* ctx)) {
+     uint64_t new_task_id = last_task_id+1;
+     kprintf("k_thread: init_task() Starting task ID %d at %#llx\n",new_task_id,init_ctx);
+
+     struct task_def_t *new_task = malloc(sizeof(task_def_t));
+
+     new_task->task_id   = new_task_id;
+     new_task->init_ctx  = init_ctx;
+     new_task->cleanup   = cleanup;
+     new_task->iter_loop = iter_loop;
+     if(init_ctx != NULL) {
+        new_task->init_ctx(new_task->ctx);
+     }
+     BS->SetTimer(timer_ev,TimerCancel,1);    // cheap alternative to a mutex lock
+     HASH_ADD_INT(tasks, task_id, new_task);
+     BS->SetTimer(timer_ev,TimerPeriodic,1);  // unlock
 }
 
-void thread_a();
-void thread_b();
-
-void thread_a() {
-     init_task();
-	int i=0;
-     for(;;) {
-		i++;
-		kprintf("Thread A iteration %d \n",i);
-	}
-}
-
-void thread_b() {
-     init_task();
-     for(;;) kprintf("Thread B\n");
+void kill_task(uint64_t task_id) {
+     
 }
 
 void scheduler_start() {
      kprintf("k_thread: scheduler_start() Configuring timer\n");
      BS->CreateEvent(EVT_TIMER | EVT_NOTIFY_SIGNAL, TPL_CALLBACK, (EFI_EVENT_NOTIFY)timer_func,NULL, &timer_ev);
-     EFI_STATUS timer_stat = BS->SetTimer(timer_ev,TimerPeriodic,10);
+     EFI_STATUS timer_stat = BS->SetTimer(timer_ev,TimerPeriodic,1);
      if(timer_stat != EFI_SUCCESS) {
          kprintf("k_thread: scheduler_start() Error configuring timer!\n");
      }
-     thread_a();
+     kprintf("k_thread: scheduler_start() Multitasking started\n");
 }
 
 
