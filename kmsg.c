@@ -6,8 +6,8 @@ char *kmsg=NULL;
 
 static char static_kmsg[4096];
 static int is_static=1;
+static int buf_len=4096;
 
-#define MAXBUF 32768
 
 void init_static_kmsg() {
      memset((void*)static_kmsg,0,4096);
@@ -20,6 +20,7 @@ void init_dynamic_kmsg() {
 	memset((void*)kmsg, 0, 4096);
 	strcat(kmsg,static_kmsg);
 	kprintf("kmsg: allocated dynamic buffer!\n");
+	is_static = 0;
 }
 
 int kprintf(const char *fmt, ...)
@@ -31,13 +32,11 @@ int kprintf(const char *fmt, ...)
 	int retval = vsprintf(temp_buf,fmt,ap);
 	va_end(ap);
 	if(is_static==0) {
-		if((strlen(kmsg)+strlen(temp_buf)+1024)> (MAXBUF)) {
-			memmove(kmsg,kmsg+strlen(temp_buf),strlen(temp_buf));
-			memmove(kmsg+(MAXBUF)-strlen(temp_buf),temp_buf,strlen(temp_buf));
-		} else {
-			kmsg = realloc((void*)kmsg, strlen(kmsg)+strlen(temp_buf)+1024); // always tag on 1024kb so we don't need to reallocate every time
-			strcat(kmsg,temp_buf);
+		if((strlen(temp_buf)+strlen(kmsg))>buf_len) {
+			kmsg = realloc((void*)kmsg, strlen(kmsg)+strlen(temp_buf)+8192); // always tag on a few kb so we don't need to reallocate every time
+			buf_len = strlen(kmsg)+strlen(temp_buf)+8192;
 		}
+		strcat(kmsg,temp_buf);
 	} else {
 		strcat(static_kmsg,temp_buf);
 	}

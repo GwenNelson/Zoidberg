@@ -1,60 +1,57 @@
+#include <efi.h>
+#include <efilib.h>
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <setjmp.h>
 
 #include "kmsg.h"
-#include "cr.c"
 
-jmp_buf main_task;
-jmp_buf child_task; 
+extern EFI_BOOT_SERVICES *BS;
+EFI_EVENT timer_ev;
 
-void thread_a();
-void thread_b();
+typedef struct task_def_t {
+    uint64_t stack_pointer;
+} task_def_t;
 
-int thread_count=3;
-int i=0;
+task_def_t *tasks       = NULL;
+uint64_t    task_count  = 1;
+uint64_t    active_task = 0;
 
-void scheduler_thread() {
-     CR_THREAD_INIT();
-     while(1) {
-        for(i=1; i<= thread_count; i++) {
-            cr_g_activate_id = i;
-            CR_YIELD(cr_idle);
-        }
+void timer_func(EFI_EVENT Event, void *ctx) {
+     register void *esp __asm__ ("rsp");
+     if(tasks==NULL) {
+        tasks = malloc(sizeof(task_def_t));
+        tasks[0].stack_pointer = (uint64_t)esp;
      }
+     tasks[active_task].stack_pointer = (uint64_t)esp;
+     active_task++;
+     if(active_task >= task_count) active_task=0;
+     esp = (void*)tasks[active_task].stack_pointer;
 }
 
 void thread_a() {
-     CR_THREAD_INIT();
+	int i=0;
      for(;;) {
-        kprintf("thread A! \n");
-        
-        CR_YIELD(scheduler_thread);
-     }
+		i++;
+		kprintf("Thread A iteration %d \n",i);
+	}
 }
 
 void thread_b() {
-     CR_THREAD_INIT();
-     for(;;) {
-        kprintf("thread B!\n");
-        CR_YIELD(scheduler_thread);
-     }
+     for(;;) kprintf("Thread B\n");
 }
 
 void scheduler_start() {
-     kprintf("k_thread.c: scheduler_start setting up thread contexts\n");
-     CR_CONTEXT context_array[4];
-     cr_init(context_array,4);
-     kprintf("k_thread.c: scheduler_start creating scheduler thread\n");
-     cr_register_thread(cr_idle);
-     cr_register_thread(scheduler_thread);
-
-
-     kprintf("k_thread.c: scheduler_start creating test threads A+B\n");
-     cr_register_thread(thread_a);
-     cr_register_thread(thread_b);
-     kprintf("k_thread.c: scheduler_start switching to threads\n");
-     CR_START(scheduler_thread);
-     while(1) {}
+     kprintf("k_thread: scheduler_start() Configuring timer\n");
+     BS->CreateEvent(EVT_TIMER | EVT_NOTIFY_SIGNAL, TPL_CALLBACK, (EFI_EVENT_NOTIFY)timer_func,NULL, &timer_ev);
+     EFI_STATUS timer_stat = BS->SetTimer(timer_ev,TimerPeriodic,10);
+     if(timer_stat != EFI_SUCCESS) {
+         kprintf("k_thread: scheduler_start() Error configuring timer!\n");
+     }
+     thread_a();
 }
+
+
+
+
 

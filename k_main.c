@@ -60,6 +60,6 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 //    configure_net_dhcp();
 
     scheduler_start();
-//    while(1) {
-//    } 
+    while(1) {
+    } 
 }

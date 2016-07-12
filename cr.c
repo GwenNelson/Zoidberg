@@ -23,6 +23,7 @@
 
 #include "cr_config.h"
 #include "cr.h"
+#include "kmsg.h"
 
 /** \mainpage
  *
@@ -254,13 +255,14 @@ void cr_init(CR_CONTEXT* cr_context, size_t cr_context_count)
 {
 	// Init the array of CR_CONTEXT structs as well as the globals.
 
+	kprintf("cr_init memset\n");
 	memset(cr_context, 0, cr_context_count * sizeof(CR_CONTEXT));
 
 	cr_g_context = cr_context;
 	cr_g_context_cnt = (uint32_t)cr_context_count;
 
 	// Register the idle thread, which should _always_ be the first coroutine registered.
-//	cr_register_thread(cr_idle);
+	cr_register_thread(cr_idle);
 }
 
 /** \brief The internal system's coroutine thread.
@@ -277,23 +279,24 @@ void cr_idle(void)
 	// This needs to be static because the function initially returns normally.
 	static cr_id_t temp_id;
 
+	kprintf("cr_idle about to init\n");
 	CR_THREAD_INIT();
-
+	kprintf("cr_idle init done\n");
 
 	// This will be the entry point when longjump is called with cr_idle's context.
 	// No need to perform another setjmp from within the loop; not much happening.
 	for (;;) {
 		// Spin until a non-idle thread is activated.
-		if (cr_g_activate_id == CR_IDLE_THREAD_ID)
+		if (cr_g_activate_id == CR_IDLE_THREAD_ID) {
 			continue;
-
+		}
 		temp_id = cr_g_activate_id;
 		cr_g_activate_id = CR_IDLE_THREAD_ID;
 		cr_g_previous_cr_id = CR_IDLE_THREAD_ID;
 
-		if (!setjmp(cr_g_context[CR_IDLE_THREAD_ID].env))
+		if (setjmp(cr_g_context[CR_IDLE_THREAD_ID].env) != 0) {
 			longjmp(cr_g_context[temp_id].env, SETJMP_DFLT_RET_VAL);
-		else
+		}
 			/* explicit block for the longjmp */ ;
 	}
 }
@@ -314,6 +317,7 @@ void cr_idle(void)
  */
 cr_id_t cr_register_thread(void(*pFunc)(void))
 {
+	kprintf("cr_register_thread start\n");
 	// Increase the coroutine count.
 	cr_g_thread_cnt += 1;
 
@@ -326,9 +330,12 @@ cr_id_t cr_register_thread(void(*pFunc)(void))
 	// the coroutine.
 	cr_g_current_cr_id = cr_g_thread_cnt;
 
-	if (!setjmp(cr_g_reg_func_env))
+	kprintf("cr_register thread about to setjmp\n");
+	if (setjmp(cr_g_reg_func_env)!=0) {
+		kprintf("cr_register_thread setjmp 0\n");
 		pFunc(); // this function won't return normally
-	else
+	}
+	kprintf("cr_register_thread longjmp return\n");
 		/* explicit block for the longjmp */ ;
 
 	// The function is now a coroutine.

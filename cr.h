@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <assert.h>
+#include "kmsg.h"
 
 
 #ifdef __INTEL_COMPILER
@@ -48,7 +49,7 @@ typedef uint64_t volatile cr_uint64_t;
 /** \brief Annonymous enumerations that define various states and settings.
  */
 enum {
-    SETJMP_DFLT_RET_VAL	=  1,	/*!< longjmp's required second paramter, which is setjmp's return value */
+    SETJMP_DFLT_RET_VAL	=  3,	/*!< longjmp's required second paramter, which is setjmp's return value */
     CR_IDLE_THREAD_ID =  0,	/*!< ID of the system's cr_idle coroutine */
     CR_SYSTEM_STARTED = -1,	/*!< Sentinal flag used internally */
     CR_INVALID_ID = -1,		/*!< Returned by cr_get_id when an ID is not found */
@@ -90,7 +91,8 @@ typedef struct CR_CONTEXT {
 #define CR_THREAD_INIT() \
 	static cr_id_t this_id__; \
 	this_id__ = cr_g_current_cr_id; \
-	if (!setjmp(cr_g_context[this_id__].env)) { \
+	if (setjmp(cr_g_context[this_id__].env) != 0) { \
+		kprintf("CR_THREAD_INIT setjmp 0\n"); \
 		longjmp(cr_g_reg_func_env, SETJMP_DFLT_RET_VAL); \
 	} else { /* explicit block for the longjmp */ ; }
 
@@ -125,7 +127,7 @@ typedef struct CR_CONTEXT {
   	do { \
 		cr_g_current_cr_id = cr_get_id(func_name); \
 		cr_g_previous_cr_id = this_id__; \
-		if (!setjmp(cr_g_context[this_id__].env)) { \
+		if (setjmp(cr_g_context[this_id__].env) != 0) { \
 			longjmp(cr_g_context[cr_g_current_cr_id].env, SETJMP_DFLT_RET_VAL); \
 		} else { /* explicit block for the longjmp */ ; } \
 	} while (0)
