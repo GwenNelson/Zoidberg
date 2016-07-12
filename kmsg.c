@@ -7,6 +7,8 @@ char *kmsg=NULL;
 static char static_kmsg[4096];
 static int is_static=1;
 
+#define MAXBUF 32768
+
 void init_static_kmsg() {
      memset((void*)static_kmsg,0,4096);
 }
@@ -29,8 +31,13 @@ int kprintf(const char *fmt, ...)
 	int retval = vsprintf(temp_buf,fmt,ap);
 	va_end(ap);
 	if(is_static==0) {
-		kmsg = realloc((void*)kmsg, strlen(kmsg)+strlen(temp_buf)+1024); // always tag on 1024kb so we don't need to reallocate every time
-		strcat(kmsg,temp_buf);
+		if((strlen(kmsg)+strlen(temp_buf)+1024)> (MAXBUF)) {
+			memmove(kmsg,kmsg+strlen(temp_buf),strlen(temp_buf));
+			memmove(kmsg+(MAXBUF)-strlen(temp_buf),temp_buf,strlen(temp_buf));
+		} else {
+			kmsg = realloc((void*)kmsg, strlen(kmsg)+strlen(temp_buf)+1024); // always tag on 1024kb so we don't need to reallocate every time
+			strcat(kmsg,temp_buf);
+		}
 	} else {
 		strcat(static_kmsg,temp_buf);
 	}
