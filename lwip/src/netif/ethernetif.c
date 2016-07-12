@@ -43,9 +43,11 @@
  * something that better describes your network interface.
  */
 
+#include <efi.h>
+#include <efilib.h>
+extern EFI_SIMPLE_NETWORK *simple_net;
 #include "lwip/opt.h"
 
-#if 0 /* don't build, this is only a skeleton, see previous comment */
 
 #include "lwip/def.h"
 #include "lwip/mem.h"
@@ -85,17 +87,18 @@ static void
 low_level_init(struct netif *netif)
 {
   struct ethernetif *ethernetif = netif->state;
-
+  EFI_SIMPLE_NETWORK_MODE *m = simple_net->Mode;
   /* set MAC hardware address length */
-  netif->hwaddr_len = ETHARP_HWADDR_LEN;
+  netif->hwaddr_len = m->HwAddressSize;
 
   /* set MAC hardware address */
-  netif->hwaddr[0] = ;
-  ...
-  netif->hwaddr[5] = ;
+  int i=0;
+  for(i=0; i< m->HwAddressSize; i++) {
+      netif->hwaddr[i] = m->CurrentAddress.Addr[i];
+  }
 
   /* maximum transfer unit */
-  netif->mtu = 1500;
+  netif->mtu = m->MaxPacketSize;
 
   /* device capabilities */
   /* don't set NETIF_FLAG_ETHARP if this device is not an ethernet one */
@@ -149,10 +152,9 @@ low_level_output(struct netif *netif, struct pbuf *p)
     /* Send the data from the pbuf to the interface, one pbuf at a
        time. The size of the data in each pbuf is kept in the ->len
        variable. */
-    send data from(q->payload, q->len);
+    EFI_STATUS s = simple_net->Transmit(simple_net,0,q->len,q->payload,NULL,NULL,NULL);
   }
 
-  signal that packet should be sent();
 
   MIB2_STATS_NETIF_ADD(netif, ifoutoctets, p->tot_len);
   if (((u8_t*)p->payload)[0] & 1) {
@@ -184,13 +186,16 @@ low_level_output(struct netif *netif, struct pbuf *p)
 static struct pbuf *
 low_level_input(struct netif *netif)
 {
+  EFI_SIMPLE_NETWORK_MODE *m = simple_net->Mode;
   struct ethernetif *ethernetif = netif->state;
   struct pbuf *p, *q;
   u16_t len;
-
-  /* Obtain the size of the packet and put it into the "len"
-     variable. */
-  len = ;
+  void* pack_buf = malloc(m->MaxPacketSize);
+  EFI_STATUS s = simple_net->Receive(simple_net,NULL,&len,pack_buf,NULL,NULL,NULL);
+  if(s != EFI_SUCCESS) { 
+    free(pack_buf);
+    return NULL;
+  }
 
 #if ETH_PAD_SIZE
   len += ETH_PAD_SIZE; /* allow room for Ethernet padding */
@@ -207,18 +212,7 @@ low_level_input(struct netif *netif)
 
     /* We iterate over the pbuf chain until we have read the entire
      * packet into the pbuf. */
-    for (q = p; q != NULL; q = q->next) {
-      /* Read enough bytes to fill this pbuf in the chain. The
-       * available data in the pbuf is given by the q->len
-       * variable.
-       * This does not necessarily have to be a memcpy, you can also preallocate
-       * pbufs for a DMA-enabled MAC and after receiving truncate it to the
-       * actually received size. In this case, ensure the tot_len member of the
-       * pbuf is the sum of the chained pbuf len members.
-       */
-      read data into(q->payload, q->len);
-    }
-    acknowledge that packet has been read();
+    pbuf_take(p, pack_buf,len);
 
     MIB2_STATS_NETIF_ADD(netif, ifinoctets, p->tot_len);
     if (((u8_t*)p->payload)[0] & 1) {
@@ -239,7 +233,7 @@ low_level_input(struct netif *netif)
     LINK_STATS_INC(link.drop);
     MIB2_STATS_NETIF_INC(netif, ifindiscards);
   }
-
+  free(pack_buf);
   return p;
 }
 
@@ -309,7 +303,7 @@ ethernetif_init(struct netif *netif)
    * The last argument should be replaced with your link speed, in units
    * of bits per second.
    */
-  MIB2_INIT_NETIF(netif, snmp_ifType_ethernet_csmacd, LINK_SPEED_OF_YOUR_NETIF_IN_BPS);
+  MIB2_INIT_NETIF(netif, snmp_ifType_ethernet_csmacd, 1000000000); // TODO - make this accurate
 
   netif->state = ethernetif;
   netif->name[0] = IFNAME0;
@@ -332,4 +326,3 @@ ethernetif_init(struct netif *netif)
   return ERR_OK;
 }
 
-#endif /* 0 */

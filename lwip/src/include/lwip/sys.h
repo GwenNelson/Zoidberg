@@ -43,7 +43,7 @@
 extern "C" {
 #endif
 
-#if NO_SYS
+#if 1
 
 /* For a totally minimal and standalone system, we provide null
    definitions of the sys_ functions. */
