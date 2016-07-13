@@ -2,7 +2,21 @@ OVMFPATH=/home/gareth/edk2/Build/OvmfX64/DEBUG_GCC46/FV
 INCLUDES=-Inewlib/newlib/libc/include -Iefilibc/efi/inc -Iefilibc/efi/inc/protocol -Iefilibc/efi/inc/x86_64 -Ilwip/src/include/
 ROMPATH=/usr/lib/ipxe/qemu/efi-e1000.rom
 
-all: BOOTX64.EFI boot.img
+LWIPDIR=lwip/src
+
+CC=x86_64-w64-mingw32-gcc
+CFLAGS=-ffreestanding ${INCLUDES}
+
+include lwip/src/Filelists.mk
+
+all: BOOTX64.EFI boot.img lwip
+
+LWIPFILES=${COREFILES} ${CORE4FILES} ${APIFILES} ${NETIFFILES} ${LWIPDIR}/netif/ethernetif.c
+
+LWIPOBJS = $(patsubst %.c,%.o,$(LWIPFILES))
+
+
+lwip: ${LWIPOBJS}
 
 genversion:
 	./genversion.sh

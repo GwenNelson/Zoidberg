@@ -10,7 +10,7 @@
 
 #define MEMP_NUM_TCP_SEG                128
 
-#define MEMP_NUM_REASSDATA              32
+#define LWIP_STATS_DISPLAY              1
 
 #define MEMP_NUM_NETBUF                 512
 
