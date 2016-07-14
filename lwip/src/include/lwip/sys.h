@@ -70,7 +70,7 @@ typedef u8_t sys_mbox_t;
 #define sys_mbox_fetch(m,d)
 #define sys_mbox_tryfetch(m,d)
 #define sys_mbox_post(m,d)
-#define sys_mbox_trypost(m,d)
+#define sys_mbox_trypost(m,d) ERR_OK
 #define sys_mbox_free(m)
 #define sys_mbox_valid(m)
 #define sys_mbox_valid_val(m)

@@ -8,15 +8,14 @@
 #include "kmsg.h"
 
 extern EFI_BOOT_SERVICES *BS;
-extern EFI_GUID Udp4Protocol;
-extern EFI_HANDLE gImageHandle;
-extern EFI_LOADED_IMAGE *g_li;
 EFI_HANDLE netHandle;
 
 EFI_SIMPLE_NETWORK *simple_net = NULL;
-EFI_PXE_BASE_CODE  *pxe_base   = NULL;
+
+extern char *kmsg;
 
 #define htonl __htonl
+#define htons __htons
 
 unsigned short csum(unsigned short *ptr,int nbytes) 
 {
@@ -48,60 +47,68 @@ void configure_net_dhcp() {
      kprintf("k_network: configure_net_dhcp() - building DHCP request\n");
      EFI_SIMPLE_NETWORK_MODE *m = simple_net->Mode;
 
-     void* buf=malloc(4096);
+     char _tx_buf[4096];
+     void* buf = (void*)_tx_buf;
+
      memset(buf,0,4096);
-
-     UINTN pack_size = sizeof(EFI_PXE_BASE_CODE_DHCPV4_PACKET);
+//     UINTN pack_size = sizeof(struct dhcp_msg);
+     UINTN pack_size=0;
 //     EFI_PXE_BASE_CODE_DHCPV4_PACKET *dhcp_req = (EFI_PXE_BASE_CODE_DHCPV4_PACKET*)malloc(sizeof(EFI_PXE_BASE_CODE_DHCPV4_PACKET));
-     EFI_PXE_BASE_CODE_DHCPV4_PACKET *dhcp_req = (EFI_PXE_BASE_CODE_DHCPV4_PACKET*)(buf +(m->MediaHeaderSize)+ (sizeof(struct iphdr) + sizeof(struct udphdr)));
+     struct dhcp_msg *dhcp_req = (struct dhcp_msg*)(buf +(m->MediaHeaderSize)+ (sizeof(struct iphdr) + sizeof(struct udphdr)));
 
-     uint32_t req_id = (uint32_t)rand();
+     uint64_t req_id = (uint64_t)rand();
 
      int i=0;
 
-     memset((void*)dhcp_req,0,pack_size);
-     dhcp_req->BootpOpcode    = 1; // request
-     dhcp_req->BootpHwType    = m->IfType;
-     dhcp_req->BootpHwAddrLen = m->HwAddressSize;
-     dhcp_req->BootpGateHops  = 0;
-     dhcp_req->BootpIdent     = req_id;
-     dhcp_req->BootpSeconds   = 0;
-     dhcp_req->BootpFlags     = 0x8000;
+/*     memset((void*)dhcp_req,0,pack_size);
+     dhcp_req->op    = 1; // request
+     dhcp_req->htype    = m->IfType;
+     dhcp_req->hlen = m->HwAddressSize;
+     dhcp_req->hops  = 0;
+     dhcp_req->xid     = req_id;
+     dhcp_req->secs   = 0;
+     dhcp_req->flags     = 0x8000;
      for(i=0; i< m->HwAddressSize; i++) {
-         dhcp_req->BootpHwAddr[i] = m->CurrentAddress.Addr[i];
+         dhcp_req->chaddr[i] = m->CurrentAddress.Addr[i];
      }
-     dhcp_req->DhcpMagik = 0x63825363;
+     dhcp_req->cookie = 0x63825363;
 
-     dhcp_req->DhcpOptions[0] = 53;
-     dhcp_req->DhcpOptions[1] = 1;
-     dhcp_req->DhcpOptions[2] = 1;
+     dhcp_req->options[0] = 53;
+     dhcp_req->options[1] = 1;
+     dhcp_req->options[2] = 1;*/
 
+
+     kprintf("k_network: configure_net_dhcp() ID is %#llx\n",req_id);
      struct iphdr *iph = (struct iphdr *)(buf+(m->MediaHeaderSize));
      struct udphdr *udph = (struct udphdr *) (buf + sizeof (struct iphdr)+(m->MediaHeaderSize));
-     iph->ihl      = 5;
-     iph->version  = 4;
-     iph->tot_len  = sizeof(struct iphdr) + sizeof(struct udphdr) + pack_size;
-     iph->id       = htonl(req_id+1);
-     iph->frag_off = 0;
-     iph->ttl      = 255;
+     memset((void*)iph,0,sizeof(struct iphdr));
+//     memset((void*)udph,0,sizeof(struct udph));
+     iph->ihl = 5;
+     iph->version = 4;
+     iph->tot_len  = htons(sizeof(struct iphdr));
      iph->protocol = IPPROTO_UDP;
+     iph->ttl      = 255;
      iph->saddr    = INADDR_ANY;
-     iph->daddr    = INADDR_BROADCAST;
-     iph->check    = csum ((unsigned short *) buf, iph->tot_len);
-     udph->uh_ulen = sizeof(struct udphdr) + pack_size;
-     udph->uh_sum  = csum((unsigned short*)(buf - sizeof(struct udphdr)),pack_size+sizeof(struct udphdr));
+     iph->daddr    = INADDR_ANY;
+//     iph->check    = csum ((unsigned short *) buf, iph->tot_len);
+//     udph->uh_ulen = sizeof(struct udphdr) + pack_size;
+//     udph->uh_sum  = csum((unsigned short*)(buf - sizeof(struct udphdr)),pack_size+sizeof(struct udphdr));
+//     udph->uh_sport  = 68;
+//     udph->uh_dport    = 68;
 
      EFI_MAC_ADDRESS anywhere;
      for(i=0; i< m->HwAddressSize; i++) {
          anywhere.Addr[i] = 255;
      }
      
-
+     char* char_iph = (char*)iph;
+     char_iph[0]='H';
+     char_iph[1]='i';
      kprintf("k_network:configure_net_dhcp() - Transmitting request\n");
-     UINTN tx_size=pack_size+(sizeof(struct iphdr))+(sizeof(struct udphdr))+(m->MediaHeaderSize);
+     UINTN tx_size=(sizeof(struct iphdr));
      UINT16 ether_type = 0x800;
 //     EFI_STATUS send_s = simple_net->Transmit(simple_net,0,tx_size,buf,NULL,&anywhere,&ether_type);
-     EFI_STATUS send_s = simple_net->Transmit(simple_net,m->MediaHeaderSize,tx_size,buf,NULL,&anywhere,&ether_type);
+     EFI_STATUS send_s = simple_net->Transmit(simple_net,m->MediaHeaderSize,tx_size,(void*)buf,NULL,&anywhere,&ether_type);
 
      kprintf("k_network:configure_net_dhcp() - Waiting for transmission\n");
      void* tx_buf=NULL;
@@ -158,11 +165,6 @@ void dump_net_status() {
      free(stats);
 }
 
-void configure_net_pxe_basecode() {
-     EFI_STATUS s = BS->OpenProtocol(g_li->DeviceHandle, &PxeBaseCodeProtocol, (void**)&pxe_base, gImageHandle, NULL, EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
-     kprintf("Status %d\n",s);
-     kprintf("Found PXE base code at %#llx\n",pxe_base);
-}
 
 void init_net() {
      EFI_NETWORK_INTERFACE_IDENTIFIER_INTERFACE *nii;
@@ -210,16 +212,6 @@ void init_net() {
         return;
      }
 
-     kprintf("k_network: init_net() - init network interface\n");
-     EFI_STATUS init_stat = simple_net->Initialize(simple_net,4096,4096);
-
-     if(init_stat==0) {
-       kprintf("k_network: init_net() - network interface init ok\n");
-     } else {
-       kprintf("k_network: init_net() - could not init network interface\n");
-       kprintf("k_network: init_net() - no networking support will be available\n");
-       return;
-     }
 
      simple_net->Statistics(simple_net,TRUE,NULL,NULL);
      configure_net_dhcp();

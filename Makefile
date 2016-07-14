@@ -1,22 +1,21 @@
 OVMFPATH=/home/gareth/edk2/Build/OvmfX64/DEBUG_GCC46/FV
-INCLUDES=-Inewlib/newlib/libc/include -Iefilibc/efi/inc -Iefilibc/efi/inc/protocol -Iefilibc/efi/inc/x86_64 -Ilwip/src/include/
+INCLUDES=-I. -Inewlib/newlib/libc/include -Iefilibc/efi/inc -Iefilibc/efi/inc/protocol -Iefilibc/efi/inc/x86_64 -Ilwip/src/include/
 ROMPATH=/usr/lib/ipxe/qemu/efi-e1000.rom
-
-LWIPDIR=lwip/src
 
 CC=x86_64-w64-mingw32-gcc
 CFLAGS=-ffreestanding ${INCLUDES}
 
-include lwip/src/Filelists.mk
 
-all: BOOTX64.EFI boot.img lwip
+all: BOOTX64.EFI boot.img
 
-LWIPFILES=${COREFILES} ${CORE4FILES} ${APIFILES} ${NETIFFILES} ${LWIPDIR}/netif/ethernetif.c
+LIBNET_OBJS=libnet/build/libnet_build_ip.o\
+            libnet/build/libnet_build_dhcp.o
 
-LWIPOBJS = $(patsubst %.c,%.o,$(LWIPFILES))
+libnet/build/%.o: libnet/src/%.c
+	x86_64-w64-mingw32-gcc -ffreestanding ${INCLUDES} -c $< -o $@
 
-
-lwip: ${LWIPOBJS}
+libnet/libnet.a: ${LIBNET_OBJS}
+	x86_64-w64-mingw32-ar rcs $@ libnet/build/*.o
 
 genversion:
 	./genversion.sh
@@ -39,14 +38,13 @@ kmsg.o: kmsg.c
 efilibc/efilibc.a:
 	make -C efilibc
 
-
 newlib/build/x86_64-zoidberg/newlib/libc.a:
 	mkdir -p newlib/build
 	cd newlib/build; ../configure --target=x86_64-zoidberg
 	CFLAGS=-nostdinc make -C newlib/build
 
 BOOTX64.EFI:newlib/build/x86_64-zoidberg/newlib/libc.a  k_main.o kmsg.o k_heap.o k_network.o k_thread.o
-	x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $@ kmsg.o k_thread.o k_heap.o k_network.o k_main.o newlib/build/x86_64-zoidberg/newlib/libc.a  -lgcc
+	x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $@ kmsg.o k_thread.o k_heap.o k_network.o k_main.o newlib/build/x86_64-zoidberg/newlib/libc.a -lgcc
 
 boot.img: BOOTX64.EFI
 	dd if=/dev/zero of=$@ bs=1M count=33

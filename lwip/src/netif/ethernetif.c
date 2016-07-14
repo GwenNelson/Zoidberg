@@ -142,7 +142,7 @@ low_level_output(struct netif *netif, struct pbuf *p)
   struct ethernetif *ethernetif = netif->state;
   struct pbuf *q;
 
-  initiate transfer();
+//  initiate transfer();
 
 #if ETH_PAD_SIZE
   pbuf_header(p, -ETH_PAD_SIZE); /* drop the padding word */
@@ -228,7 +228,7 @@ low_level_input(struct netif *netif)
 
     LINK_STATS_INC(link.recv);
   } else {
-    drop packet();
+    //drop packet();
     LINK_STATS_INC(link.memerr);
     LINK_STATS_INC(link.drop);
     MIB2_STATS_NETIF_INC(netif, ifindiscards);

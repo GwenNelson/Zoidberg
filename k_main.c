@@ -54,10 +54,8 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     kprintf("Disabling UEFI Watchdog\n");
     BS->SetWatchdogTimer(0, 0, 0, NULL);
     
-//    init_net();
+    init_net();
 
-//    dump_net_status();
-//    configure_net_dhcp();
 
     scheduler_start();
     while(1) {
