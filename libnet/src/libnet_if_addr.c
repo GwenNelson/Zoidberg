@@ -40,7 +40,6 @@
 
 #define MAX_IPADDR 512
 
-#if !(__WIN32__)
 
 /*
  * By testing if we can retrieve the FLAGS of an iface
@@ -81,6 +80,7 @@ libnet_check_iface(libnet_t *l)
     }
     close(fd);
     return (res);
+
 }
 
 
@@ -272,80 +272,6 @@ libnet_ifaddrlist(register struct libnet_ifaddr_list **ipaddrp, char *dev, regis
     *ipaddrp = ifaddrlist;
     return (nipaddr);
 }
-#else
-/* WIN32 support *
- * TODO move win32 support into win32 specific source file */
-
-/* From tcptraceroute, convert a numeric IP address to a string */
-#define IPTOSBUFFERS    12
-static int8_t *iptos(uint32_t in)
-{
-    static int8_t output[IPTOSBUFFERS][ 3 * 4 + 3 + 1];
-    static int16_t which;
-    uint8_t *p;
-
-    p = (uint8_t *)&in;
-    which = (which + 1 == IPTOSBUFFERS ? 0 : which + 1);
-    snprintf(output[which], IPTOSBUFFERS, "%d.%d.%d.%d", 
-            p[0], p[1], p[2], p[3]);
-    return output[which];
-}
-
-int
-libnet_ifaddrlist(register struct libnet_ifaddr_list **ipaddrp, char *dev_unused, register char *errbuf)
-{
-    int nipaddr = 0;
-    int i = 0;
-    static struct libnet_ifaddr_list ifaddrlist[MAX_IPADDR];
-    pcap_if_t *devlist = NULL;
-    pcap_if_t *dev = NULL;
-    int8_t err[PCAP_ERRBUF_SIZE];
-
-    /* Retrieve the interfaces list */
-    if (pcap_findalldevs(&devlist, err) == -1)
-    {
-        snprintf(errbuf, LIBNET_ERRBUF_SIZE, 
-                "%s(): error in pcap_findalldevs: %s", __func__, err);
-        return (-1);
-    }
-
-    for (dev = devlist; dev; dev = dev->next)
-    {
-        struct pcap_addr* pcapaddr;
-        for(pcapaddr = dev->addresses; pcapaddr; pcapaddr = pcapaddr->next) {
-            struct sockaddr* addr = pcapaddr->addr;
-#if 0
-            printf("if name '%s' description '%s' loop? %d\n", dev->name, dev->description, dev->flags);
-            {
-                char p[NI_MAXHOST] = "";
-                int sz = sizeof(struct sockaddr_storage);
-                int r;
-                r = getnameinfo(addr, sz, p, sizeof(p), NULL,0, NI_NUMERICHOST);
-                printf("  addr %s\n", r ? gai_strerror(r) : p);
-            }
-#endif
-
-            if(dev->flags & PCAP_IF_LOOPBACK)
-                continue;
-
-            /* this code ignores IPv6 addresses, a limitation of the libnet_ifaddr_list struct */
-
-            if(addr->sa_family == AF_INET) {
-                ifaddrlist[i].device = strdup(dev->name);
-                ifaddrlist[i].addr = ((struct sockaddr_in *)addr)->sin_addr.s_addr;
-                ++i;
-                ++nipaddr;
-            }
-        }
-    }
-
-    pcap_freealldevs(devlist);
-
-    *ipaddrp = ifaddrlist;
-
-    return nipaddr;
-}
-#endif /* __WIN32__ */
 
 int
 libnet_select_device(libnet_t *l)
@@ -362,13 +288,11 @@ libnet_select_device(libnet_t *l)
 
     if (l->device && !isdigit(l->device[0]))
     {
-#if !(__WIN32__)
 	if (libnet_check_iface(l) < 0)
 	{
             /* err msg set in libnet_check_iface() */
 	    return (-1);
 	}
-#endif
 	return (1);
     }
 

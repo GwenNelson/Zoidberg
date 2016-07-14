@@ -5,6 +5,8 @@
 #include <netinet/udp.h>
 #include <netinet/ip.h>
 
+#include <libnet.h>
+
 #include "kmsg.h"
 
 extern EFI_BOOT_SERVICES *BS;
@@ -14,32 +16,6 @@ EFI_SIMPLE_NETWORK *simple_net = NULL;
 
 extern char *kmsg;
 
-#define htonl __htonl
-#define htons __htons
-
-unsigned short csum(unsigned short *ptr,int nbytes) 
-{
-    register long sum;
-    unsigned short oddbyte;
-    register short answer;
- 
-    sum=0;
-    while(nbytes>1) {
-        sum+=*ptr++;
-        nbytes-=2;
-    }
-    if(nbytes==1) {
-        oddbyte=0;
-        *((u_char*)&oddbyte)=*(u_char*)ptr;
-        sum+=oddbyte;
-    }
- 
-    sum = (sum>>16)+(sum & 0xffff);
-    sum = sum + (sum>>16);
-    answer=(short)~sum;
-     
-    return(answer);
-}
 
 void configure_net_dhcp() {
      kprintf("k_network: configure_net_dhcp() - attempting DHCP configuration\n");
@@ -47,7 +23,113 @@ void configure_net_dhcp() {
      kprintf("k_network: configure_net_dhcp() - building DHCP request\n");
      EFI_SIMPLE_NETWORK_MODE *m = simple_net->Mode;
 
-     char _tx_buf[4096];
+     int i = 0;
+     u_char options_req[] = { LIBNET_DHCP_SUBNETMASK,
+                             LIBNET_DHCP_BROADCASTADDR, LIBNET_DHCP_TIMEOFFSET,
+                             LIBNET_DHCP_ROUTER, LIBNET_DHCP_DOMAINNAME,
+                             LIBNET_DHCP_DNS, LIBNET_DHCP_HOSTNAME };
+     u_char *options;
+     libnet_t *l;
+     char* err_buf;
+     l = libnet_init(LIBNET_NONE,NULL,err_buf);
+     if(!l) {
+        kprintf("libnet_init: %s\n", err_buf);
+     }
+     kprintf("k_network: configure_net_dhcp() - libnet setup\n");
+
+     u_long options_len = 3;
+     libnet_ptag_t dhcp_packet;
+     libnet_ptag_t udp_packet;
+     libnet_ptag_t ip_packet;
+     options = malloc(3);
+     options[i++] = LIBNET_DHCP_MESSAGETYPE;
+     options[i++] = 1;
+     options[i++] = LIBNET_DHCP_MSGDISCOVER;
+     u_long orig_len = options_len;
+     options_len += sizeof(options_req) + 2;
+     u_char *tmp = malloc(options_len);
+     memcpy(tmp, options, orig_len);
+     free(options);
+     options = tmp;
+
+     options[i++] = LIBNET_DHCP_PARAMREQUEST;
+     options[i++] = sizeof(options_req);
+     memcpy(options + i, options_req, sizeof(options_req));
+     i += sizeof(options_req);
+
+     orig_len = options_len;
+     options_len += 1;
+
+     
+     tmp = malloc(options_len);
+     memcpy(tmp, options, orig_len);
+     free(options);
+     options = tmp;
+     options[i++] = LIBNET_DHCP_END;
+
+            if (options_len + LIBNET_DHCPV4_H < LIBNET_BOOTP_MIN_LEN)
+        {
+            orig_len = options_len;
+            options_len = LIBNET_BOOTP_MIN_LEN - LIBNET_DHCPV4_H;
+            
+            tmp = malloc(options_len);
+            memcpy(tmp, options, orig_len);
+            free(options);
+            options = tmp;
+            
+            memset(options + i, 0, options_len - i);
+        }
+
+     
+     dhcp_packet = libnet_build_dhcpv4(
+                LIBNET_DHCP_REQUEST,            /* opcode */
+                1,                              /* hardware type */
+                6,                              /* hardware address length */
+                0,                              /* hop count */
+                0xdeadbeef,                     /* transaction id */
+                0,                              /* seconds since bootstrap */
+                0x8000,                         /* flags */
+                0,                              /* client ip */
+                0,                              /* your ip */
+                0,                              /* server ip */
+                0,                              /* gateway ip */
+                m->CurrentAddress.Addr,      /* client hardware addr */
+                NULL,                           /* server host name */
+                NULL,                           /* boot file */
+                options,                        /* dhcp options in payload */
+                options_len,                    /* length of options */
+                l,                              /* libnet context */
+                0);                             /* libnet ptag */
+
+udp_packet = libnet_build_udp(
+                68,                             /* source port */
+                67,                             /* destination port */
+                LIBNET_UDP_H + LIBNET_DHCPV4_H + options_len,  /* packet size */
+                0,                              /* checksum */
+                NULL,                           /* payload */
+                0,                              /* payload size */
+                l,                              /* libnet context */
+                0);                             /* libnet ptag */
+
+ip_packet = libnet_build_ipv4(
+                LIBNET_IPV4_H + LIBNET_UDP_H + LIBNET_DHCPV4_H
+                + options_len,                  /* length */
+                0x10,                           /* TOS */
+                0,                              /* IP ID */
+                0,                              /* IP Frag */
+                16,                             /* TTL */
+                IPPROTO_UDP,                    /* protocol */
+                0,                              /* checksum */
+                0,                         /* src ip */
+                0,   /* destination ip */
+                NULL,                           /* payload */
+                0,                              /* payload size */
+                l,                              /* libnet context */
+                0);                             /* libnet ptag */
+     uint32_t pack_size=0;
+     uint8_t  *pack;
+
+/*     char _tx_buf[4096];
      void* buf = (void*)_tx_buf;
 
      memset(buf,0,4096);
@@ -60,7 +142,7 @@ void configure_net_dhcp() {
 
      int i=0;
 
-/*     memset((void*)dhcp_req,0,pack_size);
+     memset((void*)dhcp_req,0,pack_size);
      dhcp_req->op    = 1; // request
      dhcp_req->htype    = m->IfType;
      dhcp_req->hlen = m->HwAddressSize;
@@ -75,7 +157,7 @@ void configure_net_dhcp() {
 
      dhcp_req->options[0] = 53;
      dhcp_req->options[1] = 1;
-     dhcp_req->options[2] = 1;*/
+     dhcp_req->options[2] = 1;
 
 
      kprintf("k_network: configure_net_dhcp() ID is %#llx\n",req_id);
@@ -94,21 +176,17 @@ void configure_net_dhcp() {
 //     udph->uh_ulen = sizeof(struct udphdr) + pack_size;
 //     udph->uh_sum  = csum((unsigned short*)(buf - sizeof(struct udphdr)),pack_size+sizeof(struct udphdr));
 //     udph->uh_sport  = 68;
-//     udph->uh_dport    = 68;
+//     udph->uh_dport    = 68;*/
 
      EFI_MAC_ADDRESS anywhere;
      for(i=0; i< m->HwAddressSize; i++) {
          anywhere.Addr[i] = 255;
      }
      
-     char* char_iph = (char*)iph;
-     char_iph[0]='H';
-     char_iph[1]='i';
      kprintf("k_network:configure_net_dhcp() - Transmitting request\n");
-     UINTN tx_size=(sizeof(struct iphdr));
      UINT16 ether_type = 0x800;
 //     EFI_STATUS send_s = simple_net->Transmit(simple_net,0,tx_size,buf,NULL,&anywhere,&ether_type);
-     EFI_STATUS send_s = simple_net->Transmit(simple_net,m->MediaHeaderSize,tx_size,(void*)buf,NULL,&anywhere,&ether_type);
+     EFI_STATUS send_s = simple_net->Transmit(simple_net,m->MediaHeaderSize,pack_size,(void*)pack,NULL,&anywhere,&ether_type);
 
      kprintf("k_network:configure_net_dhcp() - Waiting for transmission\n");
      void* tx_buf=NULL;

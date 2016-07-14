@@ -41,7 +41,7 @@
 #define snprintf(buf, len, args...) sprintf(buf, ##args)
 #endif
 
-
+#define ntohs(_x) __ntohs(_x)
 /**
  * Used for libnet's name resolution functions, specifies that no DNS lookups
  * should be performed and the IP address should be kept in numeric form.

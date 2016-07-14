@@ -49,6 +49,12 @@
 #include "config.h"
 #include "libnet.h"
 
+#define ntohs(_x) __ntohs(_x)
+#define ntohl(_x) __ntohl(_x)
+#define htonl(_x) __htonl(_x)
+#define htons(_x) __htons(_x)
+
+
 /* IPPROTO_ and sockaddr_ definitions are here. They are often
  * implicitly pulled in, but some systems need them explicitly
  * included.

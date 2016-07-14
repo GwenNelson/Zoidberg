@@ -37,16 +37,6 @@ libnet_init(int injection_type, const char *device, char *err_buf)
 {
     libnet_t *l = NULL;
 
-#if defined(__WIN32__)
-    WSADATA wsaData;
-
-    if ((WSAStartup(0x0202, &wsaData)) != 0)
-    {
-        snprintf(err_buf, LIBNET_ERRBUF_SIZE, 
-                "%s(): unable to initialize winsock 2", __func__);
-        goto bad;
-    }
-#endif
 
     l = (libnet_t *)malloc(sizeof (libnet_t));
     if (l == NULL)
@@ -72,37 +62,14 @@ libnet_init(int injection_type, const char *device, char *err_buf)
             break;
         case LIBNET_LINK:
         case LIBNET_LINK_ADV:
-            if (libnet_select_device(l) == -1)
-            {
-                snprintf(err_buf, LIBNET_ERRBUF_SIZE, "%s", l->err_buf);
-		goto bad;
-            }
-            if (libnet_open_link(l) == -1)
-            {
-                snprintf(err_buf, LIBNET_ERRBUF_SIZE, "%s", l->err_buf);
-                goto bad;
-            }
             break;
         case LIBNET_RAW4:
         case LIBNET_RAW4_ADV:
-            if (libnet_open_raw4(l) == -1)
-            {
-                snprintf(err_buf, LIBNET_ERRBUF_SIZE, "%s", l->err_buf);
-                goto bad;
-            }
             break;
         case LIBNET_RAW6:
         case LIBNET_RAW6_ADV:
-            if (libnet_open_raw6(l) == -1)
-            {
-                snprintf(err_buf, LIBNET_ERRBUF_SIZE, "%s", l->err_buf);
-                goto bad;
-            }
             break;
         default:
-            snprintf(err_buf, LIBNET_ERRBUF_SIZE,
-                    "%s(): unsupported injection type", __func__);
-            goto bad;
             break;
     }
 

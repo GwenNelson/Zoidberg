@@ -32,6 +32,12 @@
 
 #include "common.h"
 
+#define ntohs(_x) __ntohs(_x)
+#define ntohl(_x) __ntohl(_x)
+#define htonl(_x) __htonl(_x)
+#define htons(_x) __htons(_x)
+
+
 /* TODO len - should be calculated if -1 */
 libnet_ptag_t
 libnet_build_ipv4(uint16_t ip_len, uint8_t tos, uint16_t id, uint16_t frag,
@@ -237,85 +243,6 @@ bad:
     return (-1);
 }
 
-libnet_ptag_t
-libnet_autobuild_ipv4(uint16_t len, uint8_t prot, uint32_t dst, libnet_t *l)
-{
-    uint32_t n, i, j, src;
-    uint16_t h;
-    libnet_pblock_t *p;
-    libnet_ptag_t ptag;
-    struct libnet_ipv4_hdr ip_hdr;
-
-    if (l == NULL)
-    { 
-        return (-1);
-    } 
-
-    n = LIBNET_IPV4_H;                                /* size of memory block */
-    h = len;                                          /* header length */
-    ptag = LIBNET_PTAG_INITIALIZER;
-    src = libnet_get_ipaddr4(l);
-    if (src == -1)
-    {
-        /* err msg set in libnet_get_ipaddr() */ 
-        return (-1);
-    }
-
-    /*
-     *  Create a new pblock.
-     */
-    p = libnet_pblock_probe(l, ptag, n, LIBNET_PBLOCK_IPV4_H);
-    if (p == NULL)
-    {
-        return (-1);
-    }
-	
-    memset(&ip_hdr, 0, sizeof(ip_hdr));
-    ip_hdr.ip_v          = 4;                         /* version 4 */
-    ip_hdr.ip_hl         = 5;                         /* 20 byte header */
-
-    /* check to see if there are IP options to include */
-    if (p->prev)
-    {
-        if (p->prev->type == LIBNET_PBLOCK_IPO_H)
-        {
-            /*
-             *  Count up number of 32-bit words in options list, padding if
-             *  neccessary.
-             */
-            for (i = 0, j = 0; i < p->prev->b_len; i++)
-            {
-                (i % 4) ? j : j++;
-            }
-            ip_hdr.ip_hl += j;
-        }
-    }
-
-    ip_hdr.ip_tos        = 0;                         /* IP tos */
-    ip_hdr.ip_len        = htons(h);                  /* total length */
-    ip_hdr.ip_id         = htons((l->ptag_state) & 0x0000ffff); /* IP ID */
-    ip_hdr.ip_off        = 0;                         /* fragmentation flags */
-    ip_hdr.ip_ttl        = 64;                        /* time to live */
-    ip_hdr.ip_p          = prot;                      /* transport protocol */
-    ip_hdr.ip_sum        = 0;                         /* checksum */
-    ip_hdr.ip_src.s_addr = src;                       /* source ip */
-    ip_hdr.ip_dst.s_addr = dst;                       /* destination ip */
-
-    n = libnet_pblock_append(l, p, (uint8_t *)&ip_hdr, LIBNET_IPV4_H);
-    if (n == -1)
-    {
-        goto bad;
-    }
-
-    libnet_pblock_setflags(p, LIBNET_PBLOCK_DO_CHECKSUM);
-    ptag = libnet_pblock_update(l, p, LIBNET_IPV4_H, LIBNET_PBLOCK_IPV4_H);
-
-    return (ptag);
-
-bad:
-    libnet_pblock_delete(l, p);
-    return (-1);
-}
 
 libnet_ptag_t
 libnet_build_ipv4_options(const uint8_t *options, uint32_t options_s, libnet_t *l, 
@@ -737,19 +664,4 @@ bad:
     return (-1);
 }
 
-libnet_ptag_t
-libnet_autobuild_ipv6(uint16_t len, uint8_t nh, struct libnet_in6_addr dst,
-            libnet_t *l, libnet_ptag_t ptag)
-{
-    struct libnet_in6_addr src;
-
-    src = libnet_get_ipaddr6(l);
-
-    if (libnet_in6_is_error(src))
-    {
-        return (-1);
-    }
-
-    return libnet_build_ipv6(0, 0, len, nh, 64, src, dst, NULL, 0, l, ptag);
-}
 

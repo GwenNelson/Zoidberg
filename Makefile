@@ -1,5 +1,5 @@
 OVMFPATH=/home/gareth/edk2/Build/OvmfX64/DEBUG_GCC46/FV
-INCLUDES=-I. -Inewlib/newlib/libc/include -Iefilibc/efi/inc -Iefilibc/efi/inc/protocol -Iefilibc/efi/inc/x86_64 -Ilwip/src/include/
+INCLUDES=-I. -Inewlib/newlib/libc/include -Iefilibc/efi/inc -Iefilibc/efi/inc/protocol -Iefilibc/efi/inc/x86_64 -Ilibnet/src
 ROMPATH=/usr/lib/ipxe/qemu/efi-e1000.rom
 
 CC=x86_64-w64-mingw32-gcc
@@ -8,8 +8,13 @@ CFLAGS=-ffreestanding ${INCLUDES}
 
 all: BOOTX64.EFI boot.img
 
-LIBNET_OBJS=libnet/build/libnet_build_ip.o\
-            libnet/build/libnet_build_dhcp.o
+LIBNET_OBJS=libnet/build/libnet_init.o\
+            libnet/build/libnet_build_ip.o\
+            libnet/build/libnet_build_dhcp.o\
+            libnet/build/libnet_build_udp.o\
+            libnet/build/libnet_link_none.o\
+            libnet/build/libnet_pblock.o\
+            libnet/build/libnet_checksum.o
 
 libnet/build/%.o: libnet/src/%.c
 	x86_64-w64-mingw32-gcc -ffreestanding ${INCLUDES} -c $< -o $@
@@ -43,8 +48,8 @@ newlib/build/x86_64-zoidberg/newlib/libc.a:
 	cd newlib/build; ../configure --target=x86_64-zoidberg
 	CFLAGS=-nostdinc make -C newlib/build
 
-BOOTX64.EFI:newlib/build/x86_64-zoidberg/newlib/libc.a  k_main.o kmsg.o k_heap.o k_network.o k_thread.o
-	x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $@ kmsg.o k_thread.o k_heap.o k_network.o k_main.o newlib/build/x86_64-zoidberg/newlib/libc.a -lgcc
+BOOTX64.EFI:newlib/build/x86_64-zoidberg/newlib/libc.a  k_main.o kmsg.o k_heap.o k_network.o k_thread.o libnet/libnet.a
+	x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $@ kmsg.o k_thread.o k_heap.o k_network.o k_main.o libnet/libnet.a newlib/build/x86_64-zoidberg/newlib/libc.a -lgcc
 
 boot.img: BOOTX64.EFI
 	dd if=/dev/zero of=$@ bs=1M count=33

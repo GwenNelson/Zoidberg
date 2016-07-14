@@ -32,6 +32,11 @@
 
 #include "common.h"
 
+#define ntohs(_x) __ntohs(_x)
+#define ntohl(_x) __ntohl(_x)
+#define htonl(_x) __htonl(_x)
+#define htons(_x) __htons(_x)
+
 libnet_ptag_t
 libnet_build_dhcpv4(uint8_t opcode, uint8_t htype, uint8_t hlen, 
 uint8_t hopcount, uint32_t xid, uint16_t secs, uint16_t flags,
