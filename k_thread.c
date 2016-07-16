@@ -47,6 +47,12 @@ uint64_t init_task(void (*init_ctx)(void* ctx, uint64_t task_id), void (*cleanup
      return new_task_id;
 }
 
+struct task_def_t *get_task(uint64_t task_id) {
+     struct task_def_t* retval = NULL;
+     HASH_FIND_INT(tasks, &task_id, retval);
+     return retval;
+}
+
 void kill_task(uint64_t task_id) {
      
 }
