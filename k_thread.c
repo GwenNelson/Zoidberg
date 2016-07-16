@@ -12,13 +12,19 @@ extern EFI_BOOT_SERVICES *BS;
 EFI_EVENT timer_ev;
 
 
-struct task_def_t *tasks  = NULL;
-uint64_t    last_task_id  = 0;
+struct task_def_t *tasks    = NULL;
+uint64_t    last_task_id    = 0;
+struct task_def_t *cur_task = NULL;
 
 void timer_func(EFI_EVENT Event, void *ctx) {
-     struct task_def_t *i, *tmp;
-     HASH_ITER(hh, tasks, i, tmp) {
-         i->iter_loop(i->ctx);
+     if(cur_task==NULL) { 
+        cur_task=tasks;
+        return;
+     }
+     if(cur_task->hh.next == NULL) {
+        cur_task = tasks;
+     } else {
+        cur_task = cur_task->hh.next;
      }
 }
 
@@ -35,9 +41,9 @@ void init_task(void (*init_ctx)(void* ctx), void (*cleanup)(void* ctx), void (*i
      if(init_ctx != NULL) {
         new_task->init_ctx(new_task->ctx);
      }
-     BS->SetTimer(timer_ev,TimerCancel,1);    // cheap alternative to a mutex lock
+     BS->SetTimer(timer_ev,TimerCancel,10);    // cheap alternative to a mutex lock
      HASH_ADD_INT(tasks, task_id, new_task);
-     BS->SetTimer(timer_ev,TimerPeriodic,1);  // unlock
+     BS->SetTimer(timer_ev,TimerPeriodic,10);  // unlock
 }
 
 void kill_task(uint64_t task_id) {
@@ -47,14 +53,16 @@ void kill_task(uint64_t task_id) {
 void scheduler_start() {
      kprintf("k_thread: scheduler_start() Configuring timer\n");
      BS->CreateEvent(EVT_TIMER | EVT_NOTIFY_SIGNAL, TPL_CALLBACK, (EFI_EVENT_NOTIFY)timer_func,NULL, &timer_ev);
-     EFI_STATUS timer_stat = BS->SetTimer(timer_ev,TimerPeriodic,1);
+     EFI_STATUS timer_stat = BS->SetTimer(timer_ev,TimerPeriodic,10);
      if(timer_stat != EFI_SUCCESS) {
          kprintf("k_thread: scheduler_start() Error configuring timer!\n");
      }
      kprintf("k_thread: scheduler_start() Multitasking started\n");
 }
 
-
+void tasks_run() {
+     if(cur_task != NULL) cur_task->iter_loop(cur_task->ctx);
+}
 
 
 
