@@ -1,5 +1,5 @@
 OVMFPATH=/home/gareth/edk2/Build/OvmfX64/DEBUG_GCC46/FV
-INCLUDES=-I. -Inewlib/newlib/libc/include -Iefilibc/efi/inc -Iefilibc/efi/inc/protocol -Iefilibc/efi/inc/x86_64 -Ilibnet/src
+INCLUDES=-I. -Inewlib/newlib/libc/include -Iefilibc/efi/inc -Iefilibc/efi/inc/protocol -Iefilibc/efi/inc/x86_64 -Ilibnet/src -Ipawn/source/amx/
 ROMPATH=/usr/lib/ipxe/qemu/efi-e1000.rom
 
 CC=x86_64-w64-mingw32-gcc
@@ -24,6 +24,9 @@ libnet/libnet.a: ${LIBNET_OBJS}
 
 genversion:
 	./genversion.sh
+
+amx.o: pawn/source/amx/amx.c
+	x86_64-w64-mingw32-gcc -DPAWN_CELL_SIZE=64 -ffreestanding ${INCLUDES} -c $< -o $@
 
 k_thread.o: k_thread.c cr.c cr.h
 	x86_64-w64-mingw32-gcc -ffreestanding ${INCLUDES} -c $< -o $@

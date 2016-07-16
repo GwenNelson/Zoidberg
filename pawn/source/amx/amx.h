@@ -81,6 +81,8 @@
   #endif
 #endif
 
+#define HAVE_I64
+
 #if !defined HAVE_ALLOCA_H
   #if defined __GNUC__ || defined __LCC__ || defined __DMC__ || defined __ARMCC_VERSION
     #define HAVE_ALLOCA_H 1

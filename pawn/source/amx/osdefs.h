@@ -12,6 +12,9 @@
  * No usage restrictions, no warranties.
  */
 
+#include <sys/types.h>
+#define __64BIT__
+
 #ifndef _OSDEFS_H
 #define _OSDEFS_H
 
