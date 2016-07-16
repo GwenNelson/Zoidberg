@@ -7,6 +7,7 @@
 #include "k_heap.h"
 #include "zoidberg_version.h"
 #include "k_thread.h"
+#include "vm_pawn.h"
 
 EFI_SYSTEM_TABLE *ST;
 EFI_BOOT_SERVICES *BS;
@@ -58,6 +59,11 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
 
     scheduler_start();
+
+    uint64_t init_pid = vm_pawn_create();
+    kprintf("Starting PID 1 /sbin/init\n"); 
+    vm_pawn_exec(init_pid,"sbin/init/init");
+
     while(1) {
        tasks_run();
     } 

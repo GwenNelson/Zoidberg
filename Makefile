@@ -1,5 +1,5 @@
 OVMFPATH=/home/gareth/edk2/Build/OvmfX64/DEBUG_GCC46/FV
-INCLUDES=-I. -Inewlib/newlib/libc/include -Iefilibc/efi/inc -Iefilibc/efi/inc/protocol -Iefilibc/efi/inc/x86_64 -Ilibnet/src -Ipawn/source/amx/
+INCLUDES=-I. -Inewlib/newlib/libc/include -Iefilibc/efi/inc -Iefilibc/efi/inc/protocol -Iefilibc/efi/inc/x86_64 -Ilibnet/src -Ipawn/source/amx/ -Ivm
 ROMPATH=/usr/lib/ipxe/qemu/efi-e1000.rom
 
 CC=x86_64-w64-mingw32-gcc
