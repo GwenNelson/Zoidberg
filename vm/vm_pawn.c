@@ -44,5 +44,32 @@ void vm_pawn_exec(uint64_t task_id, char* filename) {
      kprintf("vm_pawn: exec() - pawn context at %#llx\n",t->ctx);
      if(pawn_ctx->is_ready == 1) { // TODO - do stuff here to reset it after a fork
      }
-     pawn_ctx->is_ready = 1; 
+     kprintf("vm_pawn: exec() - reading AMX header\n");
+     FILE* fd = fopen(filename,"r");
+     if(fd==NULL) {
+        kprintf("vm_pawn: exec() - Could not open %s\n",filename);
+        return;
+     }
+
+     AMX_HEADER hdr;
+     fread(&hdr, 1, sizeof(AMX_HEADER), fd);
+     kprintf("vm_pawn: exec() - parsing AMX header\n");
+     amx_Align16(&hdr.magic);
+/*     amx_Align16((uint16_t *)&hdr.flags);
+     amx_Align32((uint32_t *)&hdr.size);
+     amx_Align32((uint32_t *)&hdr.cod);
+     amx_Align32((uint32_t *)&hdr.dat);
+     amx_Align32((uint32_t *)&hdr.hea);
+     amx_Align32((uint32_t *)&hdr.stp);*/
+     kprintf("AMX magic is %#lx\n",hdr.magic);
+     if(hdr.magic != AMX_MAGIC) {
+        fclose(fd);
+        kprintf("vm_pawn: exec() - %s is not an AMX binary!\n",filename);
+        return;
+     }
+     amx_Align32((uint32_t*)&hdr.size);
+     kprintf("vm_pawn: exec() - Setting up AMX VM with %d bytes\n",hdr.size);
+
+     fclose(fd);
+     pawn_ctx->is_ready = 1;
 }

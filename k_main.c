@@ -62,7 +62,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
     uint64_t init_pid = vm_pawn_create();
     kprintf("Starting PID 1 /sbin/init\n"); 
-    vm_pawn_exec(init_pid,"sbin/init/init");
+    vm_pawn_exec(init_pid,"/EFI/BOOT/sbin/init");
 
     while(1) {
        tasks_run();

@@ -34,6 +34,8 @@ IF(WIN32)
   ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
 ENDIF(WIN32)
 
+
+ADD_DEFINITIONS(-DPAWN_CELL_SIZE=64)
 # The Pawn compiler
 SET(PAWNCC_SRCS sc1.c sc2.c sc3.c sc4.c sc5.c sc6.c sc7.c
 	scexpand.c sci18n.c sclist.c scmemfil.c scstate.c scvars.c
