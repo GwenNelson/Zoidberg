@@ -28,7 +28,7 @@ void timer_func(EFI_EVENT Event, void *ctx) {
      }
 }
 
-void init_task(void (*init_ctx)(void* ctx), void (*cleanup)(void* ctx), void (*iter_loop)(void* ctx)) {
+uint64_t init_task(void (*init_ctx)(void* ctx, uint64_t task_id), void (*cleanup)(void* ctx, uint64_t task_id), void (*iter_loop)(void* ctx, uint64_t task_id)) {
      uint64_t new_task_id = last_task_id+1;
      kprintf("k_thread: init_task() Starting task ID %d at %#llx\n",new_task_id,init_ctx);
 
@@ -39,11 +39,12 @@ void init_task(void (*init_ctx)(void* ctx), void (*cleanup)(void* ctx), void (*i
      new_task->cleanup   = cleanup;
      new_task->iter_loop = iter_loop;
      if(init_ctx != NULL) {
-        new_task->init_ctx(new_task->ctx);
+        new_task->init_ctx(new_task->ctx, new_task_id);
      }
      BS->SetTimer(timer_ev,TimerCancel,10);    // cheap alternative to a mutex lock
      HASH_ADD_INT(tasks, task_id, new_task);
      BS->SetTimer(timer_ev,TimerPeriodic,10);  // unlock
+     return new_task_id;
 }
 
 void kill_task(uint64_t task_id) {
@@ -61,7 +62,7 @@ void scheduler_start() {
 }
 
 void tasks_run() {
-     if(cur_task != NULL) cur_task->iter_loop(cur_task->ctx);
+     if(cur_task != NULL) cur_task->iter_loop(cur_task->ctx,cur_task->task_id);
 }
 
 

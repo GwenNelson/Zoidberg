@@ -52,6 +52,11 @@ source files:
  fs/uefi.c     - FS driver for UEFI
  fs/devfs.c    - FS driver for devfs
 
+VM methods:
+   create()       - create the VM, but don't run anything yet
+   exec(vfs_path) - load a file from memory
+   fork(other_vm) - copy another VM into this one
+
 Startup:
    EFI boilerplate (setup ST, BS, RT etc)
    use statically allocated kmsg buffer

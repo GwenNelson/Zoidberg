@@ -28,6 +28,9 @@ genversion:
 amx.o: pawn/source/amx/amx.c
 	x86_64-w64-mingw32-gcc -DPAWN_CELL_SIZE=64 -ffreestanding ${INCLUDES} -c $< -o $@
 
+vm/vm_pawn.o: vm/vm_pawn.c
+	x86_64-w64-mingw32-gcc -ffreestanding ${INCLUDES} -c $< -o $@
+
 k_thread.o: k_thread.c cr.c cr.h
 	x86_64-w64-mingw32-gcc -ffreestanding ${INCLUDES} -c $< -o $@
 
@@ -51,8 +54,8 @@ newlib/build/x86_64-zoidberg/newlib/libc.a:
 	cd newlib/build; ../configure --target=x86_64-zoidberg
 	CFLAGS=-nostdinc make -C newlib/build
 
-BOOTX64.EFI:newlib/build/x86_64-zoidberg/newlib/libc.a  k_main.o kmsg.o k_heap.o k_network.o k_thread.o libnet/libnet.a
-	x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $@ kmsg.o k_thread.o k_heap.o k_network.o k_main.o libnet/libnet.a newlib/build/x86_64-zoidberg/newlib/libc.a -lgcc
+BOOTX64.EFI:newlib/build/x86_64-zoidberg/newlib/libc.a  k_main.o kmsg.o k_heap.o k_network.o k_thread.o amx.o vm/vm_pawn.o libnet/libnet.a
+	x86_64-w64-mingw32-gcc -nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -o $@ kmsg.o k_thread.o k_heap.o k_network.o k_main.o amx.o vm/vm_pawn.o libnet/libnet.a newlib/build/x86_64-zoidberg/newlib/libc.a -lgcc
 
 boot.img: BOOTX64.EFI
 	dd if=/dev/zero of=$@ bs=1M count=33
