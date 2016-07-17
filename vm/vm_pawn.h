@@ -8,6 +8,7 @@ struct pawn_vm_t {
    AMX amx;
    AMX_IDLE idlefunc;
    int is_ready;
+   unsigned char* datablock;
 } pawn_vm_t;
 
 void vm_pawn_init_ctx(void **ctx, uint64_t task_id);

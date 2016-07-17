@@ -47,6 +47,7 @@ uint64_t vm_pawn_create() {
 
 
 ZOIDBERG_FILE *zoidberg_fopen(const char *path, const char *mode);
+size_t zoidberg_fread(void *ptr, size_t size, size_t nmemb, ZOIDBERG_FILE *stream);
 void vm_pawn_exec(uint64_t task_id, char* filename) {
      kprintf("vm_pawn: exec() - task ID is %d, exec file %s\n",task_id,filename);
 
@@ -74,8 +75,21 @@ void vm_pawn_exec(uint64_t task_id, char* filename) {
      amx_Align32((uint32_t *)&hdr.hea);
      amx_Align32((uint32_t *)&hdr.stp);
      kprintf("AMX magic is %x\n",hdr.magic);
-     kprintf("vm_pawn: exec() - Setting up AMX VM with %d bytes\n",hdr.stp);
-
+     kprintf("vm_pawn: exec() - Setting up AMX VM with %d bytes\n",hdr.size);
+     memset((void*)&(pawn_ctx->amx),0, sizeof(AMX));
+     kprintf("memset\n");
+     pawn_ctx->datablock = (unsigned char*)malloc(hdr.size);
+     kprintf("malloc\n");
+     zoidberg_fread(pawn_ctx->datablock, 1, hdr.size-hdr.hea, fd);
+     kprintf("fread\n");
      zoidberg_fclose(fd);
+     int result=amx_Init(&(pawn_ctx->amx), pawn_ctx->datablock);
+     if(result != AMX_ERR_NONE) {
+        kprintf("vm_pawn: exec() - Could not load AMX image\n");
+        free(pawn_ctx->datablock);
+        pawn_ctx->amx.base = NULL;
+        return;
+     }
+     kprintf("vm_pawn: exec() - Loaded AMX image into task\n");
      pawn_ctx->is_ready = 1;
 }
