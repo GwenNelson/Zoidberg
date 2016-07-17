@@ -944,7 +944,7 @@ static void initglobals(void)
   sc_debug=sCHKBOUNDS;  /* by default: bounds checking+assertions */
   pc_optimize=sOPTIMIZE_CORE;
   sc_needsemicolon=FALSE;/* semicolon required to terminate expressions? */
-  pc_cellsize=4;        /* default cell size = 4 bytes, 32-bits */
+  pc_cellsize=8;        /* default cell size = 4 bytes, 32-bits */
   sc_dataalign=pc_cellsize;
   pc_stksize=sDEF_AMXSTACK;/* default stack size */
   pc_addlibtable=TRUE;  /* by default, add a "library table" to the output file */
