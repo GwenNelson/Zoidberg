@@ -1,4 +1,8 @@
 #!/bin/sh
 export PATH=~/bin/bin:$PWD/sdk:$PATH
-make newlib/build/x86_64-zoidberg/newlib/libc.a
-make all
+export WORKSPACE=`pwd`/../edk2
+export PACKAGES_PATH=$WORKSPACE:$PWD
+pushd $PWD
+cd $WORKSPACE
+. edksetup.sh
+popd
