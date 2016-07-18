@@ -19,7 +19,6 @@
 [Packages]
   StdLib/StdLib.dec
   MdePkg/MdePkg.dec
-  MdePkg/Library/BaseLib
 
 [LibraryClasses]
   LibC
