@@ -26,7 +26,6 @@ echo Configuring and compiling zoidberg kernel
 build -a X64 -p kernel.dsc
 
 cp -Rv $WORKSPACE/build build
-cp build/zoidberg/DEBUG_GCC46/X64/kernel.efi BOOTX64.EFI
 
 echo Building userland
 
@@ -39,6 +38,6 @@ dd if=/dev/zero of=boot.img bs=1M count=33
 mmd -i boot.img ::/EFI
 mmd -i boot.img ::/EFI/BOOT
 mmd -i boot.img ::/EFI/BOOT/sbin
-mcopy -i boot.img BOOTX64.EFI ::/EFI/BOOT
 mcopy -i boot.img userland/build/init ::/EFI/BOOT/sbin
-
+mcopy -i boot.img build/zoidberg/DEBUG_GCC46/X64/kernel.efi ::/EFI/BOOT
+mcopy -i boot.img startup.nsh ::/
