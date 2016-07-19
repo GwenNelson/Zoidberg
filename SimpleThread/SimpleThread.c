@@ -44,10 +44,11 @@ EFIAPI
 CreateThread(
         IN  EFI_SIMPLETHREAD_PROTOCOL  *This,
         IN  THREAD_FUNC_T Thread,
-        IN  VOID *  Arg
+        IN  VOID *  Arg,
+	OUT VOID * NewThread
         )
 {
-     create_thread(Thread, Arg);
+     NewThread = create_thread(Thread, Arg);
      return 0;
 }
 

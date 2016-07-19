@@ -1,9 +1,11 @@
 #ifndef K_THREAD_H
 #define K_THREAD_H
 
+#include "../SimpleThread/SimpleThread.h"
+
+EFI_SIMPLETHREAD_PROTOCOL *SimpleThread;
 
 struct task_def_t {
-   UT_hash_handle hh;
    int task_id;
    void (*init_ctx)(void** ctx, uint64_t task_id);
    void (*cleanup)(void* ctx, uint64_t task_id);

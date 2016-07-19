@@ -55,7 +55,8 @@ EFI_STATUS
 (EFIAPI* EFI_CREATE_THREAD  )(
         IN  EFI_SIMPLETHREAD_PROTOCOL  *This,
         IN  THREAD_FUNC_T Thread,
-        IN  VOID *  Arg
+        IN  VOID *  Arg,
+	OUT VOID * NewThread
         );
 
 
