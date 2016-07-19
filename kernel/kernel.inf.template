@@ -13,8 +13,9 @@
 [Sources]
   k_main.c
   kmsg.c
-#  k_network.c
   k_thread.c
+  vm/amx.c
+  vm/vm_pawn.c
 
 [Packages]
   StdLib/StdLib.dec
@@ -28,3 +29,5 @@
   LibUefi
   DevShell
 
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -DPAWN_CELL_SIZE=64 -DAMX_NODYNALOAD -w 

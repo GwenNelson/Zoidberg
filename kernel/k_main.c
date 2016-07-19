@@ -7,6 +7,7 @@
 #include "kmsg.h"
 #include "k_thread.h"
 #include "zoidberg_version.h"
+#include "vm_pawn.h"
 
 EFI_SYSTEM_TABLE *ST;
 EFI_BOOT_SERVICES *BS;
@@ -49,14 +50,11 @@ int main(int argc, char** argv) {
     kprintf("Starting multitasking\n");
     scheduler_start();
 
-/*    scheduler_start();
+    kprintf("Starting PID 1 /sbin/init\n");
+    UINT64 init_pid = init_task(&vm_pawn_mainproc,(void*)"fs0:\\EFI\\BOOT\\sbin\\init");
 
-    UINT64 init_pid = vm_pawn_create();
-    kprintf("Starting PID 1 /sbin/init\n"); 
-    vm_pawn_exec(init_pid,"/EFI/BOOT/sbin/init");*/
-
-/*    while(1) {
-       tasks_run();
-    } */
+    while(1) {
+       gBS->Stall(1000* 1000);
+    }
     return EFI_SUCCESS;
 }
