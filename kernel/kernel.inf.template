@@ -4,21 +4,22 @@
   FILE_GUID                      = c80cc117-df52-4c37-b480-affdbfbadcc2
   MODULE_TYPE                    = UEFI_APPLICATION
   VERSION_STRING                 = @@VERSION@@
-  ENTRY_POINT                    = UefiMain
+  ENTRY_POINT                    = ShellCEntryLib
 
 #
-#  VALID_ARCHITECTURES           = IA32 X64
+#  VALID_ARCHITECTURES           = X64
 #
 
 [Sources]
   k_main.c
-#  kmsg.c
+  kmsg.c
 #  k_network.c
 #  k_thread.c
 
 [Packages]
   StdLib/StdLib.dec
   MdePkg/MdePkg.dec
+  ShellPkg/ShellPkg.dec
 
 [LibraryClasses]
   LibC

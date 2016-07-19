@@ -1,12 +1,7 @@
-#include <efi.h>
-#include <efilib.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#define uthash_fatal(msg) kprintf(msg)
-
-#include "uthash.h"
 
 #include "kmsg.h"
 #include "k_thread.h"

@@ -1,19 +1,16 @@
-#include <efi.h>
-#include <efilib.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include "efilibc.h"
+
+#include <sys/EfiSysCall.h>
+#include <Library/UefiBootServicesTableLib.h>
 
 #include "kmsg.h"
-#include "k_heap.h"
 #include "zoidberg_version.h"
-#include "k_thread.h"
-#include "vm_pawn.h"
 
 EFI_SYSTEM_TABLE *ST;
 EFI_BOOT_SERVICES *BS;
 EFI_RUNTIME_SERVICES *RT;
-EFI_HANDLE gImageHandle;
-EFI_LOADED_IMAGE *g_li;
+extern EFI_HANDLE gImageHandle;
 
 char why_not_header[]=""\
 "*****************************************************\n"\
@@ -28,16 +25,12 @@ char why_not_header[]=""\
 "* with Fox or the curiosity company                 *\n"\
 "*****************************************************\n\n";
  
-EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
-    ST = SystemTable;
+int main(int argc, char** argv) {
+//EFI_STATUS UefiMain(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
+    ST = gST;
     BS = ST->BootServices;
     RT = ST->RuntimeServices;
-    gImageHandle = ImageHandle;
     
-    EFI_LOADED_IMAGE *li;
- 
-    BS->HandleProtocol(ImageHandle, &LoadedImageProtocol, (void**)&li);
-    efilibc_init(gImageHandle);
 
     init_static_kmsg();
 
@@ -45,26 +38,21 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
     char* build_no = ZOIDBERG_BUILD;
     kprintf("Zoidberg kernel, build %s booting\n", build_no);
-    kprintf("Kernel loaded at: %#llx\n", (uint64_t)li->ImageBase);
-    kprintf("Kernel entry point (efi_main) located at: %#11x\n", (uint64_t)efi_main);
-
-    init_mem();
+    kprintf("Kernel entry point (UefiMain) located at: %#11x\n", (UINT64)main);
     
     init_dynamic_kmsg();
 
     kprintf("Disabling UEFI Watchdog\n");
     BS->SetWatchdogTimer(0, 0, 0, NULL);
-    
-//    init_net();
 
+/*    scheduler_start();
 
-    scheduler_start();
-
-    uint64_t init_pid = vm_pawn_create();
+    UINT64 init_pid = vm_pawn_create();
     kprintf("Starting PID 1 /sbin/init\n"); 
-    vm_pawn_exec(init_pid,"/EFI/BOOT/sbin/init");
+    vm_pawn_exec(init_pid,"/EFI/BOOT/sbin/init");*/
 
-    while(1) {
+/*    while(1) {
        tasks_run();
-    } 
+    } */
+    return EFI_SUCCESS;
 }

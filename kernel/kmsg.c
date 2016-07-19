@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 char *kmsg=NULL;
 
@@ -16,7 +17,7 @@ void init_static_kmsg() {
 int kprintf(const char *fmt, ...);
 void init_dynamic_kmsg() {
 	kprintf("kmsg: about to switch to dynamic buffer, if things go silent after this we have memory issues\n");
-	kmsg = realloc((void*)kmsg, strlen(4096));
+	kmsg = realloc((void*)kmsg, 4096);
 	memset((void*)kmsg, 0, 4096);
 	strcat(kmsg,static_kmsg);
 	kprintf("kmsg: allocated dynamic buffer!\n");

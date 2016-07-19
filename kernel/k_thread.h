@@ -1,7 +1,6 @@
 #ifndef K_THREAD_H
 #define K_THREAD_H
 
-#include "uthash.h"
 
 struct task_def_t {
    UT_hash_handle hh;

@@ -24,3 +24,5 @@ echo Configuring and compiling zoidberg kernel
 
 ./genversion.sh
 build -a X64 -p kernel.dsc
+
+cp -Rv $WORKSPACE/build build
