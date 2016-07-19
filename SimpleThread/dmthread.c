@@ -197,7 +197,7 @@ void initTimer()
 {
     EFI_STATUS  Status;
     Status = gBS->CreateEvent(EVT_TIMER | EVT_NOTIFY_SIGNAL, TPL_CALLBACK, (EFI_EVENT_NOTIFY)Skedule, (VOID*)NULL, &myEvent);
-    Status = gBS->SetTimer(myEvent,TimerPeriodic , 1 * 1000 * 1000);
+    Status = gBS->SetTimer(myEvent,TimerPeriodic , 10);
 }
 
 void closeTimer()
