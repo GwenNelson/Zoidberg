@@ -40,4 +40,5 @@ mmd -i boot.img ::/EFI/BOOT
 mmd -i boot.img ::/EFI/BOOT/sbin
 mcopy -i boot.img userland/build/init ::/EFI/BOOT/sbin
 mcopy -i boot.img build/zoidberg/DEBUG_GCC46/X64/kernel.efi ::/EFI/BOOT
+mcopy -i boot.img $WORKSPACE/Build/OvmfX64/DEBUG_GCC46/X64/Shell.efi ::/EFI/BOOT/BOOTX64.EFI
 mcopy -i boot.img startup.nsh ::/
