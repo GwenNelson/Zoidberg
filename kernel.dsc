@@ -8,8 +8,8 @@
   BUILD_TARGETS           = DEBUG|RELEASE|NOOPT
 
 [Components]
+  SimpleThread/SimpleThread.inf
   kernel/kernel.inf
-
 
 [LibraryClasses]
   #
