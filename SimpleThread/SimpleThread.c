@@ -88,5 +88,5 @@ UefiMain(
             &Private->SimpleThread
             );
 
-    return 0;
+    return Status;
 }

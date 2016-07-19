@@ -195,9 +195,9 @@ void start_thread(dmthread_t*  thread)
 
 void initTimer()
 {
-    EFI_STATUS  Status;
-    Status = gBS->CreateEvent(EVT_TIMER | EVT_NOTIFY_SIGNAL, TPL_CALLBACK, (EFI_EVENT_NOTIFY)Skedule, (VOID*)NULL, &myEvent);
-    Status = gBS->SetTimer(myEvent,TimerPeriodic , 10);
+    gBS->CreateEvent(EVT_TIMER | EVT_NOTIFY_SIGNAL, TPL_CALLBACK, (EFI_EVENT_NOTIFY)Skedule, (VOID*)NULL, &myEvent);
+    gBS->SetTimer(myEvent,TimerPeriodic , 10);
+    
 }
 
 void closeTimer()
@@ -216,7 +216,7 @@ void resumeTimer()
     initTimer();
 }
 
-void create_thread(thread_func_t f, void *  arg)
+void* create_thread(thread_func_t f, void *  arg)
 {
     // __asm enter // or __asm push ebp; mov esp, ebp
     thread_list *  new_thread;
@@ -234,6 +234,7 @@ void create_thread(thread_func_t f, void *  arg)
     sys.current = sys.threads;
 // Thanks there is leave here, then the esp is correct
 //     // __asm leave // or __asm mov ebp esp; pop ebp
+    return (void*)new_thread;
 }
 
 void thread_join()

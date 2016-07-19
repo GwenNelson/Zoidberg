@@ -3,20 +3,18 @@
 
 #include "../SimpleThread/SimpleThread.h"
 
-EFI_SIMPLETHREAD_PROTOCOL *SimpleThread;
+
 
 struct task_def_t {
    int task_id;
-   void (*init_ctx)(void** ctx, uint64_t task_id);
-   void (*cleanup)(void* ctx, uint64_t task_id);
-   void (*iter_loop)(void* ctx, uint64_t task_id);
+   void (*task_proc)(void* arg, UINT64 task_id);
    void* ctx;
-} task_def_t;
+   void* arg;
+};
 
-uint64_t init_task(void (*init_ctx)(void** ctx, uint64_t task_id), void (*cleanup)(void* ctx, uint64_t task_id), void (*iter_loop)(void* ctx, uint64_t task_id));
-struct task_def_t *get_task(uint64_t task_id);
-void kill_task(uint64_t task_id);
+UINT64 init_task(void (*task_proc)(void* arg, UINT64 task_id), void* arg);
+struct task_def_t *get_task(UINT64 task_id);
+void kill_task(UINT64 task_id);
 void scheduler_start();
-void tasks_run();
 
 #endif

@@ -14,7 +14,7 @@
   k_main.c
   kmsg.c
 #  k_network.c
-#  k_thread.c
+  k_thread.c
 
 [Packages]
   StdLib/StdLib.dec

@@ -5,6 +5,7 @@
 #include <Library/UefiBootServicesTableLib.h>
 
 #include "kmsg.h"
+#include "k_thread.h"
 #include "zoidberg_version.h"
 
 EFI_SYSTEM_TABLE *ST;
@@ -44,6 +45,9 @@ int main(int argc, char** argv) {
 
     kprintf("Disabling UEFI Watchdog\n");
     BS->SetWatchdogTimer(0, 0, 0, NULL);
+
+    kprintf("Starting multitasking\n");
+    scheduler_start();
 
 /*    scheduler_start();
 
