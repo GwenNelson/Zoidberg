@@ -23,23 +23,74 @@ cell AMX_NATIVE_CALL pawn_syscall_write(AMX *amx, const cell *params) {
      amx_GetString((char*)ctx.args[1].buf, (cell*)params[2], 0, ctx.args[2].count);
      sys_write(&ctx);
      free(ctx.args[1].buf);
+     kprintf("FD %d\n",ctx.args[0].fd);
      return (unsigned int)ctx.retval.ret_count;
+}
+
+cell AMX_NATIVE_CALL pawn_syscall_fork(AMX *amx, const cell *params) {
+     struct pawn_vm_t *new_pawn_ctx = malloc(sizeof(struct pawn_vm_t));
+     struct pawn_vm_t *old_pawn_ctx;
+
+
+
+
+
+     BS->SetMem((void*)&(new_pawn_ctx->amx),sizeof(AMX),0);
+     amx_GetUserData(amx,1,&old_pawn_ctx);
+     kprintf("vm_pawn: fork() - forking %s, task ID %d\n",old_pawn_ctx->filename,old_pawn_ctx->task_id);
+     int result = amx_Clone(&(new_pawn_ctx->amx),amx,amx->data);
+     if(result != AMX_ERR_NONE) {
+        kprintf("vm_pawn: fork() - Could not load AMX image: %s\n",aux_StrError(result));
+        aux_FreeProgram(&(new_pawn_ctx->amx));
+        return;
+     }
+
+     UINT64 new_task = init_task(&vm_pawn_forkproc,(void*)new_pawn_ctx);
+     return 0;
 }
 
 static AMX_NATIVE_INFO syscall_Natives[] = {
     {"write", pawn_syscall_write},
+    {"fork",  pawn_syscall_fork},
     {0,0}
 };
 
-void vm_pawn_mainproc(void* filename, UINT64 task_id) {
+void vm_pawn_forkproc(void* _t) {
+     kprintf("vm_pawn: forkproc, task struct at %#llx\n",_t);
+     struct task_def_t *t = (struct task_def_t*)_t;
+     int result;
+     kprintf("vm_pawn: fork syscall, new thread is %d\n",t->task_id);
+     struct pawn_vm_t* pawn_ctx = (struct pawn_vm_t*)t->arg;
+     pawn_ctx->task_id = t->task_id;
+     cell ret = 0;
+     pawn_ctx->amx.pri = t->task_id;
+     result   = amx_Exec(&(pawn_ctx->amx), &ret, AMX_EXEC_CONT);
+     while(result == AMX_ERR_SLEEP) {
+        BS->Stall(pawn_ctx->amx.pri);
+        result = amx_Exec(&(pawn_ctx->amx), &ret, AMX_EXEC_CONT);
+     }
+     if(result != AMX_ERR_NONE) {
+        kprintf("vm_pawn: forkproc() %s\n", aux_StrError(result));
+     }
+     if(ret != 0) {
+        kprintf("vm_pawn: Task %d returned %ld\n", t->task_id,(long)ret);
+     }
+     aux_FreeProgram(&(pawn_ctx->amx));
+
+}
+
+void vm_pawn_mainproc(void* _t) {
+     struct task_def_t *t = (struct task_def_t*)_t;
      struct pawn_vm_t pawn_ctx;
-     char* _filename = (char*)filename;
+     char* _filename = (char*)t->arg;
+     pawn_ctx.filename = _filename;
+     pawn_ctx.task_id  = t->task_id;
+     UINT64 task_id = t->task_id;
      kprintf("vm_pawn: exec() - task ID is %d, exec file %s\n",task_id,_filename);
 
-     struct task_def_t *t       = get_task(task_id);
      kprintf("vm_pawn: exec() - task struct at %#llx\n", t);
      kprintf("vm_pawn: exec() - reading AMX header\n");
-     FILE* fd = fopen(filename,"rb");
+     FILE* fd = fopen(pawn_ctx.filename,"rb");
      if(fd==NULL) {
         kprintf("vm_pawn: exec() - Could not open %s\n",_filename);
         return;
@@ -71,7 +122,8 @@ void vm_pawn_mainproc(void* filename, UINT64 task_id) {
      amx_Register(&(pawn_ctx.amx), syscall_Natives, -1);
      
      kprintf("vm_pawn: exec() - Starting VM\n");     
-
+     pawn_ctx.task_id = task_id;
+     amx_SetUserData(&(pawn_ctx.amx),1,&pawn_ctx);
      amx_SetDebugHook(&(pawn_ctx.amx),vm_pawn_monitor);
      cell ret = 0;
      result   = amx_Exec(&(pawn_ctx.amx), &ret, AMX_EXEC_MAIN);

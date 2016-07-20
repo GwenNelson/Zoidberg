@@ -1506,7 +1506,7 @@ int AMXAPI amx_Clone(AMX *amxClone, AMX *amxSource, void *data)
   amxClone->flags=amxSource->flags;
 
   /* copy the data segment; the stack and the heap can be left uninitialized */
-  assert(data!=NULL);
+//  assert(data!=NULL);
   amxClone->data=(unsigned char _FAR *)data;
   dataSource=(amxSource->data!=NULL) ? amxSource->data : amxSource->base+(int)hdr->dat;
   memcpy(amxClone->data,dataSource,(size_t)(hdr->hea-hdr->dat));

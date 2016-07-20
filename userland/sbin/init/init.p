@@ -1,5 +1,7 @@
 #include <syscalls>
 main() {
-   write(1,"Init\n",5);
+   write(1,"Init\r",5);
+   new pid = fork();
+   write(pid,"fork!\r",6);
 }
 
