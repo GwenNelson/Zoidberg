@@ -18,6 +18,7 @@
   vm/amx.c
   vm/amxaux.c
   vm/vm_pawn.c
+  vm/duktape.c
 
 [Packages]
   StdLib/StdLib.dec
