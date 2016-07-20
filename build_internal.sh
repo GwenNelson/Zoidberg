@@ -38,9 +38,13 @@ dd if=/dev/zero of=boot.img bs=1M count=33
 /sbin/mkfs.vfat boot.img -F 32
 mmd -i boot.img ::/EFI
 mmd -i boot.img ::/EFI/BOOT
-mmd -i boot.img ::/EFI/BOOT/sbin
-mcopy -i boot.img userland/build/init ::/EFI/BOOT/sbin
 mcopy -i boot.img build/zoidberg/DEBUG_GCC46/X64/kernel.efi ::/EFI/BOOT
 mcopy -i boot.img $WORKSPACE/Build/OvmfX64/DEBUG_GCC46/X64/Shell.efi ::/EFI/BOOT/BOOTX64.EFI
 mcopy -i boot.img build/zoidberg/DEBUG_GCC46/X64/SimpleThread.efi ::/EFI/BOOT
 mcopy -i boot.img startup.nsh ::/
+
+echo Building initrd
+dd if=/dev/zero of=initrd.img bs=1M count=33
+/sbin/mkfs.vfat initrd.img -F 32
+mmd -i initrd.img ::/sbin
+mcopy -i initrd.img userland/build/init ::/sbin

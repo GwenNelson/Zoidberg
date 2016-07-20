@@ -28,7 +28,8 @@ char why_not_header[]=""\
 "*****************************************************\n\n";
  
 int main(int argc, char** argv) {
-//EFI_STATUS UefiMain(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
+    if(argc>1) {
+    }
     ST = gST;
     BS = ST->BootServices;
     RT = ST->RuntimeServices;
@@ -51,7 +52,7 @@ int main(int argc, char** argv) {
     scheduler_start();
 
     kprintf("Starting PID 1 /sbin/init\n");
-    UINT64 init_pid = init_task(&vm_pawn_mainproc,(void*)"fs0:\\EFI\\BOOT\\sbin\\init");
+    UINT64 init_pid = init_task(&vm_pawn_mainproc,(void*)"initrd:\\sbin\\init");
 
     while(1) {
        gBS->Stall(1000* 1000);
