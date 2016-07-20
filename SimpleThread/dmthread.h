@@ -69,6 +69,8 @@ typedef struct Scheduler
 
 extern Scheduler sys;
 
+void stopTimer();
+void resumeTimer();
 void* create_thread(thread_func_t f, void *  arg);
 void thread_join();
 

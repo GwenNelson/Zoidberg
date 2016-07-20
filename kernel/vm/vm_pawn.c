@@ -38,7 +38,16 @@ cell AMX_NATIVE_CALL pawn_syscall_fork(AMX *amx, const cell *params) {
      BS->SetMem((void*)&(new_pawn_ctx->amx),sizeof(AMX),0);
      amx_GetUserData(amx,1,&old_pawn_ctx);
      kprintf("vm_pawn: fork() - forking %s, task ID %d\n",old_pawn_ctx->filename,old_pawn_ctx->task_id);
-     int result = amx_Clone(&(new_pawn_ctx->amx),amx,amx->data);
+     long codesize;
+     long datasize;
+     long stackheap;
+     amx_MemInfo(amx,&codesize,&datasize,&stackheap);
+     kprintf("vm_pawn: fork() - got memory info\n");
+     new_pawn_ctx->amx.data = malloc(datasize+stackheap);
+     kprintf("vm_pawn: fork() - allocated new data block\n");
+     BS->SetMem((void*)new_pawn_ctx->amx.data,datasize+stackheap,0);
+     int result = amx_Clone(&(new_pawn_ctx->amx),amx,new_pawn_ctx->amx.data);
+     kprintf("vm_pawn: fork() - cloned AMX VM\n");
      if(result != AMX_ERR_NONE) {
         kprintf("vm_pawn: fork() - Could not load AMX image: %s\n",aux_StrError(result));
         aux_FreeProgram(&(new_pawn_ctx->amx));
@@ -46,6 +55,7 @@ cell AMX_NATIVE_CALL pawn_syscall_fork(AMX *amx, const cell *params) {
      }
 
      UINT64 new_task = init_task(&vm_pawn_forkproc,(void*)new_pawn_ctx);
+     kprintf("vm_pawn: fork() - forked thread ID %d\n",new_task);
      return 0;
 }
 
@@ -56,7 +66,8 @@ static AMX_NATIVE_INFO syscall_Natives[] = {
 };
 
 void vm_pawn_forkproc(void* _t) {
-     kprintf("vm_pawn: forkproc, task struct at %#llx\n",_t);
+     kprintf("vm_pawn forkproc()\n");
+     kprintf("vm_pawn: forkproc, task struct at %#llx\n",&_t);
      struct task_def_t *t = (struct task_def_t*)_t;
      int result;
      kprintf("vm_pawn: fork syscall, new thread is %d\n",t->task_id);

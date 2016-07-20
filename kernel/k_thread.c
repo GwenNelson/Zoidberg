@@ -15,7 +15,7 @@ UINT64    last_task_id    = 0;
 UINT64    max_task_id     = 0;
 UINT64    cur_task_id     = 0;
 
-UINT64 init_task(void (*task_proc)(void* arg, UINT64 task_id), void* arg) {
+UINT64 init_task(void (*task_proc)(void* ctx), void* arg) {
      UINT64 new_task_id = last_task_id+1;
      max_task_id++;
      kprintf("k_thread: init_task() Starting task ID %d at %#llx\n",new_task_id,task_proc);

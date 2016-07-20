@@ -12,7 +12,7 @@ struct task_def_t {
    void* arg;
 };
 
-UINT64 init_task(void (*task_proc)(void* arg, UINT64 task_id), void* arg);
+UINT64 init_task(void (*task_proc)(void* ctx), void* arg);
 struct task_def_t *get_task(UINT64 task_id);
 void kill_task(UINT64 task_id);
 void scheduler_start();
