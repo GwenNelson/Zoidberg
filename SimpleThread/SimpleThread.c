@@ -48,9 +48,7 @@ CreateThread(
 	OUT VOID * NewThread
         )
 {
-     stopTimer();
      NewThread = (void*)create_thread(Thread, Arg);
-     resumeTimer();
      return 0;
 }
 

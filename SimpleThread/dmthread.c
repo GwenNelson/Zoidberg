@@ -196,7 +196,7 @@ void start_thread(dmthread_t*  thread)
 void initTimer()
 {
     gBS->CreateEvent(EVT_TIMER | EVT_NOTIFY_SIGNAL, TPL_CALLBACK, (EFI_EVENT_NOTIFY)Skedule, (VOID*)NULL, &myEvent);
-    gBS->SetTimer(myEvent,TimerPeriodic , 10);
+    gBS->SetTimer(myEvent,TimerPeriodic , 1000);
     
 }
 
