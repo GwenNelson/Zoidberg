@@ -15,6 +15,7 @@
   kmsg.c
   k_thread.c
   vm/amx.c
+  vm/amxaux.c
   vm/vm_pawn.c
 
 [Packages]
