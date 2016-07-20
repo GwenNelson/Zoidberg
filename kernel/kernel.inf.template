@@ -14,6 +14,7 @@
   k_main.c
   kmsg.c
   k_thread.c
+  k_syscalls.c
   vm/amx.c
   vm/amxaux.c
   vm/vm_pawn.c

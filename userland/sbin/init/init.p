@@ -1,5 +1,5 @@
 #include <syscalls>
 main() {
-   write(0,"Init\n",5);
+   write(1,"Init\n",5);
 }
 

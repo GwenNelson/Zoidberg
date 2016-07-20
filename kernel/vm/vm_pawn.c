@@ -5,15 +5,31 @@
 #include "amxaux.h"
 #include "kmsg.h"
 #include "k_thread.h"
+#include "k_syscalls.h"
 
 #include "vm_pawn.h"
 
 extern EFI_BOOT_SERVICES *BS;
 
 int AMXAPI vm_pawn_monitor(AMX *amx) {
-    kprintf("vm_pawn_monitor called!\n");
     return AMX_ERR_NONE;
 }
+
+cell AMX_NATIVE_CALL pawn_syscall_write(AMX *amx, const cell *params) {
+     struct syscall_ctx ctx;
+     ctx.args[0].fd    = (unsigned int)params[1];
+     ctx.args[2].count = (ssize_t)params[3];
+     ctx.args[1].buf   = malloc(ctx.args[2].count+1);
+     amx_GetString((char*)ctx.args[1].buf, (cell*)params[2], 0, ctx.args[2].count);
+     sys_write(&ctx);
+     free(ctx.args[1].buf);
+     return (unsigned int)ctx.retval.ret_count;
+}
+
+static AMX_NATIVE_INFO syscall_Natives[] = {
+    {"write", pawn_syscall_write},
+    {0,0}
+};
 
 void vm_pawn_mainproc(void* filename, UINT64 task_id) {
      struct pawn_vm_t pawn_ctx;
@@ -51,6 +67,9 @@ void vm_pawn_mainproc(void* filename, UINT64 task_id) {
         return;
      }
      kprintf("vm_pawn: exec() - Loaded AMX image into task\n");
+     
+     amx_Register(&(pawn_ctx.amx), syscall_Natives, -1);
+     
      kprintf("vm_pawn: exec() - Starting VM\n");     
 
      amx_SetDebugHook(&(pawn_ctx.amx),vm_pawn_monitor);
