@@ -53,8 +53,9 @@ cell AMX_NATIVE_CALL pawn_syscall_fork(AMX *amx, const cell *params) {
         return;
      }
 
-     UINT64 new_task = init_task(&vm_pawn_forkproc,(void*)new_pawn_ctx);
-     kprintf("vm_pawn: fork() - forked thread ID %d\n",new_task);
+     req_task(&vm_pawn_forkproc,(void*)new_pawn_ctx);
+//     UINT64 new_task = init_task(&vm_pawn_forkproc,(void*)new_pawn_ctx);
+//     kprintf("vm_pawn: fork() - forked thread ID %d\n",new_task);
      return 0;
 }
 

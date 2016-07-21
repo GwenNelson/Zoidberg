@@ -55,7 +55,8 @@ int main(int argc, char** argv) {
     UINT64 init_pid = init_task(&vm_pawn_mainproc,(void*)"initrd:\\sbin\\init");
 
     while(1) {
-       gBS->Stall(1000* 1000);
+       BS->Stall(1000);
+       init_tasks();
     }
     return EFI_SUCCESS;
 }
