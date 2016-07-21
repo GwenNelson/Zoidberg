@@ -59,118 +59,6 @@
  *  Intermediate helper defines
  */
 
-/* DLL build detection */
-#if defined(DUK_OPT_DLL_BUILD)
-#define DUK_F_DLL_BUILD
-#elif defined(DUK_OPT_NO_DLL_BUILD)
-#undef DUK_F_DLL_BUILD
-#else
-/* not configured for DLL build */
-#undef DUK_F_DLL_BUILD
-#endif
-
-/* Apple OSX, iOS */
-#if defined(__APPLE__)
-#define DUK_F_APPLE
-#endif
-
-/* OpenBSD */
-#if defined(__OpenBSD__) || defined(__OpenBSD)
-#define DUK_F_OPENBSD
-#endif
-
-/* NetBSD */
-#if defined(__NetBSD__) || defined(__NetBSD)
-#define DUK_F_NETBSD
-#endif
-
-/* FreeBSD */
-#if defined(__FreeBSD__) || defined(__FreeBSD)
-#define DUK_F_FREEBSD
-#endif
-
-/* BSD variant */
-#if defined(DUK_F_FREEBSD) || defined(DUK_F_NETBSD) || defined(DUK_F_OPENBSD) || \
-    defined(__bsdi__) || defined(__DragonFly__)
-#define DUK_F_BSD
-#endif
-
-/* Atari ST TOS.  __TOS__ defined by PureC.  No platform define in VBCC
- * apparently, so to use with VBCC user must define __TOS__ manually.
-  */
-#if defined(__TOS__)
-#define DUK_F_TOS
-#endif
-
-/* Motorola 68K.  Not defined by VBCC, so user must define one of these
- * manually when using VBCC.
- */
-#if defined(__m68k__) || defined(M68000) || defined(__MC68K__)
-#define DUK_F_M68K
-#endif
-
-/* AmigaOS.  Neither AMIGA nor __amigaos__ is defined on VBCC, so user must
- * define 'AMIGA' manually when using VBCC.
- */
-#if defined(AMIGA) || defined(__amigaos__)
-#define DUK_F_AMIGAOS
-#endif
-
-/* PowerPC */
-#if defined(__powerpc) || defined(__powerpc__) || defined(__PPC__)
-#define DUK_F_PPC
-#if defined(__PPC64__) || defined(__LP64__) || defined(_LP64)
-#define DUK_F_PPC64
-#else
-#define DUK_F_PPC32
-#endif
-#endif
-
-/* Windows, both 32-bit and 64-bit */
-#if defined(_WIN32) || defined(WIN32) || defined(_WIN64) || defined(WIN64) || \
-    defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__)
-#define DUK_F_WINDOWS
-#if defined(_WIN64) || defined(WIN64)
-#define DUK_F_WIN64
-#else
-#define DUK_F_WIN32
-#endif
-#endif
-
-/* Flash player (e.g. Crossbridge) */
-#if defined(__FLASHPLAYER__)
-#define DUK_F_FLASHPLAYER
-#endif
-
-/* QNX */
-#if defined(__QNX__)
-#define DUK_F_QNX
-#endif
-
-/* TI-Nspire (using Ndless) */
-#if defined(_TINSPIRE)
-#define DUK_F_TINSPIRE
-#endif
-
-/* Emscripten (provided explicitly by user), improve if possible */
-#if defined(EMSCRIPTEN)
-#define DUK_F_EMSCRIPTEN
-#endif
-
-/* BCC (Bruce's C compiler): this is a "torture target" for compilation */
-#if defined(__BCC__) || defined(__BCC_VERSION__)
-#define DUK_F_BCC
-#endif
-
-/* Linux */
-#if defined(__linux) || defined(__linux__) || defined(linux)
-#define DUK_F_LINUX
-#endif
-
-/* illumos / Solaris */
-#if defined(__sun) && defined(__SVR4)
-#define DUK_F_SUN
-#endif
 
 /* POSIX */
 #if defined(__posix)
@@ -2016,11 +1904,11 @@ typedef struct duk_hthread duk_context;
  * if necessary.  The replacement constants (FP_NAN etc) can be anything but
  * match Linux constants now.
  */
-#undef DUK_USE_REPL_FPCLASSIFY
-#undef DUK_USE_REPL_SIGNBIT
-#undef DUK_USE_REPL_ISFINITE
-#undef DUK_USE_REPL_ISNAN
-#undef DUK_USE_REPL_ISINF
+/*undef DUK_USE_REPL_FPCLASSIFY
+undef DUK_USE_REPL_SIGNBIT
+undef DUK_USE_REPL_ISFINITE
+undef DUK_USE_REPL_ISNAN
+undef DUK_USE_REPL_ISINF*/
 
 /* Complex condition broken into separate parts. */
 #undef DUK_F_USE_REPL_ALL
@@ -2043,6 +1931,8 @@ typedef struct duk_hthread duk_context;
  */
 #define DUK_F_USE_REPL_ALL
 #endif
+
+#define DUK_F_USE_REPL_ALL
 
 #if defined(DUK_F_USE_REPL_ALL)
 #define DUK_USE_REPL_FPCLASSIFY
