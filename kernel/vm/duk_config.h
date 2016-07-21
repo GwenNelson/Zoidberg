@@ -52,6 +52,7 @@
  *
  */
 
+
 #if !defined(DUK_CONFIG_H_INCLUDED)
 #define DUK_CONFIG_H_INCLUDED
 
@@ -530,7 +531,15 @@
 #include <time.h>
 #include <sys/time.h>
 #define DUK_USE_OS_STRING "unknown"
-#else
+#endif
+
+//else
+#undef DUK_USE_DATE_NOW_GETTIMEOFDAY
+#undef DUK_USE_DATE_TZO_GMTIME_R
+#undef DUK_USE_DATE_PRS_STRPTIME
+#undef DUK_USE_DATE_FMT_STRFTIME
+
+
 /* --- Generic fallback --- */
 /* The most portable current time provider is time(), but it only has a
  * one second resolution.
@@ -550,7 +559,7 @@
 #include <time.h>
 
 #define DUK_USE_OS_STRING "unknown"
-#endif  /* autodetect platform */
+//endif  /* autodetect platform */
 
 /* Shared includes: C89 */
 #include <stdio.h>

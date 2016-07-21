@@ -118,6 +118,7 @@
 *  (``sami.vaarala@iki.fi``) and I'll fix the omission.
 */
 
+double trunc(double d){ return (d>0) ? floor(d) : ceil(d) ; }
 #line 1 "duk_replacements.c"
 /*
  *  Replacements for missing platform functions.

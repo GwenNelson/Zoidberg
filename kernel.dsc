@@ -53,6 +53,8 @@
   ShellLib|ShellPkg/Library/UefiShellLib/UefiShellLib.inf
 
   CacheMaintenanceLib|MdePkg/Library/BaseCacheMaintenanceLib/BaseCacheMaintenanceLib.inf
-
+  LibCType|StdLib/LibC/Ctype/Ctype.inf
+  LibLocale|StdLib/LibC/Locale/Locale.inf
+  LibMath|StdLib/LibC/Math/Math.inf
 
 !include StdLib/StdLib.inc

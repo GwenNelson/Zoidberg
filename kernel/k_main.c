@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
     kprintf("Starting PID 1 /sbin/init\n");
 //    UINT64 init_pid = init_task(&vm_pawn_mainproc,(void*)"initrd:\\sbin\\init");
     
-    UINT64 init_pid = init_task(&vm_duktape_mainproc,(void*)"initrd:\\sbin\\init.js");
+    UINT64 init_pid = init_task(&vm_duktape_mainproc,(void*)"initrd:\\sbin\\init");
     while(1) {
        BS->Stall(1000);
        init_tasks();

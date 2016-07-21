@@ -28,7 +28,10 @@
 
 [LibraryClasses]
   LibC
+  LibCType
   LibMath
+  LibStdLib
+  LibTime
   LibStdio
   LibTime
   LibUefi

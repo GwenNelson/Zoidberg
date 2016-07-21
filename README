@@ -1,0 +1,6 @@
+To build:
+   Install edk2 in ~/edk2
+   Install emscripten portable SDK in ~/Downloads/emsdk_portable
+   Fix __HAVE_NANF in edk2
+   Run ./build.sh
+
