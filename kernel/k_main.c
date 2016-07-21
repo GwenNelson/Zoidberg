@@ -8,6 +8,7 @@
 #include "k_thread.h"
 #include "zoidberg_version.h"
 #include "vm_pawn.h"
+#include "vm_duktape.h"
 
 EFI_SYSTEM_TABLE *ST;
 EFI_BOOT_SERVICES *BS;
@@ -52,8 +53,9 @@ int main(int argc, char** argv) {
     scheduler_start();
 
     kprintf("Starting PID 1 /sbin/init\n");
-    UINT64 init_pid = init_task(&vm_pawn_mainproc,(void*)"initrd:\\sbin\\init");
-
+//    UINT64 init_pid = init_task(&vm_pawn_mainproc,(void*)"initrd:\\sbin\\init");
+    
+    UINT64 init_pid = init_task(&vm_duktape_mainproc,(void*)"initrd:\\sbin\\init.js");
     while(1) {
        BS->Stall(1000);
        init_tasks();
