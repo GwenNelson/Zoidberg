@@ -5,9 +5,9 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <sys/types.h>
 #include "k_thread.h"
 
-typedef int ssize_t;
 union syscall_arg {
     unsigned int fd;
     void* buf;

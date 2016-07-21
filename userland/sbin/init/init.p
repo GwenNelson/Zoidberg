@@ -1,12 +1,12 @@
 #include <syscalls>
 main() {
-   write(1,"Init\r",5);
+   write(1,"Init\n",5);
    new pid = fork();
-   if(pid == 0) {
-      write(1,"parent\r",7);
+   if(pid != 0) {
+      write(1,"parent\n",7);
    } else {
-      write(1,"child!\r",7);
+      write(1,"child!\n",7);
    }
-   while(1) {}
+   for(;;) {}
 }
 

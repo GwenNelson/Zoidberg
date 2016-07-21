@@ -74,7 +74,7 @@ void vm_pawn_forkproc(void* _t) {
      struct pawn_vm_t* pawn_ctx = (struct pawn_vm_t*)t->arg;
      pawn_ctx->task_id = t->task_id;
      cell ret = 0;
-     pawn_ctx->amx.pri = t->task_id;
+//     pawn_ctx->amx.pri = t->task_id;
      result   = amx_Exec(&(pawn_ctx->amx), &ret, AMX_EXEC_CONT);
      while(result == AMX_ERR_SLEEP) {
         BS->Stall(pawn_ctx->amx.pri);

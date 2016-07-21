@@ -25,7 +25,7 @@ void acquire_tasks_lock() {   // warning - this motherfucker blocks FOREVER, FOR
      int my_id = rand();
      while(req_tasks_lock != my_id) {
         while(req_tasks_lock>0) {
-          BS->Stall(100);
+          BS->Stall(120);
         }
         req_tasks_lock = my_id;
      }
