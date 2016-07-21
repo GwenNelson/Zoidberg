@@ -67,15 +67,14 @@ static AMX_NATIVE_INFO syscall_Natives[] = {
 
 void vm_pawn_forkproc(void* _t) {
      kprintf("vm_pawn forkproc()\n");
-     for(;;);
-/*     kprintf("vm_pawn: forkproc, task struct at %#llx\n",&_t);
+     kprintf("vm_pawn: forkproc, task struct at %#llx\n",&_t);
      struct task_def_t *t = (struct task_def_t*)_t;
      int result;
      kprintf("vm_pawn: fork syscall, new thread is %d\n",t->task_id);
      struct pawn_vm_t* pawn_ctx = (struct pawn_vm_t*)t->arg;
      pawn_ctx->task_id = t->task_id;
      cell ret = 0;
-//     pawn_ctx->amx.pri = t->task_id;
+     pawn_ctx->amx.pri = t->task_id;
      result   = amx_Exec(&(pawn_ctx->amx), &ret, AMX_EXEC_CONT);
      while(result == AMX_ERR_SLEEP) {
         BS->Stall(pawn_ctx->amx.pri);
@@ -87,7 +86,7 @@ void vm_pawn_forkproc(void* _t) {
      if(ret != 0) {
         kprintf("vm_pawn: Task %d returned %ld\n", t->task_id,(long)ret);
      }
-     aux_FreeProgram(&(pawn_ctx->amx));*/
+     aux_FreeProgram(&(pawn_ctx->amx));
 
 }
 
