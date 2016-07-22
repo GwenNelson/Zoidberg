@@ -6,7 +6,7 @@ export PATH := ${PWD}/sdk/usr/bin:${PATH}
 newlib/build/x86_64-zoidberg/newlib/libc.a: sdktools
 	mkdir -p newlib/build
 	cd newlib/build; ../configure --target=x86_64-zoidberg
-	CFLAGS=-nostdinc make -C newlib/build
+	CFLAGS=-nostdinc make -C newlib/build -j
 
 INCLUDES=-Ignu-efi-3.0.4/inc/ -Inewlib/newlib/libc/include/
 
