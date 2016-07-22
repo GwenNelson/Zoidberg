@@ -69,6 +69,7 @@ void uefi_run(void* _t) {
      EFI_HANDLE child_h;
      path = shell->GetDevicePathFromFilePath(_filename);
 
+
      s = BS->LoadImage(0,gImageHandle,path,NULL,NULL,&child_h);
      install_syscall_protocol(child_h,ST,t->task_id);
      s = BS->StartImage(child_h,NULL,NULL);

@@ -19,8 +19,8 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
      BS = ST->BootServices;
      RT = ST->RuntimeServices;
      gImageHandle = ImageHandle;
-     EFI_STATUS s = BS->LocateProtocol(&gEfiZoidbergSyscallProtocolGUID , 0, (VOID**)&syscall_proto);
-     if(s==0) {
+     EFI_STATUS s = BS->HandleProtocol(ImageHandle, &gEfiZoidbergSyscallProtocolGUID, (VOID**)&syscall_proto);
+     if(s != EFI_SUCCESS) {
        ST->ConOut->OutputString(ST->ConOut, L"crt0: Failed to connect to syscall protocol!\n\r");
        return 1;
      } else {
