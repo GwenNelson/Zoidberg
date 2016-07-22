@@ -30,8 +30,6 @@ char why_not_header[]=""\
 "* This program is free software, see file COPYING   *\n"\
 "* for full details.                                 *\n"\
 "*                                                   *\n"\
-"* This program is not produced by or affiliated     *\n"\
-"* with Fox or the curiosity company                 *\n"\
 "*****************************************************\n\n";
 
 EFI_STATUS OpenShellProtocol( EFI_SHELL_PROTOCOL            **gEfiShellProtocol )
@@ -105,6 +103,8 @@ int main(int argc, char** argv) {
     kprintf("Starting PID 1 /sbin/init\n");
     
     init_task(&uefi_run,(void*)L"initrd:\\sbin\\init");
+    init_task(&uefi_run,(void*)L"fs0:\\task_a.efi");
+    init_task(&uefi_run,(void*)L"fs0:\\task_b.efi");
     while(1) {
        BS->Stall(1000);
        init_tasks();
