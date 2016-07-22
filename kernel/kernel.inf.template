@@ -36,6 +36,8 @@
   LibTime
   LibUefi
   DevShell
+  UefiLib
+  DevicePathLib
 
 [BuildOptions]
   GCC:*_*_*_CC_FLAGS = -DPAWN_CELL_SIZE=64 -DAMX_NODYNALOAD -w 
