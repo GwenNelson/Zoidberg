@@ -1,4 +1,5 @@
 #include <stdio.h>
+
 int main() {
-    printf("Init test\n");
+    printf("[INIT] Starting system...\n");
 }
