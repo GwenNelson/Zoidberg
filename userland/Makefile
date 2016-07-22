@@ -5,7 +5,7 @@ newlib/build/x86_64-zoidberg/newlib/libc.a:
 	cd newlib/build; ../configure --target=x86_64-zoidberg
 	CFLAGS=-nostdinc make -C newlib/build
 
-CFLAGS=-nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main
+CFLAGS=-nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -Ignu-efi-3.0.4/inc/ -Inewlib/newlib/libc/include/
 
 build/sbin/init: sbin/init/init.c
 	sdk/x86_64-zoidberg-gcc -o $@ $< newlib/build/x86_64-zoidberg/newlib/libc.a -lgcc
