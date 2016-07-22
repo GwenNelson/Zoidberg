@@ -1,5 +1,3 @@
-PAWNCC=../pawn/source/compiler/build/pawncc
-DUK=~/duktape/duk
 
 all: build/init build/init.js
 
