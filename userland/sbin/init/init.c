@@ -1,6 +1,6 @@
 #include <stdio.h>
 
 int main() {
-    write(1,"test\n",5);
+    printf("[init] starting system\n");
     return 0;
 }

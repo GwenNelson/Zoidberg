@@ -1,84 +1,24 @@
-This design document is messy and full of fucking swearwords, you cunts
+System components:
+  UEFI shell + StdLib - BOOTX64.EFI
+    Provides filesystem, stdio and other services for use directly by the kernel
+    Passes control to kernel after startup
+  threading driver - SimpleThread
+    Loaded at startup, provides context switching and threads
+  kernel.efi
+    The actual kernel
+    Provides syscall protocol, sets up threading, all the other stuff
+    Only part that should talk directly to the lower layers
+  /sbin/init
+    Userland PID 1
+    Compiled with the SDK, talks to the kernel to do what it needs to do
+    Starts the system up properly
 
-UEFI BootServices for drivers
-VFS layer
-  Copy PhysFS and add new archive formats representing actual filesystems
-VM userland
-  Processes are simply virtual machines, implemented with pawn bytecode for now
-  Kernel executes them in round robin style, executing a pile of operations per cycle
-Syscall API
-  *nix style syscalls with numbers and shit (even with VMs, madness)
-  Direct function calls from the VMs
-Process model
-  Fork-exec style
-  Basically posix-y as much as possible
-
-new VFS design:
-    node tree
-     each node contains function pointers to do primitive operations (open, read, write, delete etc)
-     directory nodes contain a function pointer to return a linked list of child nodes
-     directory nodes also contain a function pointer for retrieving a single child node
-     node has arbitary data (for use by FS driver)
-
-mounting filesystems:
-1 - /    root_node created by kernel
-2 - /efi efi_node created by mounter
-3 - efi_node->data set to EFI root volume
-4 - efi_node function pointers setup by EFI driver
-
-VFS layout:
- /            VFS root node
- /efi         mountpoint for EFI partition we booted from
- /dev         mountpoint for devfs-like filesystem
- /dev/kmsg    readonly, dmesg style dump of kernel output
-
-process model:
- pid 0 - kernel task
-     not a real process, but a struct is still present inside kernel
- pid 1 - init
-     forked from pid 0
-     first userland process
-
-source files:
- k_main.c      - kernel entry point
- kmsg.c        - kmsg implementation
- k_heap.c      - kernel heap stuff
- k_network.c   - kernel networking driver
- k_vfs.c       - VFS API
- k_syscalls.c  - syscall tables
- k_proc.c      - process/VM API
- vm/pawn.c     - implementation of pawn VMs
- vm/whatever.c - implementation of whatever other VMs
- fs/uefi.c     - FS driver for UEFI
- fs/devfs.c    - FS driver for devfs
-
-VM methods:
-   create()       - create the VM, but don't run anything yet
-   exec(vfs_path) - load a file from memory
-   fork(other_vm) - copy another VM into this one
-
-Startup:
-   EFI boilerplate (setup ST, BS, RT etc)
-   use statically allocated kmsg buffer
-   dump version info and kernel load address etc
-   setup heap and dump memory info - allocate any temporary buffers directly via UEFI protocol using EfiBootServicesData pool
-     main heap goes into conventional memory
-   allocate dynamic kmsg buffer in main heap
-   copy contents of static kmsg buffer into new dynamic kmsg buffer
-   disable UEFI watchdog
-   setup networking
-   mount /efi and /dev
-   dump VFS tree
-   create process table (uthash?)
-   create PID 0 structure, permanently idle
-   "fork" PID 0 into PID1 by copying structure
-   initialize VM for PID1 and set to runnable state
-   setup scheduler timer to start multitasking
-   run idle loop forever (or rather, until shutdown)
-      alternatively, use permanent loop and no timer (i.e run the scheduler in the while(1) loop in kmain.c)
-   scheduler (or main loop)
-     get list of runnable processes
-     for each process, run a single iteration of the VM (perhaps modify later to give more iterations to higher priority processes?)
-
-
+VFS layout
+  /boot 
+    maps to whichever UEFI volume we booted from
+  /
+    maps to initrd: volume until init mounts real root (if it exists)
+  /dev/uefi/
+    various subdirectories containing UEFI volumes
+  mount maps one VFS path to another path
 
