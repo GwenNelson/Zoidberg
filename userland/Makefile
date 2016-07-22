@@ -1,8 +1,7 @@
+all: newlib/build/x86_64-zoidberg/newlib/libc.a
 
-all: build/init build/init.js
+newlib/build/x86_64-zoidberg/newlib/libc.a:
+	mkdir -p newlib/build
+	cd newlib/build; ../configure --target=x86_64-zoidberg
+	CFLAGS=-nostdinc make -C newlib/build
 
-build/init.js: sbin/init/init.c
-	emcc --closure 1 -O2 -s TOTAL_MEMORY=2097152 -s TOTAL_STACK=524288 --memory-init-file 0 $< -o $@
-
-build/init: build/init.js
-	${DUK} -c $@ $<
