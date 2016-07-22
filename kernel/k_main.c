@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
 
     kprintf("Starting PID 1 /sbin/init\n");
     
-    init_task(&uefi_run,(void*)L"initrd:\\sbin\\init");
+    req_task(&uefi_run,(void*)L"initrd:\\sbin\\init");
     while(1) {
        BS->Stall(1000);
        init_tasks();

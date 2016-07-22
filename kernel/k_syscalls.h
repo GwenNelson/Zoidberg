@@ -70,22 +70,25 @@ struct _EFI_ZOIDBERG_SYSCALL_PROTOCOL{
 };
 
 void sys_exit(struct syscall_ctx  *ctx);
-void sys_fork(struct syscall_ctx  *ctx);
 void sys_read(struct syscall_ctx  *ctx);
 void sys_write(struct syscall_ctx *ctx);
+void sys_exec(struct syscall_ctx *ctx);
+void sys_vfork(struct syscall_ctx *ctx);
 
 static void (*syscalls[5])(struct syscall_ctx *ctx) = {
     NULL,
     &sys_exit,
-    &sys_fork,
     &sys_read,
-    &sys_write
+    &sys_write,
+    &sys_exec,
+    &sys_vfork
 };
 
 #define ZSYSCALL_EXIT  1
-#define ZSYSCALL_FORK  2
-#define ZSYSCALL_READ  3
-#define ZSYSCALL_WRITE 4
+#define ZSYSCALL_READ  2
+#define ZSYSCALL_WRITE 3
+#define ZSYSCALL_EXEC  4
+#define ZSYSCALL_VFORK 5
 
 extern EFI_GUID gEfiZoidbergSyscallProtocolGUID;
 

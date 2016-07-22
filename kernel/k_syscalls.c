@@ -3,15 +3,22 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include "k_thread.h"
 #include "kmsg.h"
 
 EFI_GUID gEfiZoidbergSyscallProtocolGUID = EFI_ZOIDBERG_SYSCALL_PROTOCOL_GUID;
 
 void sys_exit(struct syscall_ctx *ctx) {
+     kill_task(ctx->task_id);
 }
 
-// this is basically up to the VM to implement
-void sys_fork(struct syscall_ctx *ctx) {
+void sys_exec(struct syscall_ctx *ctx) {
+}
+
+// pid_t vfork()
+void sys_vfork(struct syscall_ctx *ctx) {
+     // TODO copy the thread stack here
+     ctx->retval.ret_int = 0;
 }
 
 // ssize_t read(unsigned int fd, char* buf, size_t count)

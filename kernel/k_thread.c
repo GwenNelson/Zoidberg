@@ -5,6 +5,7 @@
 
 #include "kmsg.h"
 #include "k_thread.h"
+#include "dmthread.h"
 
 extern EFI_BOOT_SERVICES *BS;
 
@@ -15,24 +16,20 @@ task_def_t tasks[4096];
 task_def_t *pending_tasks       = NULL;
 task_def_t *pending_tasks_last  = NULL;
 
-int req_tasks_lock=0; // crappy crappy mutex
+volatile UINT8 req_tasks_lock=0; // crappy crappy mutex
 
 UINT64    last_task_id    = 0;
 UINT64    max_task_id     = 0;
 UINT64    cur_task_id     = 0;
 
 void acquire_tasks_lock() {   // warning - this motherfucker blocks FOREVER, FOR ALL ETERNITY if already locked
-     int my_id = rand();
-     while(req_tasks_lock != my_id) {
-        while(req_tasks_lock>0) {
-          BS->Stall(120+my_id);
-        }
-        if(req_tasks_lock==0) req_tasks_lock = my_id;
+     while(__sync_lock_test_and_set(&req_tasks_lock, 1)) {
      }
 }
 
 void release_tasks_lock() {
-     req_tasks_lock = 0;
+     __sync_synchronize();
+     req_tasks_lock=0;
 }
 
 void init_tasks() {
@@ -100,7 +97,9 @@ task_def_t *get_task(UINT64 task_id) {
 }
 
 void kill_task(UINT64 task_id) {
-     
+     task_def_t* t = get_task(task_id);
+     dmthread_t *dmthread_ctx = (dmthread_t*)t->ctx;
+     dmthread_ctx->status = STATUS_DEAD;
 }
 
 EFI_GUID gEfiSimpleThreadProtocolGUID = EFI_SIMPLETHREAD_PROTOCOL_GUID;
