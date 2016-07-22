@@ -1,5 +1,4 @@
-extern write(int fd, const void *buf, int count);
-
+#include <stdio.h>
 int main() {
-    write(1,"Init\n",5);
+    printf("Init test\n");
 }

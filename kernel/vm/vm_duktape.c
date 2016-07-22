@@ -15,8 +15,9 @@ duk_ret_t duk_syscall_write(duk_context *ctx) {
      sys_ctx.args[0].fd    =          duk_to_uint(ctx, 0);
      sys_ctx.args[1].buf   = (void*)duk_to_string(ctx, 1);
      sys_ctx.args[2].count = (ssize_t)duk_to_uint(ctx, 2);
-     sys_write(&sys_ctx);
-     duk_push_number(ctx,sys_ctx.retval.ret_count);
+     printf("%s",sys_ctx.args[1].buf);
+//     sys_write(&sys_ctx);
+//     duk_push_number(ctx,sys_ctx.retval.ret_count);
      return 1;
 }
 
@@ -53,17 +54,17 @@ void vm_duktape_mainproc(void* _t) {
 
      kprintf("vm_duktape: exec() - registering syscalls!\n");     
      duk_push_c_function(duktape_ctx.ctx, duk_syscall_write,3);
-     duk_put_global_string(duktape_ctx.ctx,"write");
+     duk_put_global_string(duktape_ctx.ctx,"zwrite");
      kprintf("vm_duktape: exec() - loading bytecode into context!\n");
 
-     duk_push_lstring(duktape_ctx.ctx, duktape_ctx.js_src, fd_size);
-     duk_to_buffer(duktape_ctx.ctx, -1, NULL);
+     duk_push_string(duktape_ctx.ctx, duktape_ctx.js_src);
+     duk_eval(duktape_ctx.ctx);
+//     duk_to_buffer(duktape_ctx.ctx, -1, NULL);
      kprintf("vm_duktape: exec() - preparing for execution!\n");
-     duk_load_function(duktape_ctx.ctx);
+//     duk_load_function(duktape_ctx.ctx);
      duk_push_global_object(duktape_ctx.ctx);
      kprintf("vm_duktape: exec() - process ready!\n");
      duk_call(duktape_ctx.ctx,0);
-     kprintf("%s\n",duk_get_string(duktape_ctx.ctx,-1));
      free(duktape_ctx.js_src);
      duk_destroy_heap(duktape_ctx.ctx);
 }
