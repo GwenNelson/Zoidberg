@@ -45,13 +45,14 @@ CallSyscall(
 }
 
 extern EFI_BOOT_SERVICES *BS;
+extern EFI_HANDLE gImageHandle;
 
 void install_syscall_protocol(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable,UINT64 task_id) {
      kprintf("k_syscalls: Installing syscall protocol\n");
      EFI_ZOIDBERG_SYSCALL_PROTOCOL new_syscall_proto;
      new_syscall_proto.my_task_id   = task_id;
      new_syscall_proto.call_syscall = CallSyscall;
-     BS->InstallProtocolInterface(&ImageHandle,
+     BS->InstallProtocolInterface(&gImageHandle,
                                   &gEfiZoidbergSyscallProtocolGUID,
                                   EFI_NATIVE_INTERFACE,
                                   &new_syscall_proto

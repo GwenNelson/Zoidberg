@@ -1,4 +1,4 @@
 #ifndef ZOIDBERG_VERSION_H
 #define ZOIDBERG_VERSION_H
-#define ZOIDBERG_BUILD  "c35594e"
+#define ZOIDBERG_BUILD  "69709ee"
 #endif

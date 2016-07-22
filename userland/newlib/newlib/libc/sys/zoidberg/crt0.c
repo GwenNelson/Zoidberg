@@ -4,7 +4,6 @@
 #define ZOIDBERG_USERLAND_SDK
 #include "k_syscalls.h"
 
-extern void exit(int code);
 extern int main();
 
 EFI_SYSTEM_TABLE *ST;
@@ -20,8 +19,12 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
      BS = ST->BootServices;
      RT = ST->RuntimeServices;
      gImageHandle = ImageHandle;
-     EFI_STATUS s = BS->HandleProtocol(ImageHandle,&gEfiZoidbergSyscallProtocolGUID,(void**)&syscall_proto);
-
-     int ex = main();
+     EFI_STATUS s = BS->LocateProtocol(&gEfiZoidbergSyscallProtocolGUID , 0, (VOID**)&syscall_proto);
+     if(s==0) {
+       ST->ConOut->OutputString(ST->ConOut, L"crt0: Failed to connect to syscall protocol!\n\r");
+       return 1;
+     } else {
+       int ex = main();
+     }
      return 0;
 }
