@@ -5,7 +5,7 @@ echo if this does not run, try doing "source build.sh" instead of ./build.sh
 
 echo Configuring EDK2....
 
-export PATH=~/bin/bin:$PWD/sdk:$PATH
+export PATH=~/bin/bin:$PWD/userland/sdk:$PATH
 export WORKSPACE=`pwd`/../edk2
 export PACKAGES_PATH=$WORKSPACE:$PWD
 pushd $PWD
