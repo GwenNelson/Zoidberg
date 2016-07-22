@@ -103,11 +103,8 @@ int main(int argc, char** argv) {
     scheduler_start();
 
     kprintf("Starting PID 1 /sbin/init\n");
-//    UINT64 init_pid = init_task(&vm_pawn_mainproc,(void*)"initrd:\\sbin\\init");
     
-    req_task(&vm_duktape_mainproc,(void*)"initrd:\\sbin\\init.js");
-    req_task(&uefi_run,(void*)L"fs0:\\init.efi");
-    kprintf("If you can see this, woohoo\n");
+    init_task(&uefi_run,(void*)L"initrd:\\sbin\\init");
     while(1) {
        BS->Stall(1000);
        init_tasks();
