@@ -70,10 +70,8 @@ void uefi_run(void* _t) {
      path = shell->GetDevicePathFromFilePath(_filename);
 
      s = BS->LoadImage(0,gImageHandle,path,NULL,NULL,&child_h);
-     kprintf("%d\n",s);
      install_syscall_protocol(child_h,ST,t->task_id);
      s = BS->StartImage(child_h,NULL,NULL);
-     kprintf("%d\n",s);
 }
  
 int main(int argc, char** argv) {
@@ -103,8 +101,6 @@ int main(int argc, char** argv) {
     kprintf("Starting PID 1 /sbin/init\n");
     
     init_task(&uefi_run,(void*)L"initrd:\\sbin\\init");
-    init_task(&uefi_run,(void*)L"fs0:\\task_a.efi");
-    init_task(&uefi_run,(void*)L"fs0:\\task_b.efi");
     while(1) {
        BS->Stall(1000);
        init_tasks();

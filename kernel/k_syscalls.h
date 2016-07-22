@@ -6,10 +6,16 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <sys/types.h>
-#include "k_thread.h"
 
+#ifndef ZOIDBERG_USERLAND_SDK
 #include <Uefi.h>
 #include <Base.h>
+#include "k_thread.h"
+#else
+#define UINT64 uint64_t
+#include <efi.h>
+#include <efilib.h>
+#endif
 
 union syscall_arg {
     unsigned int fd;
@@ -76,8 +82,16 @@ static void (*syscalls[5])(struct syscall_ctx *ctx) = {
     &sys_write
 };
 
+#define ZSYSCALL_EXIT  1
+#define ZSYSCALL_FORK  2
+#define ZSYSCALL_READ  3
+#define ZSYSCALL_WRITE 4
+
 extern EFI_GUID gEfiZoidbergSyscallProtocolGUID;
 
+
+#ifndef ZOIDBERG_USERLAND_SDK
 void install_syscall_protocol(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable,UINT64 task_id);
+#endif
 
 #endif

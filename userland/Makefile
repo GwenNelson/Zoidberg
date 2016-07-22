@@ -1,7 +1,9 @@
-all: fullsdk newlib/build/x86_64-zoidberg/newlib/libc.a build/sbin/init
+all: fullsdk newlib/build/x86_64-zoidberg/newlib/libc.a build/sbin/init gnu-efi-3.0.4/x86_64/lib/libefi.a
 
 export PATH := ${PWD}/sdk/usr/bin:${PATH}
 
+gnu-efi-3.0.4/x86_64/lib/libefi.a: sdktools
+	make -C gnu-efi-3.0.4 CROSS_COMPILE=x86_64-zoidberg- -i
 
 newlib/build/x86_64-zoidberg/newlib/libc.a: sdktools
 	mkdir -p newlib/build
@@ -16,7 +18,7 @@ build/sbin/init.o: sbin/init/init.c fullsdk
 	mkdir -p build/sbin
 	x86_64-zoidberg-gcc -ffreestanding ${INCLUDES} -c $< -o $@
 
-build/sbin/init: build/sbin/init.o newlib/build/x86_64-zoidberg/newlib/libc.a build/sbin/init.o
+build/sbin/init: build/sbin/init.o newlib/build/x86_64-zoidberg/newlib/libc.a build/sbin/init.o gnu-efi-3.0.4/x86_64/lib/libefi.a
 	mkdir -p build/sbin
 	x86_64-zoidberg-gcc ${CFLAGS} ${INCLUDES} -o $@ $^ -lgcc
 

@@ -6,6 +6,11 @@
 #include <sys/time.h>
 #include <stdio.h>
 
+
+#define ZOIDBERG_USERLAND_SDK
+#include "k_syscalls.h"
+
+extern EFI_ZOIDBERG_SYSCALL_PROTOCOL *syscall_proto;
 // this is just to make libgcc happy
 int atexit(void (*function)(void)) {
 }
@@ -28,4 +33,10 @@ int stat(const char *file, struct stat *st) { }
 clock_t times(struct tms *buf) { }
 int unlink(char *name) { }
 int wait(int *status) { }
-int write(int file, char *ptr, int len) { }
+int write(int file, char *ptr, int len) { 
+    syscall_ctx sys_ctx;
+    sys_ctx.args[0].fd     = file;
+    sys_ctx.args[1].buf    = (void*)ptr;
+    sys_ctx.args[2].count  = (ssize_t)len;
+    syscall_proto->call_syscall(syscall_proto,ZSYSCALL_WRITE,&sys_ctx);
+}
