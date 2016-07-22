@@ -8,4 +8,3 @@ map initrd fs1:
 echo Loading zoidberg kernel...
 fs0:\EFI\BOOT\kernel.efi
 
-cls

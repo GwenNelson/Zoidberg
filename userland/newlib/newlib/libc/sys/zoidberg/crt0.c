@@ -15,9 +15,7 @@ EFI_ZOIDBERG_SYSCALL_PROTOCOL *syscall_proto = NULL;
 EFI_GUID gEfiZoidbergSyscallProtocolGUID = EFI_ZOIDBERG_SYSCALL_PROTOCOL_GUID;
 
 EFI_STATUS
-EFIAPI
 efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
-     InitializeLib(ImageHandle, SystemTable);
      ST = SystemTable;
      BS = ST->BootServices;
      RT = ST->RuntimeServices;

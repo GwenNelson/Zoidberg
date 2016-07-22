@@ -12,15 +12,15 @@ newlib/build/x86_64-zoidberg/newlib/libc.a: sdktools
 
 INCLUDES=-Ignu-efi-3.0.4/inc/ -Inewlib/newlib/libc/include/
 
-CFLAGS=-nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main 
+APPCFLAGS=-nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main 
 
 build/sbin/init.o: sbin/init/init.c fullsdk
 	mkdir -p build/sbin
 	x86_64-zoidberg-gcc -ffreestanding ${INCLUDES} -c $< -o $@
 
-build/sbin/init: build/sbin/init.o newlib/build/x86_64-zoidberg/newlib/libc.a build/sbin/init.o gnu-efi-3.0.4/x86_64/lib/libefi.a
+build/sbin/init: newlib/build/x86_64-zoidberg/newlib/libc.a build/sbin/init.o newlib/build/x86_64-zoidberg/newlib/libc/sys/zoidberg/syscalls.o
 	mkdir -p build/sbin
-	x86_64-zoidberg-gcc ${CFLAGS} ${INCLUDES} -o $@ $^ -lgcc
+	x86_64-zoidberg-gcc ${APPCFLAGS} ${INCLUDES} -o $@ $^ -lgcc
 
 sdk/usr/bin/%: sdk_tools/%
 	ln -s ${PWD}/$< $@
