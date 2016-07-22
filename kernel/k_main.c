@@ -65,10 +65,17 @@ void uefi_run(void* _t) {
      struct task_def_t *t = (struct task_def_t*)_t;
      char* _filename = (char*)t->arg;
      EFI_STATUS rstat = 0;
-     EFI_SHELL_PROTOCOL            *gEfiShellProtocol;
-     EFI_STATUS s = OpenShellProtocol(&gEfiShellProtocol);
-     s = gEfiShellProtocol->Execute(&gImageHandle,_filename,NULL,&rstat);
-     kprintf("%d %d\n",s,rstat);
+     EFI_SHELL_PROTOCOL            *shell;
+     EFI_DEVICE_PATH_PROTOCOL *path;
+     EFI_STATUS s = OpenShellProtocol(&shell);
+     EFI_HANDLE child_h;
+     path = shell->GetDevicePathFromFilePath(_filename);
+
+     s = BS->LoadImage(0,gImageHandle,path,NULL,NULL,&child_h);
+     kprintf("%d\n",s);
+     install_syscall_protocol(child_h,ST,t->task_id);
+     s = BS->StartImage(child_h,NULL,NULL);
+     kprintf("%d\n",s);
 }
  
 int main(int argc, char** argv) {
@@ -98,8 +105,8 @@ int main(int argc, char** argv) {
     kprintf("Starting PID 1 /sbin/init\n");
 //    UINT64 init_pid = init_task(&vm_pawn_mainproc,(void*)"initrd:\\sbin\\init");
     
-    UINT64 init_pid = init_task(&vm_duktape_mainproc,(void*)"initrd:\\sbin\\init.js");
-    init_task(&uefi_run,(void*)L"-nomap -noversion -nostartup fs0:\\init.efi");
+    req_task(&vm_duktape_mainproc,(void*)"initrd:\\sbin\\init.js");
+    req_task(&uefi_run,(void*)L"fs0:\\init.efi");
     kprintf("If you can see this, woohoo\n");
     while(1) {
        BS->Stall(1000);

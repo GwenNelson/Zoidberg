@@ -25,9 +25,9 @@ void acquire_tasks_lock() {   // warning - this motherfucker blocks FOREVER, FOR
      int my_id = rand();
      while(req_tasks_lock != my_id) {
         while(req_tasks_lock>0) {
-          BS->Stall(120);
+          BS->Stall(120+my_id);
         }
-        req_tasks_lock = my_id;
+        if(req_tasks_lock==0) req_tasks_lock = my_id;
      }
 }
 
@@ -77,7 +77,7 @@ void req_task(void (*task_proc)(void* ctx), void* arg) {
 
 UINT64 init_task(void (*task_proc)(void* ctx), void* arg) {
      UINT64 new_task_id = last_task_id+1;
-     if(tasks[new_task_id].task_id != 0) return;
+     if(tasks[new_task_id].task_id > 0) return;
      max_task_id++;
      kprintf("k_thread: init_task() Starting task ID %d at %#llx\n",new_task_id,task_proc);
 

@@ -8,6 +8,9 @@
 #include <sys/types.h>
 #include "k_thread.h"
 
+#include <Uefi.h>
+#include <Base.h>
+
 union syscall_arg {
     unsigned int fd;
     void* buf;
@@ -16,10 +19,48 @@ union syscall_arg {
     ssize_t ret_count;
 };
 
-struct syscall_ctx {
-    struct task_def_t *task;
+typedef struct syscall_ctx {
+    UINT64 task_id;
     union syscall_arg args[10];
     union syscall_arg retval;
+} syscall_ctx;
+
+
+
+#define EFI_ZOIDBERG_SYSCALL_PROTOCOL_GUID \
+{ \
+    0xfdb99303, 0x4eef, 0x4176, {0x99, 0x2a, 0x25, 0x1e, 0xa2, 0x64, 0x0f, 0xdb } \
+}
+
+#define ZOIDBERG_SYSCALL_PROTOCOL EFI_ZOIDBERG_SYSCALL_PROTOCOL_GUID
+
+typedef struct _EFI_ZOIDBERG_SYSCALL_PROTOCOL EFI_ZOIDBERG_SYSCALL_PROTOCOL;
+
+typedef EFI_ZOIDBERG_SYSCALL_PROTOCOL EFI_ZOIDBERG_SYSCALL;
+
+/**
+
+
+  @param This        pointer to the syscall protocol
+  @param syscall_no  which syscall number to invoke
+  @param syscall_ctx pointer to a syscall_ctx struct
+
+  @retval EFI_SUCCESS
+
+  To get actual return value from syscall, check ctx->retval
+**/
+typedef
+EFI_STATUS
+(EFIAPI* EFI_CALL_ZOIDBERG_SYSCALL )(
+        IN EFI_ZOIDBERG_SYSCALL_PROTOCOL *This,
+        IN UINT64 syscall_no,
+        IN syscall_ctx* ctx
+        );
+
+struct _EFI_ZOIDBERG_SYSCALL_PROTOCOL{
+    UINT64 Revision;
+    UINT64 my_task_id; // TODO - make this a full struct with details on the task
+    EFI_CALL_ZOIDBERG_SYSCALL call_syscall;
 };
 
 void sys_exit(struct syscall_ctx  *ctx);
@@ -27,7 +68,7 @@ void sys_fork(struct syscall_ctx  *ctx);
 void sys_read(struct syscall_ctx  *ctx);
 void sys_write(struct syscall_ctx *ctx);
 
-static void *syscalls[5] = {
+static void (*syscalls[5])(struct syscall_ctx *ctx) = {
     NULL,
     &sys_exit,
     &sys_fork,
@@ -35,5 +76,8 @@ static void *syscalls[5] = {
     &sys_write
 };
 
+extern EFI_GUID gEfiZoidbergSyscallProtocolGUID;
+
+void install_syscall_protocol(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable,UINT64 task_id);
 
 #endif

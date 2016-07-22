@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include "kmsg.h"
 
+EFI_GUID gEfiZoidbergSyscallProtocolGUID = EFI_ZOIDBERG_SYSCALL_PROTOCOL_GUID;
+
 void sys_exit(struct syscall_ctx *ctx) {
 }
 
@@ -30,4 +32,30 @@ void sys_write(struct syscall_ctx *ctx) {
       ctx->retval.ret_count = write(fd,buf,count);
 }
 
+EFI_STATUS
+EFIAPI
+CallSyscall(
+        IN EFI_ZOIDBERG_SYSCALL_PROTOCOL *This,
+        IN UINT64 syscall_no,
+        IN syscall_ctx* ctx)
+{
+        ctx->task_id = This->my_task_id;
+        syscalls[syscall_no](ctx);
+        return 0;
+}
+
+extern EFI_BOOT_SERVICES *BS;
+
+void install_syscall_protocol(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable,UINT64 task_id) {
+     kprintf("k_syscalls: Installing syscall protocol\n");
+     EFI_ZOIDBERG_SYSCALL_PROTOCOL new_syscall_proto;
+     new_syscall_proto.my_task_id   = task_id;
+     new_syscall_proto.call_syscall = CallSyscall;
+     BS->InstallProtocolInterface(&ImageHandle,
+                                  &gEfiZoidbergSyscallProtocolGUID,
+                                  EFI_NATIVE_INTERFACE,
+                                  &new_syscall_proto
+                                  );
+
+}
 
