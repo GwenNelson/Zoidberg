@@ -73,6 +73,7 @@ void uefi_run(void* _t) {
      s = BS->LoadImage(0,gImageHandle,path,NULL,NULL,&child_h);
      install_syscall_protocol(child_h,ST,t->task_id);
      s = BS->StartImage(child_h,NULL,NULL);
+     BS->UnloadImage(child_h);
 }
 
 void idle_task(void* _t) {
