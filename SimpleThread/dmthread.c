@@ -121,8 +121,11 @@ void Skedule()
     oldThread = sys.current;
     if(oldThread->thread.status == STATUS_DEAD){
         remove_thread();
+        __sync_bool_compare_and_swap (&Inschedule, 1, 0);
+        gThreads--;
+        return;
         //switchto();
-        LongJump(& sys.current->thread.sig_context, 1);
+//        LongJump(& sys.current->thread.sig_context, 1);
     }
     free_dead_stack();
 
@@ -196,7 +199,7 @@ void start_thread(dmthread_t*  thread)
 void initTimer()
 {
     gBS->CreateEvent(EVT_TIMER | EVT_NOTIFY_SIGNAL, TPL_CALLBACK, (EFI_EVENT_NOTIFY)Skedule, (VOID*)NULL, &myEvent);
-    gBS->SetTimer(myEvent,TimerPeriodic , 1000);
+    gBS->SetTimer(myEvent,TimerPeriodic , 0);
     
 }
 

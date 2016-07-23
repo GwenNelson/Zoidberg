@@ -5,7 +5,7 @@
 #include <sys/errno.h>
 #include <sys/time.h>
 #include <stdio.h>
-
+#include <setjmp.h>
 
 #define ZOIDBERG_USERLAND_SDK
 #include "k_syscalls.h"
@@ -15,10 +15,13 @@ extern EFI_ZOIDBERG_SYSCALL_PROTOCOL *syscall_proto;
 int atexit(void (*function)(void)) {
 }
 
+extern jmp_buf proc_start_env;
 void _exit() { 
      syscall_ctx sys_ctx;
      syscall_proto->call_syscall(syscall_proto,ZSYSCALL_EXIT,&sys_ctx);
+     longjmp(proc_start_env,1);
 }
+
 int close(int file) { }
 char **environ; /* pointer to array of char * strings that define the current environment variables */
 int execve(char *name, char **argv, char **env) { return 0; }

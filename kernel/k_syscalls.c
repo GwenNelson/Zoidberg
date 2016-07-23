@@ -6,6 +6,8 @@
 #include "k_thread.h"
 #include "kmsg.h"
 
+
+extern EFI_BOOT_SERVICES *BS;
 EFI_GUID gEfiZoidbergSyscallProtocolGUID = EFI_ZOIDBERG_SYSCALL_PROTOCOL_GUID;
 
 void sys_exit(struct syscall_ctx *ctx) {
@@ -51,7 +53,6 @@ CallSyscall(
         return 0;
 }
 
-extern EFI_BOOT_SERVICES *BS;
 extern EFI_HANDLE gImageHandle;
 EFI_ZOIDBERG_SYSCALL_PROTOCOL new_syscall_proto;
 

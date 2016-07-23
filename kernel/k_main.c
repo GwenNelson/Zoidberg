@@ -74,6 +74,13 @@ void uefi_run(void* _t) {
      install_syscall_protocol(child_h,ST,t->task_id);
      s = BS->StartImage(child_h,NULL,NULL);
 }
+
+void idle_task(void* _t) {
+     kprintf("kernel idle task started!\n");
+     for(;;) {
+         BS->Stall(100000);
+     }
+}
  
 int main(int argc, char** argv) {
     if(argc>1) {
@@ -99,8 +106,11 @@ int main(int argc, char** argv) {
     kprintf("Starting multitasking\n");
     scheduler_start();
 
+    kprintf("Spawning kernel idle task\n");
+    init_kernel_task(&idle_task,NULL);
+
     kprintf("Starting PID 1 /sbin/init\n");
-    
+ 
     req_task(&uefi_run,(void*)L"initrd:\\sbin\\init");
     while(1) {
        BS->Stall(1000);

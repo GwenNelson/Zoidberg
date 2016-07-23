@@ -89,10 +89,19 @@ UINT64 init_task(void (*task_proc)(void* ctx), void* arg) {
      return new_task.task_id;
 }
 
+void init_kernel_task(void (*task_proc)(void* ctx), void* arg) {
+     kprintf("k_thread: init_kernel_task at %#llx\n",task_proc);
+     task_def_t *new_task = (task_def_t*)malloc(sizeof(task_def_t));
+     new_task->task_id   = -1;
+     new_task->task_proc = task_proc;
+     new_task->arg       = arg;
+     thread_proto->create_thread(thread_proto,(THREAD_FUNC_T)task_proc,new_task,new_task->ctx);
+
+}
+
 task_def_t *get_task(UINT64 task_id) {
      task_def_t* retval = NULL;
      retval = &(tasks[task_id]);
-     kprintf("k_thread: get_task() - located PID %d at %#llx\n",task_id,retval);
      return retval;
 }
 
@@ -101,6 +110,8 @@ void kill_task(UINT64 task_id) {
      dmthread_t *dmthread_ctx = (dmthread_t*)t->ctx;
      dmthread_ctx->status = STATUS_DEAD;
 }
+
+
 
 EFI_GUID gEfiSimpleThreadProtocolGUID = EFI_SIMPLETHREAD_PROTOCOL_GUID;
 

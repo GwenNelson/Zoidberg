@@ -26,7 +26,7 @@ int main() {
        printf("           [+] in parent, child PID is %d\n",ret);
     } else {
        printf("           [+] in child\n");
-//       exit(0);
+       exit(0);
        stop_startup("exit() did not work!");
     }
 
