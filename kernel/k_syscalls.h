@@ -76,7 +76,7 @@ void sys_write(struct syscall_ctx *ctx);
 void sys_exec(struct syscall_ctx *ctx);
 void sys_vfork(struct syscall_ctx *ctx);
 
-static void (*syscalls[5])(struct syscall_ctx *ctx) = {
+static void (*syscalls[6])(struct syscall_ctx *ctx) = {
     NULL,
     &sys_exit,
     &sys_read,
