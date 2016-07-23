@@ -29,11 +29,6 @@ int vfork() {
     return sys_ctx.retval.ret_int;
 }
 
-int fork() {
-    syscall_ctx sys_ctx;
-    syscall_proto->call_syscall(syscall_proto,ZSYSCALL_VFORK,&sys_ctx);
-    return sys_ctx.retval.ret_int;
-}
 int fstat(int file, struct stat *st) { }
 int getpid() { 
     return syscall_proto->my_task_id;

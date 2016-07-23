@@ -8,7 +8,7 @@ gnu-efi-3.0.4/x86_64/lib/libefi.a: sdktools
 newlib/build/x86_64-zoidberg/newlib/libc.a: sdktools
 	mkdir -p newlib/build
 	cd newlib/build; ../configure --target=x86_64-zoidberg
-	CFLAGS=-nostdinc make -C newlib/build -j
+	CFLAGS="-nostdinc" make -C newlib/build -j
 
 INCLUDES=-Ignu-efi-3.0.4/inc/ -Inewlib/newlib/libc/include/
 

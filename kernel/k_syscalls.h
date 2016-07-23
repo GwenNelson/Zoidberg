@@ -69,6 +69,7 @@ struct _EFI_ZOIDBERG_SYSCALL_PROTOCOL{
     EFI_CALL_ZOIDBERG_SYSCALL call_syscall;
 };
 
+#ifndef ZOIDBERG_USERLAND_SDK
 void sys_exit(struct syscall_ctx  *ctx);
 void sys_read(struct syscall_ctx  *ctx);
 void sys_write(struct syscall_ctx *ctx);
@@ -83,6 +84,7 @@ static void (*syscalls[5])(struct syscall_ctx *ctx) = {
     &sys_exec,
     &sys_vfork
 };
+#endif
 
 #define ZSYSCALL_EXIT  1
 #define ZSYSCALL_READ  2
