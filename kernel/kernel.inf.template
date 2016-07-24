@@ -15,11 +15,6 @@
   kmsg.c
   k_thread.c
   k_syscalls.c
-  vm/amx.c
-  vm/amxaux.c
-  vm/vm_pawn.c
-  vm/duktape.c
-  vm/vm_duktape.c
 
 [Packages]
   StdLib/StdLib.dec
@@ -38,6 +33,7 @@
   DevShell
   UefiLib
   DevicePathLib
+  DxeServicesLib
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -DPAWN_CELL_SIZE=64 -DAMX_NODYNALOAD -w 
+  GCC:*_*_*_CC_FLAGS = -w 
