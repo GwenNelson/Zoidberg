@@ -36,10 +36,10 @@ void init_tasks() {
      acquire_tasks_lock();
      task_def_t* t = pending_tasks;
      while(t != NULL) {
-       kprintf("init_tasks() found a task_req\n");
+       klog("TASKING",1,"Found a task_req");
        if(t != NULL) {
           UINT64 new_task_id = init_task(t->task_proc, t->arg);
-          kprintf("task_req %d honoured\n",new_task_id);
+          klog("TASKING",1,"task_req %d honoured",new_task_id);
        }
        if(t-> next != NULL) {
           t = t->next;
@@ -76,7 +76,7 @@ UINT64 init_task(void (*task_proc)(void* ctx), void* arg) {
      UINT64 new_task_id = last_task_id+1;
      if(tasks[new_task_id].task_id > 0) return;
      max_task_id++;
-     kprintf("k_thread: init_task() Starting task ID %d at %#llx\n",new_task_id,task_proc);
+     klog("TASKING",1,"Starting task ID %d at %#llx",new_task_id,task_proc);
 
      task_def_t new_task;
 
@@ -90,7 +90,7 @@ UINT64 init_task(void (*task_proc)(void* ctx), void* arg) {
 }
 
 void init_kernel_task(void (*task_proc)(void* ctx), void* arg) {
-     kprintf("k_thread: init_kernel_task at %#llx\n",task_proc);
+     klog("TASKING",1,"init_kernel task at %#llx",task_proc);
      task_def_t *new_task = (task_def_t*)malloc(sizeof(task_def_t));
      new_task->task_id   = -1;
      new_task->task_proc = task_proc;
@@ -116,13 +116,13 @@ void kill_task(UINT64 task_id) {
 EFI_GUID gEfiSimpleThreadProtocolGUID = EFI_SIMPLETHREAD_PROTOCOL_GUID;
 
 void scheduler_start() {
-     kprintf("k_thread: scheduler_start() Allocating task table\n");
+     klog("TASKING",1,"Configuring task table");
      BS->SetMem((void*)tasks,sizeof(task_def_t)*4096,0);
 
-     kprintf("k_thread: scheduler_start() Setting up threading protocol\n");
+     klog("TASKING",1,"Setting up threading protocol");
      EFI_STATUS s = BS->LocateProtocol(&gEfiSimpleThreadProtocolGUID , 0, (VOID**)&thread_proto);
      if(s != EFI_SUCCESS) {
-        kprintf("Could not open EFI_SIMPLETHREAD_PROTOCOL, result: %d\n",s);
+        klog("TASKING",0,"Could not open EFI_SIMPLETHREAD_PROTOCOL, result: %d", s);
         return;
      }
 }

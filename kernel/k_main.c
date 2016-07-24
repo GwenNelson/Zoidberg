@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <sys/EfiSysCall.h>
 #include <Library/UefiBootServicesTableLib.h>
@@ -21,16 +22,6 @@ EFI_BOOT_SERVICES *BS;
 EFI_RUNTIME_SERVICES *RT;
 extern EFI_HANDLE gImageHandle;
 
-char why_not_header[]=""\
-"*****************************************************\n"\
-"*                   Why not zoidberg?               *\n"\
-"*                                                   *\n"\
-"* Zoidberg kernel Copyright(2016) Gareth Nelson     *\n"\
-"*                                                   *\n"\
-"* This program is free software, see file COPYING   *\n"\
-"* for full details.                                 *\n"\
-"*                                                   *\n"\
-"*****************************************************\n\n";
 
 EFI_STATUS OpenShellProtocol( EFI_SHELL_PROTOCOL            **gEfiShellProtocol )
 {
@@ -77,15 +68,14 @@ void uefi_run(void* _t) {
 }
 
 void idle_task(void* _t) {
-     kprintf("kernel idle task started!\n");
+     klog("IDLE",1,"Kernel idle task started");
      for(;;) {
          BS->Stall(100000);
      }
 }
  
 int main(int argc, char** argv) {
-    if(argc>1) {
-    }
+
     ST = gST;
     BS = ST->BootServices;
     RT = ST->RuntimeServices;
@@ -93,28 +83,50 @@ int main(int argc, char** argv) {
 
     init_static_kmsg();
 
-    kprintf(why_not_header);
+    int i;
+
+    char* initrd_path = NULL;
+
+    if(argc>1) {
+       for(i=1; i<argc; i++) {
+           if(strncmp(argv[i],"initrd=",7)==0) {
+              initrd_path = argv[i]+7;
+           }
+       }
+    }
+
+    ST->ConOut->ClearScreen(ST->ConOut);
 
     char* build_no = ZOIDBERG_BUILD;
-    kprintf("Zoidberg kernel, build %s booting\n", build_no);
-    kprintf("Kernel entry point (UefiMain) located at: %#11x\n", (UINT64)main);
+    char* version  = ZOIDBERG_VERSION;
+    ST->ConOut->SetAttribute(ST->ConOut,EFI_TEXT_ATTR(EFI_WHITE,EFI_BACKGROUND_BLACK));
+    kprintf("Zoidberg kernel, Copyright 2016 Gareth Nelson\n");
+    kprintf("Kernel version: %s, build number: %s\n", version, build_no);
+    kprintf("Kernel entry point located at %#11x\n\n", (UINT64)main);
     
     init_dynamic_kmsg();
 
-    kprintf("Disabling UEFI Watchdog\n");
+    if(initrd_path==NULL) {
+       klog("INITRD",0,"No initrd= option specified, will default to initrd.img");
+    } else {
+       klog("INITRD",1,"Mounting initrd image from %s",initrd_path);
+    }
+
+    klog("UEFI",1,"Disabling watchdog");
     BS->SetWatchdogTimer(0, 0, 0, NULL);
 
-    kprintf("Starting multitasking\n");
+    klog("TASKING",1,"Starting multitasking");
     scheduler_start();
 
-    kprintf("Spawning kernel idle task\n");
+    klog("TASKING",1,"Spawning kernel idle task");
     init_kernel_task(&idle_task,NULL);
+    BS->Stall(1000);
 
-    kprintf("Starting PID 1 /sbin/init\n");
+    klog("INIT",1,"Starting PID 1 /sbin/init");
  
     req_task(&uefi_run,(void*)L"initrd:\\sbin\\init");
     while(1) {
-       BS->Stall(1000);
+       BS->Stall(100);
        init_tasks();
     }
     return EFI_SUCCESS;

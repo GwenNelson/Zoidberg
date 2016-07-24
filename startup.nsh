@@ -6,5 +6,5 @@ echo Mounting zoidberg initrd...
 map initrd fs1:
 
 echo Loading zoidberg kernel...
-fs0:\EFI\BOOT\kernel.efi
+fs0:\EFI\BOOT\kernel.efi initrd=initrd.img
 

@@ -9,4 +9,6 @@ void init_dynamic_kmsg();
 
 int kprintf(const char *fmt, ...);
 
+int klog(char* component, int is_good, const char *fmt, ...);
+
 #endif
