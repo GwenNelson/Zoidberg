@@ -16,6 +16,12 @@ popd
 echo Configuring and compiling zoidberg kernel
 
 ./genversion.sh
+pushd logo
+cd bin2c
+gcc -o bin2c bin2c.c
+cd ..
+bin2c/bin2c -o ../kernel/zoidberg_logo.h Logo.bmp
+
 build -a X64 -p kernel.dsc
 
 cp -Rv $WORKSPACE/build/* build/

@@ -22,6 +22,7 @@
   #
   # Common Libraries
   #
+  DxeServicesLib|MdePkg/Library/DxeServicesLib/DxeServicesLib.inf
   BaseLib|MdePkg/Library/BaseLib/BaseLib.inf
   BaseMemoryLib|MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
   UefiLib|MdePkg/Library/UefiLib/UefiLib.inf

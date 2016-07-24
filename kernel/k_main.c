@@ -10,12 +10,16 @@
 #include <Protocol/LoadedImage.h>
 #include <../MdePkg/Include/Library/DevicePathLib.h>
 #include <Protocol/EfiShell.h>
+#include <Library/BaseLib.h>
+#include <Pi/PiFirmwareFile.h>
+#include <Library/DxeServicesLib.h>
+#include <IndustryStandard/Bmp.h>
+#include <Protocol/GraphicsOutput.h>
+
 
 #include "kmsg.h"
 #include "k_thread.h"
 #include "zoidberg_version.h"
-#include "vm_pawn.h"
-#include "vm_duktape.h"
 
 EFI_SYSTEM_TABLE *ST;
 EFI_BOOT_SERVICES *BS;
@@ -73,6 +77,258 @@ void idle_task(void* _t) {
          BS->Stall(100000);
      }
 }
+
+STATIC
+EFI_GUID
+gImageFileGuid = {0xa29bcde0, 0x60b7, 0x4573, {0x8d, 0x03, 0x66, 0x7c, 0x82, 0xe3, 0x52, 0x59}};
+
+EFI_STATUS
+ConvertBmpToGopBlt (
+  IN     VOID      *BmpImage,
+  IN     UINTN     BmpImageSize,
+  IN OUT VOID      **GopBlt,
+  IN OUT UINTN     *GopBltSize,
+     OUT UINTN     *PixelHeight,
+     OUT UINTN     *PixelWidth
+  )
+{
+  UINT8                         *Image;
+  UINT8                         *ImageHeader;
+  BMP_IMAGE_HEADER              *BmpHeader;
+  BMP_COLOR_MAP                 *BmpColorMap;
+  EFI_GRAPHICS_OUTPUT_BLT_PIXEL *BltBuffer;
+  EFI_GRAPHICS_OUTPUT_BLT_PIXEL *Blt;
+  UINT64                        BltBufferSize;
+  UINTN                         Index;
+  UINTN                         Height;
+  UINTN                         Width;
+  UINTN                         ImageIndex;
+  UINT32                        DataSizePerLine;
+  BOOLEAN                       IsAllocated;
+  UINT32                        ColorMapNum;
+
+  if (sizeof (BMP_IMAGE_HEADER) > BmpImageSize) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  BmpHeader = (BMP_IMAGE_HEADER *) BmpImage;
+
+  if (BmpHeader->CharB != 'B' || BmpHeader->CharM != 'M') {
+    return EFI_UNSUPPORTED;
+  }
+
+  //
+  // Doesn't support compress.
+  //
+  if (BmpHeader->CompressionType != 0) {
+    return EFI_UNSUPPORTED;
+  }
+
+  //
+  // Only support BITMAPINFOHEADER format.
+  // BITMAPFILEHEADER + BITMAPINFOHEADER = BMP_IMAGE_HEADER
+  //
+  if (BmpHeader->HeaderSize != sizeof (BMP_IMAGE_HEADER) - OFFSET_OF(BMP_IMAGE_HEADER, HeaderSize)) {
+    return EFI_UNSUPPORTED;
+  }
+
+  //
+  // The data size in each line must be 4 byte alignment.
+  //
+  DataSizePerLine = ((BmpHeader->PixelWidth * BmpHeader->BitPerPixel + 31) >> 3) & (~0x3);
+  BltBufferSize = MultU64x32 (DataSizePerLine, BmpHeader->PixelHeight);
+  if (BltBufferSize > (UINT32) ~0) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  if ((BmpHeader->Size != BmpImageSize) || 
+      (BmpHeader->Size < BmpHeader->ImageOffset) ||
+      (BmpHeader->Size - BmpHeader->ImageOffset !=  BmpHeader->PixelHeight * DataSizePerLine)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // Calculate Color Map offset in the image.
+  //
+  Image       = BmpImage;
+  BmpColorMap = (BMP_COLOR_MAP *) (Image + sizeof (BMP_IMAGE_HEADER));
+  if (BmpHeader->ImageOffset < sizeof (BMP_IMAGE_HEADER)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  if (BmpHeader->ImageOffset > sizeof (BMP_IMAGE_HEADER)) {
+    switch (BmpHeader->BitPerPixel) {
+      case 1:
+        ColorMapNum = 2;
+        break;
+      case 4:
+        ColorMapNum = 16;
+        break;
+      case 8:
+        ColorMapNum = 256;
+        break;
+      default:
+        ColorMapNum = 0;
+        break;
+      }
+    //
+    // BMP file may has padding data between the bmp header section and the bmp data section.
+    //
+    if (BmpHeader->ImageOffset - sizeof (BMP_IMAGE_HEADER) < sizeof (BMP_COLOR_MAP) * ColorMapNum) {
+      return EFI_INVALID_PARAMETER;
+    }
+  }
+
+  //
+  // Calculate graphics image data address in the image
+  //
+  Image         = ((UINT8 *) BmpImage) + BmpHeader->ImageOffset;
+  ImageHeader   = Image;
+
+  //
+  // Calculate the BltBuffer needed size.
+  //
+  BltBufferSize = MultU64x32 ((UINT64) BmpHeader->PixelWidth, BmpHeader->PixelHeight);
+  //
+  // Ensure the BltBufferSize * sizeof (EFI_GRAPHICS_OUTPUT_BLT_PIXEL) doesn't overflow
+  //
+  if (BltBufferSize > DivU64x32 ((UINTN) ~0, sizeof (EFI_GRAPHICS_OUTPUT_BLT_PIXEL))) {
+    return EFI_UNSUPPORTED;
+  }
+  BltBufferSize = MultU64x32 (BltBufferSize, sizeof (EFI_GRAPHICS_OUTPUT_BLT_PIXEL));
+
+  IsAllocated   = FALSE;
+  if (*GopBlt == NULL) {
+    //
+    // GopBlt is not allocated by caller.
+    //
+    *GopBltSize = (UINTN) BltBufferSize;
+    *GopBlt     = AllocatePool (*GopBltSize);
+    IsAllocated = TRUE;
+    if (*GopBlt == NULL) {
+      return EFI_OUT_OF_RESOURCES;
+    }
+  } else {
+    //
+    // GopBlt has been allocated by caller.
+    //
+    if (*GopBltSize < (UINTN) BltBufferSize) {
+      *GopBltSize = (UINTN) BltBufferSize;
+      return EFI_BUFFER_TOO_SMALL;
+    }
+  }
+
+  *PixelWidth   = BmpHeader->PixelWidth;
+  *PixelHeight  = BmpHeader->PixelHeight;
+
+  //
+  // Convert image from BMP to Blt buffer format
+  //
+  BltBuffer = *GopBlt;
+  for (Height = 0; Height < BmpHeader->PixelHeight; Height++) {
+    Blt = &BltBuffer[(BmpHeader->PixelHeight - Height - 1) * BmpHeader->PixelWidth];
+    for (Width = 0; Width < BmpHeader->PixelWidth; Width++, Image++, Blt++) {
+      switch (BmpHeader->BitPerPixel) {
+      case 1:
+        //
+        // Convert 1-bit (2 colors) BMP to 24-bit color
+        //
+        for (Index = 0; Index < 8 && Width < BmpHeader->PixelWidth; Index++) {
+          Blt->Red    = BmpColorMap[((*Image) >> (7 - Index)) & 0x1].Red;
+          Blt->Green  = BmpColorMap[((*Image) >> (7 - Index)) & 0x1].Green;
+          Blt->Blue   = BmpColorMap[((*Image) >> (7 - Index)) & 0x1].Blue;
+          Blt++;
+          Width++;
+        }
+
+        Blt--;
+        Width--;
+        break;
+
+      case 4:
+        //
+        // Convert 4-bit (16 colors) BMP Palette to 24-bit color
+        //
+        Index       = (*Image) >> 4;
+        Blt->Red    = BmpColorMap[Index].Red;
+        Blt->Green  = BmpColorMap[Index].Green;
+        Blt->Blue   = BmpColorMap[Index].Blue;
+        if (Width < (BmpHeader->PixelWidth - 1)) {
+          Blt++;
+          Width++;
+          Index       = (*Image) & 0x0f;
+          Blt->Red    = BmpColorMap[Index].Red;
+          Blt->Green  = BmpColorMap[Index].Green;
+          Blt->Blue   = BmpColorMap[Index].Blue;
+        }
+        break;
+
+      case 8:
+        //
+        // Convert 8-bit (256 colors) BMP Palette to 24-bit color
+        //
+        Blt->Red    = BmpColorMap[*Image].Red;
+        Blt->Green  = BmpColorMap[*Image].Green;
+        Blt->Blue   = BmpColorMap[*Image].Blue;
+        break;
+
+      case 24:
+        //
+        // It is 24-bit BMP.
+        //
+        Blt->Blue   = *Image++;
+        Blt->Green  = *Image++;
+        Blt->Red    = *Image;
+        break;
+
+      default:
+        //
+        // Other bit format BMP is not supported.
+        //
+        if (IsAllocated) {
+          FreePool (*GopBlt);
+          *GopBlt = NULL;
+        }
+        return EFI_UNSUPPORTED;
+      };
+
+    }
+
+    ImageIndex = (UINTN) (Image - ImageHeader);
+    if ((ImageIndex % 4) != 0) {
+      //
+      // Bmp Image starts each row on a 32-bit boundary!
+      //
+      Image = Image + (4 - (ImageIndex % 4));
+    }
+  }
+
+  return EFI_SUCCESS;
+}
+
+
+
+void draw_logo() {
+     EFI_GRAPHICS_OUTPUT_PROTOCOL *GraphicsOutput;
+     BS->HandleProtocol (gST->ConsoleOutHandle, &gEfiGraphicsOutputProtocolGuid, (VOID **) &GraphicsOutput);
+     UINT8 *ImageData;
+     UINTN ImageSize;
+     GetSectionFromAnyFv(&gImageFileGuid, EFI_SECTION_RAW, 0, (void**)&ImageData, &ImageSize);
+     UINTN BltSize;
+     EFI_GRAPHICS_OUTPUT_BLT_PIXEL *Blt;
+     UINTN Height;
+     UINTN Width;
+     ConvertBmpToGopBlt (
+            ImageData,
+            ImageSize,
+            (VOID **) &Blt,
+            &BltSize,
+            &Height,
+            &Width
+            );
+     GraphicsOutput->Blt(GraphicsOutput,Blt,EfiBltBufferToVideo,0,0,(UINTN)0,(UINTN)0,Width,Height,Width*sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL));
+
+}
  
 int main(int argc, char** argv) {
 
@@ -100,10 +356,12 @@ int main(int argc, char** argv) {
     char* build_no = ZOIDBERG_BUILD;
     char* version  = ZOIDBERG_VERSION;
     ST->ConOut->SetAttribute(ST->ConOut,EFI_TEXT_ATTR(EFI_WHITE,EFI_BACKGROUND_BLACK));
-    kprintf("Zoidberg kernel, Copyright 2016 Gareth Nelson\n");
-    kprintf("Kernel version: %s, build number: %s\n", version, build_no);
-    kprintf("Kernel entry point located at %#11x\n\n", (UINT64)main);
-    
+    kprintf("\tZoidberg kernel, Copyright 2016 Gareth Nelson\n");
+    kprintf("\tKernel version: %s, build number: %s\n", version, build_no);
+    kprintf("\tKernel entry point located at %#11x\n\n", (UINT64)main);
+   
+    draw_logo();
+ 
     init_dynamic_kmsg();
 
     if(initrd_path==NULL) {
