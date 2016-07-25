@@ -38,6 +38,8 @@ dd if=/dev/zero of=boot.img bs=1M count=33
 /sbin/mkfs.vfat boot.img -F 32
 mmd -i boot.img ::/EFI
 mmd -i boot.img ::/EFI/BOOT
+mcopy -i boot.img logo/Logo.bmp ::/EFI/BOOT
+mcopy -i boot.img unifont.psf   ::/EFI/BOOT
 mcopy -i boot.img build/zoidberg/DEBUG_GCC46/X64/kernel.efi ::/EFI/BOOT
 mcopy -i boot.img $WORKSPACE/Build/OvmfX64/DEBUG_GCC46/X64/Shell.efi ::/EFI/BOOT/BOOTX64.EFI
 mcopy -i boot.img build/zoidberg/DEBUG_GCC46/X64/SimpleThread.efi ::/EFI/BOOT

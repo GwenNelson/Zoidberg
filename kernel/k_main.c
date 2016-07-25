@@ -20,6 +20,8 @@
 #include "kmsg.h"
 #include "k_thread.h"
 #include "zoidberg_version.h"
+#include "efiwindow/efiwindow.h"
+#include "efiwindow/ewbitmap.h"
 
 EFI_SYSTEM_TABLE *ST;
 EFI_BOOT_SERVICES *BS;
@@ -77,10 +79,6 @@ void idle_task(void* _t) {
          BS->Stall(100000);
      }
 }
-
-STATIC
-EFI_GUID
-gImageFileGuid = {0xa29bcde0, 0x60b7, 0x4573, {0x8d, 0x03, 0x66, 0x7c, 0x82, 0xe3, 0x52, 0x59}};
 
 EFI_STATUS
 ConvertBmpToGopBlt (
@@ -307,6 +305,7 @@ ConvertBmpToGopBlt (
 }
 
 
+
 #include "zoidberg_logo.h"
 void draw_logo() {
      EFI_GRAPHICS_OUTPUT_PROTOCOL *GraphicsOutput;
@@ -324,27 +323,60 @@ void draw_logo() {
         return;
      }
 
-     UINT8 *ImageData = (UINT8*)Logo_bmp;
-     UINTN ImageSize  = (UINTN)Logo_bmp_size;
-     UINTN BltSize;
-     EFI_GRAPHICS_OUTPUT_BLT_PIXEL *Blt;
-     UINTN Height;
-     UINTN Width;
-     s = ConvertBmpToGopBlt (
-            ImageData,
-            ImageSize,
-            (VOID **) &Blt,
-            &BltSize,
-            &Height,
-            &Width
-            );
-     if(EFI_ERROR(s)) {
-        klog("VIDEO",0,"Failed to convert bitmap logo: %d",s);
-        return;
-     }
-     GraphicsOutput->Blt(GraphicsOutput,Blt,EfiBltBufferToVideo,0,0,(UINTN)0,(UINTN)40,Width,Height,Width*sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL));
 
-     FreePool(handleBuffer);
+	UINTN BltSize = Logo_bmp_size * sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL);
+	void* Blt = malloc(BltSize);
+	UINTN width;
+	UINTN height;
+	s = ConvertBmpToGopBlt((UINT8*)Logo_bmp,(UINTN)Logo_bmp_size,(void**)&Blt,&BltSize,&height,&width);
+	if(EFI_ERROR(s)) {
+	   klog("VIDEO",0,"Could not convert logo.bmp: %d",s);
+           return;
+	}
+
+	s = GraphicsOutput->Blt (
+                 GraphicsOutput,
+                 Blt,
+                 EfiBltBufferToVideo,
+                 0,
+                 0,
+                 (UINTN) 10,
+                 (UINTN) 40,
+                 width,
+                 height,
+                 width * sizeof (EFI_GRAPHICS_OUTPUT_BLT_PIXEL)
+                 );
+	if(EFI_ERROR(s)) {
+	   klog("VIDEO",0,"Could not render logo: %d", s);
+	}
+}
+
+void init_video() {
+    EFI_STATUS s = ew_init(gImageHandle);
+    if(EFI_ERROR(s)) {
+       klog("VIDEO",0,"Could not setup efiwindow library!");
+       return;
+    } else {
+       klog("VIDEO",1,"Started efiwindow");
+    }
+    
+    FONT *font;
+    s = ew_load_psf_font(&font, "fs0:\\EFI\\boot\\unifont.psf");
+      
+    if(EFI_ERROR(s)) {
+       klog("VIDEO",0,"Could not load console font");
+       return;
+    } else {
+       klog("VIDEO",1,"Loaded console font");
+    }
+
+    s = ew_set_mode(800,600,32);
+    if(EFI_ERROR(s)) {
+       klog("VIDEO",0,"Could not set graphics mode 800x600x32");
+       return;
+    } else {
+       klog("VIDEO",1,"Set graphics mode 800x600x32");
+    }
 }
  
 int main(int argc, char** argv) {
@@ -368,6 +400,7 @@ int main(int argc, char** argv) {
        }
     }
 
+    init_video();
     ST->ConOut->ClearScreen(ST->ConOut);
 
     char* build_no = ZOIDBERG_BUILD;
@@ -377,6 +410,7 @@ int main(int argc, char** argv) {
     kprintf("\tKernel version: %s, build number: %s\n", version, build_no);
     kprintf("\tKernel entry point located at %#11x\n\n", (UINT64)main);
  
+
     draw_logo();
  
     init_dynamic_kmsg();

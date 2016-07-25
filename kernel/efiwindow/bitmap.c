@@ -44,8 +44,7 @@ EFI_STATUS ew_create_bitmap(WINDOW **w, RECT *loc, WINDOW *parent, EW_BITMAP *in
 	}
 
 	FILE *fp = fopen(info->fname, "r");
-	if(fp == NULL)
-		return EFI_NOT_FOUND;
+	if(fp == NULL) 	return EFI_NOT_FOUND;
 
 	switch(info->bitmap_type)
 	{

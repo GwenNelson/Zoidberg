@@ -28,7 +28,7 @@
 #include <sys/param.h>
 
 EFI_GRAPHICS_OUTPUT_PROTOCOL *GOP;
-extern EFI_GUID GraphicsOutputProtocol;
+//extern EFI_GUID gGraphicsOutputProtocolGuid;
 
 extern EFI_SYSTEM_TABLE *ST;
 extern EFI_BOOT_SERVICES *BS;
@@ -61,9 +61,19 @@ EFI_STATUS ew_init(EFI_HANDLE ImageHandle)
 		return EFI_INVALID_PARAMETER;
 	}
 
+UINTN handleCount;
+     EFI_HANDLE *handleBuffer;
+     BS->LocateHandleBuffer(
+                    ByProtocol,
+                    &gEfiGraphicsOutputProtocolGuid,
+                    NULL,
+                    &handleCount,
+                    &handleBuffer);
+
+
 	/* Get the GOP device from the console out device */
-	EFI_STATUS s = BS->OpenProtocol(ST->ConsoleOutHandle, &GraphicsOutputProtocol, (void **)&GOP, ImageHandle, NULL,
-		EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+	EFI_STATUS s = BS->HandleProtocol(handleBuffer[0], &gEfiGraphicsOutputProtocolGuid, (VOID **) &GOP);
+
 	if(EFI_ERROR(s))
 	{
 		fprintf(stderr, "efiwindow: ew_init(): error: Could not get Graphics Output Protocol: %i\n", s);

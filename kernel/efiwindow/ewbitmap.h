@@ -38,6 +38,8 @@ typedef struct _ew_bitmap
 	char *fname;
 	int bitmap_type;
 	int stretch;
+        long int bmp_size;
+        unsigned char *bmp_data;
 } EW_BITMAP;
 
 EFI_STATUS ew_create_bitmap(WINDOW **w, RECT *loc, WINDOW *parent, EW_BITMAP *info); 
