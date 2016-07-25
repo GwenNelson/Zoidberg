@@ -307,18 +307,30 @@ ConvertBmpToGopBlt (
 }
 
 
-
+#include "zoidberg_logo.h"
 void draw_logo() {
      EFI_GRAPHICS_OUTPUT_PROTOCOL *GraphicsOutput;
-     BS->HandleProtocol (gST->ConsoleOutHandle, &gEfiGraphicsOutputProtocolGuid, (VOID **) &GraphicsOutput);
-     UINT8 *ImageData;
-     UINTN ImageSize;
-     GetSectionFromAnyFv(&gImageFileGuid, EFI_SECTION_RAW, 0, (void**)&ImageData, &ImageSize);
+     UINTN handleCount;
+     EFI_HANDLE *handleBuffer;
+     BS->LocateHandleBuffer(
+                    ByProtocol,
+                    &gEfiGraphicsOutputProtocolGuid,
+                    NULL,
+                    &handleCount,
+                    &handleBuffer);
+     EFI_STATUS s = BS->HandleProtocol (handleBuffer[0], &gEfiGraphicsOutputProtocolGuid, (VOID **) &GraphicsOutput);
+     if(EFI_ERROR(s)) {
+        klog("VIDEO",0,"No graphics output support: %d",s); 
+        return;
+     }
+
+     UINT8 *ImageData = (UINT8*)Logo_bmp;
+     UINTN ImageSize  = (UINTN)Logo_bmp_size;
      UINTN BltSize;
      EFI_GRAPHICS_OUTPUT_BLT_PIXEL *Blt;
      UINTN Height;
      UINTN Width;
-     ConvertBmpToGopBlt (
+     s = ConvertBmpToGopBlt (
             ImageData,
             ImageSize,
             (VOID **) &Blt,
@@ -326,8 +338,13 @@ void draw_logo() {
             &Height,
             &Width
             );
-     GraphicsOutput->Blt(GraphicsOutput,Blt,EfiBltBufferToVideo,0,0,(UINTN)0,(UINTN)0,Width,Height,Width*sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL));
+     if(EFI_ERROR(s)) {
+        klog("VIDEO",0,"Failed to convert bitmap logo: %d",s);
+        return;
+     }
+     GraphicsOutput->Blt(GraphicsOutput,Blt,EfiBltBufferToVideo,0,0,(UINTN)0,(UINTN)40,Width,Height,Width*sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL));
 
+     FreePool(handleBuffer);
 }
  
 int main(int argc, char** argv) {
@@ -359,10 +376,11 @@ int main(int argc, char** argv) {
     kprintf("\tZoidberg kernel, Copyright 2016 Gareth Nelson\n");
     kprintf("\tKernel version: %s, build number: %s\n", version, build_no);
     kprintf("\tKernel entry point located at %#11x\n\n", (UINT64)main);
-   
+ 
     draw_logo();
  
     init_dynamic_kmsg();
+ 
 
     if(initrd_path==NULL) {
        klog("INITRD",0,"No initrd= option specified, will default to initrd.img");

@@ -22,6 +22,11 @@
 #include <efiwindow.h>
 #include <stdio.h>
 
+extern EFI_SYSTEM_TABLE *ST;
+extern EFI_BOOT_SERVICES *BS;
+extern EFI_RUNTIME_SERVICES *RT;
+extern EFI_HANDLE gImageHandle;
+
 static void *bb = NULL;
 static int w, h, bpp;
 static int bbpages;

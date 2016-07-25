@@ -21,6 +21,7 @@ cd bin2c
 gcc -o bin2c bin2c.c
 cd ..
 bin2c/bin2c -o ../kernel/zoidberg_logo.h Logo.bmp
+popd
 
 build -a X64 -p kernel.dsc
 

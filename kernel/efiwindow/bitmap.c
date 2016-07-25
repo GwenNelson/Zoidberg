@@ -19,7 +19,7 @@
  * THE SOFTWARE.
  */
 
-#include <efiwindow.h>
+#include "efiwindow.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

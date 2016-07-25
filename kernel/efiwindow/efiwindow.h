@@ -22,10 +22,21 @@
 #ifndef EFIWINDOW_H
 #define EFIWINDOW_H
 
-#include <efi.h>
-#include <efilib.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <sys/EfiSysCall.h>
+#include <Library/UefiBootServicesTableLib.h>
+#include <Protocol/DevicePath.h>
+#include <Library/PcdLib.h>
+#include <Library/UefiLib.h>
+#include <Protocol/LoadedImage.h>
+#include <../MdePkg/Include/Library/DevicePathLib.h>
+#include <Protocol/EfiShell.h>
+#include <Library/BaseLib.h>
+#include <Pi/PiFirmwareFile.h>
+#include <Library/DxeServicesLib.h>
+#include <IndustryStandard/Bmp.h>
+#include <Protocol/GraphicsOutput.h>
 
 extern EFI_GRAPHICS_OUTPUT_PROTOCOL *GOP;
 

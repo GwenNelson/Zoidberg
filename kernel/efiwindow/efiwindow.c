@@ -19,16 +19,21 @@
  * THE SOFTWARE.
  */
 
-#include <efiwindow.h>
+#include "efiwindow.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <windowlist.h>
+#include "windowlist.h"
 #include <assert.h>
 #include <string.h>
 #include <sys/param.h>
 
 EFI_GRAPHICS_OUTPUT_PROTOCOL *GOP;
 extern EFI_GUID GraphicsOutputProtocol;
+
+extern EFI_SYSTEM_TABLE *ST;
+extern EFI_BOOT_SERVICES *BS;
+extern EFI_RUNTIME_SERVICES *RT;
+extern EFI_HANDLE gImageHandle;
 
 WINDOW *EW_DESKTOP = NULL;
 

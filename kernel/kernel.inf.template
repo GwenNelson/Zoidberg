@@ -15,6 +15,15 @@
   kmsg.c
   k_thread.c
   k_syscalls.c
+  efiwindow/bitmap.c
+  efiwindow/efiwindow.c
+  efiwindow/ewrect.c
+  efiwindow/progress.c
+  efiwindow/psffont.c
+  efiwindow/screen.c
+  efiwindow/textbox.c
+  efiwindow/windowlist.c
+
 
 [Packages]
   StdLib/StdLib.dec
