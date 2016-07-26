@@ -19,18 +19,6 @@ int main() {
     printf("       [+] PID=%d\n",my_pid);
     if(my_pid!=1) stop_startup("/sbin/init must be PID 1");
     
-    printf("       [+] vfork() test\n");
-    int ret = vfork();
-    if(ret<0) stop_startup("vfork() is not working!");
-    if(ret!=0) {
-       printf("           [+] in parent, child PID is %d\n",ret);
-    } else {
-       printf("           [+] in child\n");
-       exit(0);
-       stop_startup("exit() did not work!");
-    }
-
-
     printf("[init] Will spawn shell from %s\n",shell_path);
     pid_t shell_pid = vfork();
     if(shell_pid==0) {

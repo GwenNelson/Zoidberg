@@ -5,7 +5,9 @@
 #include <stdio.h>
 #include "k_thread.h"
 #include "kmsg.h"
+#include "dmthread.h"
 
+#include <Library/BaseLib.h>
 
 extern EFI_BOOT_SERVICES *BS;
 EFI_GUID gEfiZoidbergSyscallProtocolGUID = EFI_ZOIDBERG_SYSCALL_PROTOCOL_GUID;
@@ -14,13 +16,10 @@ void sys_exit(struct syscall_ctx *ctx) {
      kill_task(ctx->task_id);
 }
 
-void sys_exec(struct syscall_ctx *ctx) {
+void sys_vspawn(struct syscall_ctx *ctx) {
 }
 
-// pid_t vfork()
-void sys_vfork(struct syscall_ctx *ctx) {
-     // TODO copy the thread stack here
-     ctx->retval.ret_int = 0;
+void sys_exec(struct syscall_ctx *ctx) {
 }
 
 // ssize_t read(unsigned int fd, char* buf, size_t count)
@@ -41,7 +40,7 @@ void sys_write(struct syscall_ctx *ctx) {
       ctx->retval.ret_count = write(fd,buf,count);
 }
 
-EFI_STATUS
+UINT64
 EFIAPI
 CallSyscall(
         IN EFI_ZOIDBERG_SYSCALL_PROTOCOL *This,

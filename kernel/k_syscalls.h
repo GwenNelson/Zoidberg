@@ -56,7 +56,7 @@ typedef EFI_ZOIDBERG_SYSCALL_PROTOCOL EFI_ZOIDBERG_SYSCALL;
   To get actual return value from syscall, check ctx->retval
 **/
 typedef
-EFI_STATUS
+UINT64
 (EFIAPI* EFI_CALL_ZOIDBERG_SYSCALL )(
         IN EFI_ZOIDBERG_SYSCALL_PROTOCOL *This,
         IN UINT64 syscall_no,
@@ -74,7 +74,7 @@ void sys_exit(struct syscall_ctx  *ctx);
 void sys_read(struct syscall_ctx  *ctx);
 void sys_write(struct syscall_ctx *ctx);
 void sys_exec(struct syscall_ctx *ctx);
-void sys_vfork(struct syscall_ctx *ctx);
+void sys_vspawn(struct syscall_ctx *ctx);
 
 static void (*syscalls[6])(struct syscall_ctx *ctx) = {
     NULL,
@@ -82,15 +82,15 @@ static void (*syscalls[6])(struct syscall_ctx *ctx) = {
     &sys_read,
     &sys_write,
     &sys_exec,
-    &sys_vfork
+    &sys_vspawn
 };
 #endif
 
-#define ZSYSCALL_EXIT  1
-#define ZSYSCALL_READ  2
-#define ZSYSCALL_WRITE 3
-#define ZSYSCALL_EXEC  4
-#define ZSYSCALL_VFORK 5
+#define ZSYSCALL_EXIT   1
+#define ZSYSCALL_READ   2
+#define ZSYSCALL_WRITE  3
+#define ZSYSCALL_EXEC   4
+#define ZSYSCALL_VSPAWN 5
 
 extern EFI_GUID gEfiZoidbergSyscallProtocolGUID;
 

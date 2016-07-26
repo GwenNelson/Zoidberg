@@ -436,7 +436,6 @@ int main(int argc, char** argv) {
  
     req_task(&uefi_run,(void*)L"initrd:\\sbin\\init");
     while(1) {
-       BS->Stall(100);
        init_tasks();
     }
     return EFI_SUCCESS;

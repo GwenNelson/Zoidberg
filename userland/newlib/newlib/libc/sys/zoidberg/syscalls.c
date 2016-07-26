@@ -27,9 +27,8 @@ char **environ; /* pointer to array of char * strings that define the current en
 int execve(char *name, char **argv, char **env) { return 0; }
 
 int vfork() { 
-    syscall_ctx sys_ctx;
-    syscall_proto->call_syscall(syscall_proto,ZSYSCALL_VFORK,&sys_ctx);
-    return sys_ctx.retval.ret_int;
+    errno = ENOSYS;
+    return -1;
 }
 
 int fstat(int file, struct stat *st) { }
