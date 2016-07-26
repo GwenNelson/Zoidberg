@@ -23,6 +23,15 @@
   efiwindow/screen.c
   efiwindow/textbox.c
   efiwindow/windowlist.c
+  libvterm/encoding.c
+  libvterm/keyboard.c
+  libvterm/mouse.c
+  libvterm/parser.c
+  libvterm/pen.c
+  libvterm/screen.c
+  libvterm/state.c
+  libvterm/unicode.c
+  libvterm/vterm.c
 
 
 [Packages]
@@ -45,4 +54,4 @@
   DxeServicesLib
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -w 
+  GCC:*_*_*_CC_FLAGS = -w -std=c99 
