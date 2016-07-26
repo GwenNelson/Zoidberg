@@ -30,6 +30,12 @@ int vfork() {
     errno = ENOSYS;
     return -1;
 }
+int spawn(char* path) {
+    syscall_ctx sys_ctx;
+    sys_ctx.args[0].path = path;
+    syscall_proto->call_syscall(syscall_proto,ZSYSCALL_SPAWN,&sys_ctx);
+    return sys_ctx.retval.ret_int;
+}
 
 int fstat(int file, struct stat *st) { }
 int getpid() { 

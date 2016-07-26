@@ -56,6 +56,7 @@ EFI_STATUS OpenShellProtocol( EFI_SHELL_PROTOCOL            **gEfiShellProtocol 
   return Status;
 }
 
+// TODO - move this to another file
 void uefi_run(void* _t) {
      struct task_def_t *t = (struct task_def_t*)_t;
      char* _filename = (char*)t->arg;

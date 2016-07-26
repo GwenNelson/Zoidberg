@@ -16,7 +16,27 @@ void sys_exit(struct syscall_ctx *ctx) {
      kill_task(ctx->task_id);
 }
 
-void sys_vspawn(struct syscall_ctx *ctx) {
+void conv_backslashes(CHAR16 *s)
+{
+        while (*s != 0)
+        {
+                if(*s == '/')
+                        *s = '\\';
+                s++;
+        }
+}
+
+
+extern void uefi_run(void* _t);
+// pid_t spawn(char* path)
+void sys_spawn(struct syscall_ctx *ctx) {
+     char* path = ctx->args[0].path;
+     CHAR16 *wfname = (CHAR16 *)malloc((strlen(path) + 1) * sizeof(CHAR16));
+     mbstowcs((wchar_t *)wfname, path, strlen(path) + 1);
+     conv_backslashes(wfname);
+     //UINT64 pid = init_task(&uefi_run,(void*)wfname);
+     req_task(&uefi_run,(void*)wfname);
+//     ctx->retval.ret_int = pid;
 }
 
 void sys_exec(struct syscall_ctx *ctx) {

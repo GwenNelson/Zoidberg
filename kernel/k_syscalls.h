@@ -20,6 +20,7 @@
 union syscall_arg {
     unsigned int fd;
     void* buf;
+    char*   path;
     ssize_t count;
     int     ret_int;
     ssize_t ret_count;
@@ -74,7 +75,7 @@ void sys_exit(struct syscall_ctx  *ctx);
 void sys_read(struct syscall_ctx  *ctx);
 void sys_write(struct syscall_ctx *ctx);
 void sys_exec(struct syscall_ctx *ctx);
-void sys_vspawn(struct syscall_ctx *ctx);
+void sys_spawn(struct syscall_ctx *ctx);
 
 static void (*syscalls[6])(struct syscall_ctx *ctx) = {
     NULL,
@@ -82,7 +83,7 @@ static void (*syscalls[6])(struct syscall_ctx *ctx) = {
     &sys_read,
     &sys_write,
     &sys_exec,
-    &sys_vspawn
+    &sys_spawn
 };
 #endif
 
@@ -90,7 +91,7 @@ static void (*syscalls[6])(struct syscall_ctx *ctx) = {
 #define ZSYSCALL_READ   2
 #define ZSYSCALL_WRITE  3
 #define ZSYSCALL_EXEC   4
-#define ZSYSCALL_VSPAWN 5
+#define ZSYSCALL_SPAWN 5
 
 extern EFI_GUID gEfiZoidbergSyscallProtocolGUID;
 

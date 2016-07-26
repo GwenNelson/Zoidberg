@@ -2,7 +2,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-char* shell_path="/bin/sh";
+char* shell_path="initrd:/bin/sh";
 
 void stop_startup(char* errmsg) {
      printf("\n\n **** STARTUP ABORTED ****\n");
@@ -20,15 +20,8 @@ int main() {
     if(my_pid!=1) stop_startup("/sbin/init must be PID 1");
     
     printf("[init] Will spawn shell from %s\n",shell_path);
-    pid_t shell_pid = vfork();
-    if(shell_pid==0) {
-       char* shellargv[] = {shell_path,NULL};
-       char* shellenv[]  = {NULL};
-       execve(shell_path,shellargv,shellenv);
-    } else {
-       for(;;); // TODO - wait() for shell
-    }
+    pid_t shell_pid = spawn(shell_path);
+    // TODO - wait() for shell
 
-    printf("[init] PANIC - should not ever reach here!\n");
     for(;;);
 }

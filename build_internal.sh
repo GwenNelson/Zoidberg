@@ -51,4 +51,4 @@ dd if=/dev/zero of=initrd.img bs=1M count=33
 mmd -i initrd.img ::/sbin
 mmd -i initrd.img ::/bin
 mcopy -i initrd.img userland/build/sbin/init ::/sbin
-mcopy -i initrd.img userland/build/sbin/sh ::/bin
+mcopy -i initrd.img userland/build/bin/sh ::/bin
