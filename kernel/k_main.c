@@ -23,6 +23,7 @@
 #include "efiwindow/efiwindow.h"
 #include "efiwindow/ewbitmap.h"
 #include "libvterm/vterm.h"
+#include "k_initrd.h"
 
 EFI_SYSTEM_TABLE *ST;
 EFI_BOOT_SERVICES *BS;
@@ -457,9 +458,10 @@ int main(int argc, char** argv) {
  
 
     if(initrd_path==NULL) {
-       klog("INITRD",0,"No initrd= option specified, will default to initrd.img");
+       klog("INITRD",0,"No initrd= option specified!");
     } else {
-       klog("INITRD",1,"Mounting initrd image from %s",initrd_path);
+       mount_initrd(initrd_path);
+       system("map");
     }
 
     klog("UEFI",1,"Disabling watchdog");

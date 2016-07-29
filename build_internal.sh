@@ -34,7 +34,7 @@ make -C userland -j
 
 echo Building bootable image
 
-dd if=/dev/zero of=boot.img bs=1M count=33
+dd if=/dev/zero of=boot.img bs=1M count=128
 /sbin/mkfs.vfat boot.img -F 32
 mmd -i boot.img ::/EFI
 mmd -i boot.img ::/EFI/BOOT
@@ -46,9 +46,12 @@ mcopy -i boot.img build/zoidberg/DEBUG_GCC46/X64/SimpleThread.efi ::/EFI/BOOT
 mcopy -i boot.img startup.nsh ::/
 
 echo Building initrd
-dd if=/dev/zero of=initrd.img bs=1M count=33
-/sbin/mkfs.vfat initrd.img -F 32
+dd if=/dev/zero of=initrd.img bs=1M count=4
+/sbin/mkfs.vfat initrd.img 
 mmd -i initrd.img ::/sbin
 mmd -i initrd.img ::/bin
 mcopy -i initrd.img userland/build/sbin/init ::/sbin
 mcopy -i initrd.img userland/build/bin/sh ::/bin
+
+echo Copying initrd.img to boot partition
+mcopy -i boot.img initrd.img ::/EFI/BOOT

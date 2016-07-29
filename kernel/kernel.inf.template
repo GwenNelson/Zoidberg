@@ -15,6 +15,7 @@
   kmsg.c
   k_thread.c
   k_syscalls.c
+  k_initrd.c
   efiwindow/bitmap.c
   efiwindow/efiwindow.c
   efiwindow/ewrect.c
@@ -52,6 +53,10 @@
   UefiLib
   DevicePathLib
   DxeServicesLib
+
+[Protocols]
+  gEfiBlockIoProtocolGuid
+  gEfiDevicePathProtocolGuid
 
 [BuildOptions]
   GCC:*_*_*_CC_FLAGS = -w -std=c99 
