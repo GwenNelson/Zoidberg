@@ -461,7 +461,6 @@ int main(int argc, char** argv) {
        klog("INITRD",0,"No initrd= option specified!");
     } else {
        mount_initrd(initrd_path);
-       system("map");
     }
 
     klog("UEFI",1,"Disabling watchdog");
