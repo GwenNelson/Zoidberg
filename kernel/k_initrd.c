@@ -173,7 +173,17 @@ void mount_initrd(char* path) {
                 );
       }
 
-      system("-noversion -nostartup -nomap connect");
+
+     UINTN HandleCount;
+     EFI_HANDLE *HandleBuffer;
+     UINTN HandleIndex;
+     s = BS->LocateHandleBuffer(AllHandles,NULL,NULL,&HandleCount,&HandleBuffer);
+     for(HandleIndex=0; HandleIndex < HandleCount; HandleIndex++) {
+         BS->ConnectController(HandleBuffer[HandleIndex],NULL,NULL,TRUE);
+     }
+     BS->FreePool(HandleBuffer);
+
+
       s = shell_proto->SetMap(&initrd_devpath_proto,L"initrd:");
       if(EFI_ERROR(s)) {
          klog("INITRD",0,"SetMap failed: %d",s);
