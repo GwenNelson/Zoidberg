@@ -19,12 +19,11 @@ int main() {
 
     while(running) {
        cwd = "/";  // mock for now
-       sprintf(hostname_str,"%s","zoidberg"); // also mock
+       snprintf(hostname_str,1024,"%s","zoidberg"); // also mock
        snprintf(prompt_str, 4096, unix_prompt, login_name, hostname_str, cwd);
        printf(prompt_str);
        ret = NULL;
        while(ret==NULL) { ret = fgets(input_line,4096, stdin);}
-       printf("\n");
     }
 
 }

@@ -29,8 +29,8 @@ cp -Rv $WORKSPACE/build/* build/
 
 echo Building userland
 
-#cp kernel/k_syscalls.h userland/newlib/newlib/libc/sys/zoidberg/
-#make -C userland -j
+cp kernel/k_syscalls.h userland/newlib/newlib/libc/sys/zoidberg/
+make -C userland -j
 
 echo Building bootable image
 
