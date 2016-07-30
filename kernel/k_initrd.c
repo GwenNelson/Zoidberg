@@ -29,12 +29,23 @@ EFI_STATUS EFIAPI InitRDReadBlocks(
 	OUT VOID        *Buffer)
 {
 	void* block_ptr;
-        block_ptr = initrd_buf + (LBA*INITRD_BLOCKSIZE);
+	EFI_BLOCK_IO_MEDIA *Media = This->Media;
+  if(BufferSize % Media->BlockSize != 0)
+                return EFI_BAD_BUFFER_SIZE;
+
+        if(LBA > Media->LastBlock)
+                return EFI_DEVICE_ERROR;
+
+        if(LBA + BufferSize / Media->BlockSize - 1 > Media->LastBlock)
+                return EFI_DEVICE_ERROR;
+
+
+        block_ptr = initrd_buf + MultU64x32(LBA,INITRD_BLOCKSIZE);
 	memcpy(Buffer,block_ptr,BufferSize);
 	return EFI_SUCCESS;
 }
 
-EFI_STATUS InitRDWriteBlocks(
+EFI_STATUS EFIAPI InitRDWriteBlocks(
 	IN EFI_BLOCK_IO *This,
 	IN UINT32       MediaId,
 	IN EFI_LBA      LBA,
@@ -44,7 +55,7 @@ EFI_STATUS InitRDWriteBlocks(
 	return EFI_WRITE_PROTECTED;
 }
 
-EFI_STATUS InitRDFlushBlocks(
+EFI_STATUS EFIAPI InitRDFlushBlocks(
 	IN EFI_BLOCK_IO *This)
 {
 	return EFI_SUCCESS;
@@ -161,8 +172,9 @@ void mount_initrd(char* path) {
                 &shell_proto
                 );
       }
-//      system("fs0:\\EFI\\BOOT\\BOOTX64.EFI -nostartup");
-      s = shell_proto->SetMap(&initrd_devpath_proto,L"initrd");
+
+      system("-noversion -nostartup -nomap connect");
+      s = shell_proto->SetMap(&initrd_devpath_proto,L"initrd:");
       if(EFI_ERROR(s)) {
          klog("INITRD",0,"SetMap failed: %d",s);
       }
