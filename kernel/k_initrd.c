@@ -17,20 +17,20 @@ void* initrd_buf;
 
 EFI_BLOCK_IO_PROTOCOL    initrd_proto;
 EFI_BLOCK_IO_MEDIA       initrd_media;
-//MEMMAP_DEVICE_PATH       initrd_devpath_proto;
 EFI_HANDLE               *initrd_handle=NULL;
 
 #define INITRD_BLOCKSIZE 512
 
-EFI_STATUS InitRDReadBlocks(
+EFI_STATUS EFIAPI InitRDReadBlocks(
 	IN EFI_BLOCK_IO *This,
 	IN UINT32       MediaId,
 	IN EFI_LBA      LBA,
 	IN UINTN        BufferSize,
 	OUT VOID        *Buffer)
 {
-        void* block_ptr = initrd_buf + (LBA*INITRD_BLOCKSIZE);
-        BS->CopyMem(Buffer,block_ptr,512);
+	void* block_ptr;
+        block_ptr = initrd_buf + (LBA*INITRD_BLOCKSIZE);
+	memcpy(Buffer,block_ptr,BufferSize);
 	return EFI_SUCCESS;
 }
 
@@ -97,9 +97,9 @@ void mount_initrd(char* path) {
      klog("INITRD",1,"Reading image into memory");
      
      size_t retval = fread(initrd_buf,1,size,fd);
-     
+ 
      if(retval != size) {
-        klog("INITRD",0,"Failed to read image into memory!");
+        klog("INITRD",0,"Failed to read image into memory! %d", retval);
         fclose(fd);
         free(initrd_buf);
         return;
@@ -161,7 +161,7 @@ void mount_initrd(char* path) {
                 &shell_proto
                 );
       }
-      system("fs0:\\EFI\\BOOT\\BOOTX64.EFI -nostartup");
+//      system("fs0:\\EFI\\BOOT\\BOOTX64.EFI -nostartup");
       s = shell_proto->SetMap(&initrd_devpath_proto,L"initrd");
       if(EFI_ERROR(s)) {
          klog("INITRD",0,"SetMap failed: %d",s);

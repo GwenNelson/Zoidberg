@@ -46,7 +46,7 @@ mcopy -i boot.img build/zoidberg/DEBUG_GCC46/X64/SimpleThread.efi ::/EFI/BOOT
 mcopy -i boot.img startup.nsh ::/
 
 echo Building initrd
-dd if=/dev/zero of=initrd.img bs=1M count=5
+dd if=/dev/zero of=initrd.img bs=1M count=1
 /sbin/mkfs.vfat initrd.img 
 mmd -i initrd.img ::/sbin
 mmd -i initrd.img ::/bin
