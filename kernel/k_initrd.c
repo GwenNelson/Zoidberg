@@ -113,7 +113,7 @@ void mount_initrd(char* path) {
      size_t retval=0;
      size_t read_so_far=0;
      while(read_so_far < size) {
-         retval = fread(cur_buf,512,32,fd);
+         retval = fread(cur_buf,512,8,fd);
          if(retval != EOF) {
             cur_buf     += retval*512;
             read_so_far += retval*512;

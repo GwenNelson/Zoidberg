@@ -147,10 +147,10 @@ void kmsg_prog_update(UINT64 n) {
      if(fraction >1) prog_chars[fraction-2] = '=';
      prog_chars[fraction-1]='>';
      if(fraction < 30) {
-       printf("\r[%-30.*s] %c %-30s",fraction,prog_chars,spin_char[prog_spin],prog_amounts);
+       printf("\r%-10s [%-30.*s] %c %-30s"," ",fraction,prog_chars,spin_char[prog_spin],prog_amounts);
      } else {
-       printf("\r%-65s"," ");
-       printf("\r[%-30.*s] ", 30, prog_chars);
+       printf("\r%-75s"," ");
+       printf("\r%-10s [%-30.*s] "," ", 30, prog_chars);
        kprintf("done\n");
      }
      fflush(stdout);
