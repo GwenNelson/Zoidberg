@@ -6,6 +6,7 @@
 #include "k_thread.h"
 #include "kmsg.h"
 #include "dmthread.h"
+#include "k_utsname.h"
 
 #include <Library/BaseLib.h>
 
@@ -75,6 +76,12 @@ void sys_zrealloc(struct syscall_ctx *ctx) {
      void*   buf   = ctx->args[0].buf;
      size_t size = ctx->args[1].size;
      ctx->retval.ret_ptr = realloc(buf,size);
+}
+
+void sys_uname(struct syscall_ctx *ctx) {
+     struct utsname *buf = (struct utsname*)ctx->args[0].buf;
+     *buf = zoidberg_uname;
+     ctx->retval.ret_int = 0;
 }
 
 UINT64

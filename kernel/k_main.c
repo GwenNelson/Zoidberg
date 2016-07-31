@@ -24,6 +24,7 @@
 #include "efiwindow/ewbitmap.h"
 #include "libvterm/vterm.h"
 #include "k_initrd.h"
+#include "k_utsname.h"
 
 EFI_SYSTEM_TABLE *ST;
 EFI_BOOT_SERVICES *BS;
@@ -448,7 +449,7 @@ int main(int argc, char** argv) {
     ST->ConOut->SetAttribute(ST->ConOut,EFI_TEXT_ATTR(EFI_WHITE,EFI_BACKGROUND_BLACK));
     kprintf("\n");
     kprintf("\t\tZoidberg kernel, Copyright 2016 Gareth Nelson\n");
-    kprintf("\t\tKernel version: %s, build number: %s\n", version, build_no);
+    kprintf("\t\t%s %s %s %s\n",zoidberg_uname.sysname, zoidberg_uname.release, zoidberg_uname.version, zoidberg_uname.machine);
     kprintf("\t\tKernel entry point located at %#11x\n\n\n\n", (UINT64)main);
  
 

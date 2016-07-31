@@ -81,8 +81,9 @@ void sys_spawn(struct syscall_ctx *ctx);
 void sys_zmalloc(struct syscall_ctx *ctx);
 void sys_zrealloc(struct syscall_ctx *ctx);
 void sys_zfree(struct syscall_ctx *ctx);
+void sys_uname(struct syscall_ctx *ctx);
 
-static void (*syscalls[9])(struct syscall_ctx *ctx) = {
+static void (*syscalls[10])(struct syscall_ctx *ctx) = {
     NULL,
     &sys_exit,
     &sys_read,
@@ -91,7 +92,8 @@ static void (*syscalls[9])(struct syscall_ctx *ctx) = {
     &sys_spawn,
     &sys_zmalloc,
     &sys_zfree,
-    &sys_zrealloc
+    &sys_zrealloc,
+    &sys_uname
 };
 #endif
 
@@ -103,6 +105,7 @@ static void (*syscalls[9])(struct syscall_ctx *ctx) = {
 #define ZSYSCALL_MALLOC  6
 #define ZSYSCALL_FREE    7
 #define ZSYSCALL_REALLOC 8
+#define ZSYSCALL_UNAME   9
 
 extern EFI_GUID gEfiZoidbergSyscallProtocolGUID;
 

@@ -16,6 +16,8 @@
   k_thread.c
   k_syscalls.c
   k_initrd.c
+  k_utsname.c
+
   efiwindow/bitmap.c
   efiwindow/efiwindow.c
   efiwindow/ewrect.c

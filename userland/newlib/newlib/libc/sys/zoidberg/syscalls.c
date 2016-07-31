@@ -117,6 +117,13 @@ caddr_t sbrk(int incr) {
 //    return (caddr_t)-1;
 }
 
+int uname(struct utsname *buf) {
+    syscall_ctx sys_ctx;
+    sys_ctx.args[0].buf = buf;
+    syscall_proto->call_syscall(syscall_proto,ZSYSCALL_UNAME,&sys_ctx);
+    return sys_ctx.retval.ret_int;
+}
+
 int stat(const char *file, struct stat *st) { }
 clock_t times(struct tms *buf) { }
 int unlink(char *name) { }
