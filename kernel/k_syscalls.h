@@ -24,6 +24,7 @@ union syscall_arg {
     ssize_t count;
     int     ret_int;
     ssize_t ret_count;
+    size_t  size;
     void*   ret_ptr;
 };
 
@@ -71,26 +72,26 @@ struct _EFI_ZOIDBERG_SYSCALL_PROTOCOL{
     EFI_CALL_ZOIDBERG_SYSCALL call_syscall;
 };
 
-#ifndef ZOIDBERG_USERLAND_SDK
+#ifndef ZOIDBERG_USERLAND
 void sys_exit(struct syscall_ctx  *ctx);
 void sys_read(struct syscall_ctx  *ctx);
 void sys_write(struct syscall_ctx *ctx);
 void sys_exec(struct syscall_ctx *ctx);
 void sys_spawn(struct syscall_ctx *ctx);
-void sys_malloc(struct syscall_ctx *ctx);
-void sys_realloc(struct syscall_ctx *ctx);
-void sys_free(struct syscall_ctx *ctx);
+void sys_zmalloc(struct syscall_ctx *ctx);
+void sys_zrealloc(struct syscall_ctx *ctx);
+void sys_zfree(struct syscall_ctx *ctx);
 
-static void (*syscalls[6])(struct syscall_ctx *ctx) = {
+static void (*syscalls[9])(struct syscall_ctx *ctx) = {
     NULL,
     &sys_exit,
     &sys_read,
     &sys_write,
     &sys_exec,
     &sys_spawn,
-    &sys_malloc,
-    &sys_free,
-    &sys_realloc
+    &sys_zmalloc,
+    &sys_zfree,
+    &sys_zrealloc
 };
 #endif
 

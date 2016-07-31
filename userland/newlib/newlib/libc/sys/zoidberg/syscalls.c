@@ -72,9 +72,49 @@ int read(int file, char *ptr, int len) {
     return sys_ctx.retval.ret_count;
 }
 
+void* malloc(size_t size) {
+    syscall_ctx sys_ctx;
+    sys_ctx.args[0].size = size;
+    syscall_proto->call_syscall(syscall_proto,ZSYSCALL_MALLOC,&sys_ctx);
+    return sys_ctx.retval.ret_ptr;
+}
+
+void* z_malloc(size_t size) {
+    syscall_ctx sys_ctx;
+    sys_ctx.args[0].size = size;
+    syscall_proto->call_syscall(syscall_proto,ZSYSCALL_MALLOC,&sys_ctx);
+    return sys_ctx.retval.ret_ptr;
+}
+
+void* realloc(void* ptr, size_t size) {
+    syscall_ctx sys_ctx;
+    sys_ctx.args[0].buf=ptr;
+    sys_ctx.args[1].size = size;
+    syscall_proto->call_syscall(syscall_proto,ZSYSCALL_REALLOC,&sys_ctx);
+    return sys_ctx.retval.ret_ptr;
+}
+
+void free(void* ptr) {
+    syscall_ctx sys_ctx;
+    sys_ctx.args[0].buf = ptr;
+    syscall_proto->call_syscall(syscall_proto,ZSYSCALL_FREE,&sys_ctx);
+}
+
+void* sbrk_ptr=NULL;
+void* sbrk_base=NULL;
+UINT64 sbrk_offs=0;
 caddr_t sbrk(int incr) { 
-    errno = ENOSYS;
-    return (caddr_t)-1;
+    if(sbrk_ptr==NULL) sbrk_ptr = sbrk_base = z_malloc(65536);
+    if((sbrk_offs+incr) > 65535) {
+      errno = ENOMEM;
+      return (caddr_t)-1;
+    }
+    caddr_t old_sbrk = (caddr_t)sbrk_ptr;
+    sbrk_ptr += incr;
+    sbrk_offs += incr;
+    return old_sbrk;
+//    errno = ENOSYS;
+//    return (caddr_t)-1;
 }
 
 int stat(const char *file, struct stat *st) { }

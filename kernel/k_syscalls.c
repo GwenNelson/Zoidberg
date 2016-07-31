@@ -60,20 +60,21 @@ void sys_write(struct syscall_ctx *ctx) {
       ctx->retval.ret_count = write(fd,buf,count);
 }
 
-void sys_malloc(struct syscall_ctx *ctx) {
-     ssize_t count           = ctx->args[0].count;
-     ctx->retval.ret_ptr     = malloc(count);
+void sys_zmalloc(struct syscall_ctx *ctx) {
+     size_t size           = ctx->args[0].size;
+
+     ctx->retval.ret_ptr     = malloc(size);
 }
 
-void sys_free(struct syscall_ctx *ctx) {
+void sys_zfree(struct syscall_ctx *ctx) {
      void* buf = ctx->args[0].buf;
      free(buf);
 }
 
-void sys_realloc(struct syscall_ctx *ctx) {
+void sys_zrealloc(struct syscall_ctx *ctx) {
      void*   buf   = ctx->args[0].buf;
-     ssize_t count = ctx->args[1].count;
-     ctx->retval.ret_ptr = realloc(buf,count);
+     size_t size = ctx->args[1].size;
+     ctx->retval.ret_ptr = realloc(buf,size);
 }
 
 UINT64
@@ -84,7 +85,7 @@ CallSyscall(
         IN syscall_ctx* ctx)
 {
         // TODO - better syscall tracing and make it optional
-//        klog("TRACE","1","Task %d calling syscall %d",This->my_task_id,syscall_no);
+        //klog("TRACE","1","Task %d calling syscall %d",This->my_task_id,syscall_no);
         ctx->task_id = This->my_task_id;
         syscalls[syscall_no](ctx);
         return 0;

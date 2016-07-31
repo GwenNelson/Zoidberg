@@ -23,14 +23,14 @@ cd ..
 bin2c/bin2c -o ../kernel/zoidberg_logo.h Logo.bmp
 popd
 
-#build -a X64 -p kernel.dsc
+build -a X64 -p kernel.dsc
 
 cp -Rv $WORKSPACE/build/* build/
 
 echo Building userland
 
 cp kernel/k_syscalls.h userland/newlib/newlib/libc/sys/zoidberg/
-#make -C userland -j all
+make -C userland -j all
 
 echo Building bootable image
 
