@@ -23,14 +23,14 @@ cd ..
 bin2c/bin2c -o ../kernel/zoidberg_logo.h Logo.bmp
 popd
 
-build -a X64 -p kernel.dsc
+#build -a X64 -p kernel.dsc
 
 cp -Rv $WORKSPACE/build/* build/
 
 echo Building userland
 
 cp kernel/k_syscalls.h userland/newlib/newlib/libc/sys/zoidberg/
-make -C userland -j all
+#make -C userland -j all
 
 echo Building bootable image
 
@@ -52,6 +52,21 @@ mmd -i initrd.img ::/sbin
 mmd -i initrd.img ::/bin
 mcopy -i initrd.img userland/build/sbin/init ::/sbin
 mcopy -i initrd.img userland/build/bin/sh ::/bin
+
+echo Shrinking+rebuilding initrd.img
+BYTESTOTAL=`du -b initrd.img | awk {'print $1'}`
+BYTESFREE=`mdir -i initrd.img | grep free | sed 's/bytes free//' | sed 's/ //g'`
+BYTESFINAL=$((($BYTESTOTAL-$BYTESFREE)+65536  ))
+
+BYTESFINAL=$(($BYTESFINAL - ($BYTESFINAL % 65536)))
+
+cp initrd.img initrd.img.bak
+rm -f initrd.img
+dd if=/dev/zero of=initrd.img bs=65536 count=$(( ($BYTESFINAL / 65536) ))
+/sbin/mkfs.vfat initrd.img
+mkdir -p initrd/
+mcopy -i initrd.img.bak -spn ::/* initrd/
+mcopy -i initrd.img -sp initrd/* ::/
 
 echo Copying initrd.img to boot partition
 mcopy -i boot.img initrd.img ::/EFI/BOOT
