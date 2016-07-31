@@ -60,6 +60,22 @@ void sys_write(struct syscall_ctx *ctx) {
       ctx->retval.ret_count = write(fd,buf,count);
 }
 
+void sys_malloc(struct syscall_ctx *ctx) {
+     ssize_t count           = ctx->args[0].count;
+     ctx->retval.ret_ptr     = malloc(count);
+}
+
+void sys_free(struct syscall_ctx *ctx) {
+     void* buf = ctx->args[0].buf;
+     free(buf);
+}
+
+void sys_realloc(struct syscall_ctx *ctx) {
+     void*   buf   = ctx->args[0].buf;
+     ssize_t count = ctx->args[1].count;
+     ctx->retval.ret_ptr = realloc(buf,count);
+}
+
 UINT64
 EFIAPI
 CallSyscall(
@@ -67,6 +83,8 @@ CallSyscall(
         IN UINT64 syscall_no,
         IN syscall_ctx* ctx)
 {
+        // TODO - better syscall tracing
+        klog("TRACE","1","Task %d calling syscall %d",This->my_task_id,syscall_no);
         ctx->task_id = This->my_task_id;
         syscalls[syscall_no](ctx);
         return 0;

@@ -1,4 +1,4 @@
-all: fullsdk newlib/build/x86_64-zoidberg/newlib/libc.a build/sbin/init gnu-efi-3.0.4/x86_64/lib/libefi.a
+all: fullsdk newlib/build/x86_64-zoidberg/newlib/libc.a build/sbin/init gnu-efi-3.0.4/x86_64/lib/libefi.a build/bin/sh
 
 export PATH := ${PWD}/sdk/usr/bin:${PATH}
 

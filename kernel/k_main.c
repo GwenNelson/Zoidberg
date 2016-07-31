@@ -486,6 +486,7 @@ int main(int argc, char** argv) {
     }
 
     klog("INIT",1,"Starting PID 1 /sbin/init");
+
  
     req_task(&uefi_run,(void*)L"initrd:\\sbin\\init");
     while(1) {

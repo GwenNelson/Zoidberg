@@ -8,6 +8,8 @@ typedef struct task_def_t {
    void (*task_proc)(void* arg, UINT64 task_id);
    void* ctx;
    void* arg;
+
+
    struct task_def_t *next;
    struct task_def_t *prev;
 } task_def_t;

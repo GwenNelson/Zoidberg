@@ -37,14 +37,31 @@ int spawn(char* path) {
     return sys_ctx.retval.ret_int;
 }
 
-int fstat(int file, struct stat *st) { }
+int fstat(int file, struct stat *st) { 
+    if(file <= 2) {
+      st->st_mode    = S_IFCHR;
+      st->st_blksize = 0;
+      return 0;
+    }
+    errno = EBADF;
+    return -1;
+}
 int getpid() { 
     return syscall_proto->my_task_id;
 }
-int isatty(int file) { }
+int isatty(int file) {
+    if(file <= 2) return 1;
+    errno = EINVAL;
+    return 0;
+}
 int kill(int pid, int sig) { }
 int link(char *old, char *new) { }
-int lseek(int file, int ptr, int dir) { }
+int lseek(int file, int ptr, int dir) { 
+    if(file <= 2) {
+       errno = ESPIPE;
+       return -1;
+    }
+}
 int open(const char *name, int flags, ...) { }
 int read(int file, char *ptr, int len) { 
     syscall_ctx sys_ctx;

@@ -80,9 +80,9 @@ UINT64 init_task(void (*task_proc)(void* ctx), void* arg) {
 
      task_def_t new_task;
 
-     new_task.task_id    = new_task_id;
-     new_task.task_proc  = task_proc;
-     new_task.arg        = arg;
+     new_task.task_id       = new_task_id;
+     new_task.task_proc     = task_proc;
+     new_task.arg           = arg;
      tasks[new_task_id]  = new_task;
      thread_proto->create_thread(thread_proto,(THREAD_FUNC_T)task_proc,&(tasks[new_task_id]),new_task.ctx);
      last_task_id = new_task_id; 
