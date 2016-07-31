@@ -83,8 +83,8 @@ CallSyscall(
         IN UINT64 syscall_no,
         IN syscall_ctx* ctx)
 {
-        // TODO - better syscall tracing
-        klog("TRACE","1","Task %d calling syscall %d",This->my_task_id,syscall_no);
+        // TODO - better syscall tracing and make it optional
+//        klog("TRACE","1","Task %d calling syscall %d",This->my_task_id,syscall_no);
         ctx->task_id = This->my_task_id;
         syscalls[syscall_no](ctx);
         return 0;
