@@ -84,6 +84,9 @@ void sys_uname(struct syscall_ctx *ctx) {
      ctx->retval.ret_int = 0;
 }
 
+void sys_wait(struct syscall_ctx *ctx) {
+}
+
 UINT64
 EFIAPI
 CallSyscall(

@@ -26,6 +26,7 @@ union syscall_arg {
     ssize_t ret_count;
     size_t  size;
     void*   ret_ptr;
+    pid_t   pid;
 };
 
 typedef struct syscall_ctx {
@@ -82,6 +83,7 @@ void sys_zmalloc(struct syscall_ctx *ctx);
 void sys_zrealloc(struct syscall_ctx *ctx);
 void sys_zfree(struct syscall_ctx *ctx);
 void sys_uname(struct syscall_ctx *ctx);
+void sys_wait(struct syscall_ctx *ctx);
 
 static void (*syscalls[10])(struct syscall_ctx *ctx) = {
     NULL,
@@ -93,7 +95,8 @@ static void (*syscalls[10])(struct syscall_ctx *ctx) = {
     &sys_zmalloc,
     &sys_zfree,
     &sys_zrealloc,
-    &sys_uname
+    &sys_uname,
+    &sys_wait
 };
 #endif
 
@@ -106,6 +109,7 @@ static void (*syscalls[10])(struct syscall_ctx *ctx) = {
 #define ZSYSCALL_FREE    7
 #define ZSYSCALL_REALLOC 8
 #define ZSYSCALL_UNAME   9
+#define ZSYSCALL_WAIT    10
 
 extern EFI_GUID gEfiZoidbergSyscallProtocolGUID;
 
