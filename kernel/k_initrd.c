@@ -105,15 +105,20 @@ void mount_initrd(char* path) {
         return;
      }
 
-     klog("INITRD",1,"Reading image into memory");
-     
-     size_t retval = fread(initrd_buf,1,size,fd);
- 
-     if(retval != size) {
-        klog("INITRD",0,"Failed to read image into memory! %d", retval);
-        fclose(fd);
-        free(initrd_buf);
-        return;
+     klog("INITRD",KLOG_PROG,"Reading image into memory");
+     kmsg_prog_start(size);
+
+     void* cur_buf = initrd_buf; 
+     int i=0;
+     size_t retval=0;
+     size_t read_so_far=0;
+     while(read_so_far < size) {
+         retval = fread(cur_buf,512,32,fd);
+         if(retval != EOF) {
+            cur_buf     += retval*512;
+            read_so_far += retval*512;
+            kmsg_prog_update(retval*512);
+         }
      }
     
      fclose(fd);

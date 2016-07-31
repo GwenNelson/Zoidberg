@@ -6,6 +6,9 @@
 #include <sys/EfiSysCall.h>
 #include <Library/UefiLib.h>
 
+#define IN_KMSG
+#include "kmsg.h"
+
 char *kmsg=NULL;
 
 static char static_kmsg[4096];
@@ -95,7 +98,7 @@ int kvprintf(const char *fmt, va_list ap)
 
 int klog(char* component, int is_good, const char *fmt, ...) {
     acquire_klog_lock();
-    if(is_good==1) {
+    if(is_good != KLOG_ERR) {
        ST->ConOut->SetAttribute(ST->ConOut,EFI_TEXT_ATTR(EFI_GREEN|0x8,EFI_BACKGROUND_BLACK));
     } else {
        ST->ConOut->SetAttribute(ST->ConOut,EFI_TEXT_ATTR(EFI_RED|0x8,EFI_BACKGROUND_BLACK));
@@ -115,6 +118,40 @@ int klog(char* component, int is_good, const char *fmt, ...) {
     va_start(ap, fmt);
     int retval = kvprintf(fmt,ap);
     va_end(ap);
-    kprintf("\n");
+    if(is_good != KLOG_PROG) {
+       kprintf("\n");
+    }
     release_klog_lock();
-} 
+}
+
+static UINT64 prog_start_cur   = 0;
+static UINT64 prog_start_total = 0;
+static char prog_chars[32];
+static char prog_amounts[256];
+static char spin_char[] = "/-|\\-";
+static int prog_spin=0;
+
+void kmsg_prog_start(UINT64 total) {
+     prog_start_cur = prog_start_total = 0;
+     prog_start_total = total;
+     snprintf(prog_chars,32,"%0*d",30,0);
+     printf("\n");
+}
+
+void kmsg_prog_update(UINT64 n) {
+     prog_start_cur += n;
+     if(prog_spin>=4) prog_spin=-1;
+     prog_spin++;
+     snprintf(prog_amounts,255,"%d/%d",prog_start_cur,prog_start_total);
+     UINT64 fraction = (30 * prog_start_cur) / prog_start_total;
+     if(fraction >1) prog_chars[fraction-2] = '=';
+     prog_chars[fraction-1]='>';
+     if(fraction < 30) {
+       printf("\r[%-30.*s] %c %-30s",fraction,prog_chars,spin_char[prog_spin],prog_amounts);
+     } else {
+       printf("\r%-65s"," ");
+       printf("\r[%-30.*s] ", 30, prog_chars);
+       kprintf("done\n");
+     }
+     fflush(stdout);
+}
