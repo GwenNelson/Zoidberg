@@ -22,7 +22,6 @@ int main() {
        snprintf(prompt_str, 4096, unix_prompt, login_name, hostname_str, cwd);
        printf(prompt_str);
        __getline(&input_line,&len,stdin);
-       printf("\n");
     }
 
 }
