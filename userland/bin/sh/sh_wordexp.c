@@ -133,12 +133,11 @@ int do_wordexp(const char *s, wordexp_t *we, int flags)
 		we->we_offs = 0;
 	}
 
-	goto nospace;
 //	if (pipe2(p, O_CLOEXEC) < 0) goto nospace;
 //	__block_all_sigs(&set);
-	pid = fork();
+//	pid = fork();
 //	__restore_sigs(&set);
-	if (pid < 0) {
+/*	if (pid < 0) {
 		close(p[0]);
 		close(p[1]);
 		goto nospace;
@@ -151,7 +150,7 @@ int do_wordexp(const char *s, wordexp_t *we, int flags)
 			"sh", s, redir, (char *)0);
 		_exit(1);
 	}
-	close(p[1]);
+	close(p[1]);*/
 	
 	f = fdopen(p[0], "r");
 	if (!f) {

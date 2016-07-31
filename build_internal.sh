@@ -30,7 +30,9 @@ cp -Rv $WORKSPACE/build/* build/
 echo Building userland
 
 cp kernel/k_syscalls.h userland/newlib/newlib/libc/sys/zoidberg/
-make -C userland -j all
+pushd userland
+make  -j all
+popd
 
 echo Building bootable image
 
