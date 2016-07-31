@@ -22,11 +22,15 @@ build/sbin/init: newlib/build/x86_64-zoidberg/newlib/libc.a build/sbin/init.o ne
 	mkdir -p build/sbin
 	x86_64-zoidberg-gcc ${APPCFLAGS} ${INCLUDES} -o $@ $^ -lgcc -lc
 
+build/bin/sh_wordexp.o: bin/sh/sh_wordexp.c
+	mkdir -p build/bin
+	x86_64-zoidberg-gcc -ffreestanding ${INCLUDES} -c $< -o $@
+
 build/bin/sh.o: bin/sh/sh.c fullsdk
 	mkdir -p build/bin
 	x86_64-zoidberg-gcc -ffreestanding ${INCLUDES} -c $< -o $@
 
-build/bin/sh: newlib/build/x86_64-zoidberg/newlib/libc.a build/bin/sh.o newlib/build/x86_64-zoidberg/newlib/libc/sys/zoidberg/syscalls.o
+build/bin/sh: newlib/build/x86_64-zoidberg/newlib/libc.a build/bin/sh_wordexp.o build/bin/sh.o newlib/build/x86_64-zoidberg/newlib/libc/sys/zoidberg/syscalls.o
 	mkdir -p build/bin
 	x86_64-zoidberg-gcc ${APPCFLAGS} ${INCLUDES} -o $@ $^ -lgcc -lc
 
