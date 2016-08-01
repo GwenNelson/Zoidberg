@@ -53,7 +53,7 @@ static void go(entrypoint_t ep)
     ep(puts);
 }
 
-int elfloader_main(int argc, char **argv)
+int elfload_main(int argc, char **argv)
 {
     if (argc < 2) {
         fprintf(stderr, "usage: %s [elf-to-load]\n", argv[0]);
@@ -71,10 +71,6 @@ int elfloader_main(int argc, char **argv)
 
     check(el_init(&ctx), "initialising");
 
-    if (posix_memalign(&buf, ctx.align, ctx.memsz)) {
-        perror("memalign");
-        return 1;
-    }
 
 
     ctx.base_load_vaddr = ctx.base_load_paddr = (uintptr_t) buf;
