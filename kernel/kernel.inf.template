@@ -18,6 +18,11 @@
   k_initrd.c
   k_utsname.c
 
+  elfload/elfload.c
+  elfload/elfloader.c
+  elfload/elfreloc_amd64.c
+
+
   efiwindow/bitmap.c
   efiwindow/efiwindow.c
   efiwindow/ewrect.c
@@ -26,6 +31,7 @@
   efiwindow/screen.c
   efiwindow/textbox.c
   efiwindow/windowlist.c
+
   libvterm/encoding.c
   libvterm/keyboard.c
   libvterm/mouse.c
