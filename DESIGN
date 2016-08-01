@@ -13,6 +13,13 @@ System components:
     Compiled with the SDK, talks to the kernel to do what it needs to do
     Starts the system up properly
 
+New memory manager needed
+  Get memory map at startup
+  Allocate as many pages as possible to a heap (similar to pre-edk2 k_heap)
+  Use heap to satisfy userspace malloc/free
+   Possibly patch BS->AllocatePool ?
+
+
 VFS layout
   /boot 
     maps to whichever UEFI volume we booted from
@@ -21,4 +28,35 @@ VFS layout
   /dev/uefi/
     various subdirectories containing UEFI volumes
   mount maps one VFS path to another path
+
+VFS implementation
+  prefix table
+    linked list
+    longest matching path prefix for a file wins
+    if 2 or more entries are registered under the same prefix, both will be queried for a file
+       if more than 1 entry returns a positive for the file, the last one in the list is used
+    maps path prefixes to filesystem handler structs
+
+UEFI VFS handling:
+  UEFI SIMPLE_FILE_PROTOCOL protocol installed on kernel.efi gImageHandle and mapped to zoidberg:/
+  Represents the root of the VFS and used in calls to UEFI
+  Implements GetInfo() method of EFI_FILE_PROTOCOL with unix semantics
+
+filesystem handler struct
+  void* fs_data;
+      used by the filesystem driver to store any specific info about this filesystem to identify it
+  int file_exists(char* path);
+      return 1 if the specified file exists
+  void* open(char* path,int flags);
+      return a pointer to a file descriptor for the specified path and mode, or NULL if there was an error
+      mode param uses the standard POSIX open() flags
+  int read(void* fd, void* buf, size_t count) and friends
+      obvious, other standard file operations are also implemented, just using void* instead of int for file descriptors
+
+VFS startup
+  1 - kernel mounts initrd at / if provided
+  2 - kernel mounts UEFI boot volume (normally fs0) at /boot
+  3 - kernel runs /sbin/init as PID 1
+  4 - init mounts other filesystems from /etc/fstab, including the "real" root filesystem
+
 
