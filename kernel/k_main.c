@@ -309,30 +309,18 @@ ConvertBmpToGopBlt (
 }
 
 
-
+EFI_GRAPHICS_OUTPUT_PROTOCOL *GraphicsOutput;
 #include "zoidberg_logo.h"
 void draw_logo() {
-     EFI_GRAPHICS_OUTPUT_PROTOCOL *GraphicsOutput;
-     UINTN handleCount;
-     EFI_HANDLE *handleBuffer;
-     BS->LocateHandleBuffer(
-                    ByProtocol,
-                    &gEfiGraphicsOutputProtocolGuid,
-                    NULL,
-                    &handleCount,
-                    &handleBuffer);
-     EFI_STATUS s = BS->HandleProtocol (handleBuffer[0], &gEfiGraphicsOutputProtocolGuid, (VOID **) &GraphicsOutput);
-     if(EFI_ERROR(s)) {
-        klog("VIDEO",0,"No graphics output support: %d",s); 
-        return;
-     }
+
+
 
 
 	UINTN BltSize = Logo_bmp_size * sizeof(EFI_GRAPHICS_OUTPUT_BLT_PIXEL);
 	void* Blt = malloc(BltSize);
 	UINTN width;
 	UINTN height;
-	s = ConvertBmpToGopBlt((UINT8*)Logo_bmp,(UINTN)Logo_bmp_size,(void**)&Blt,&BltSize,&height,&width);
+	EFI_STATUS s = ConvertBmpToGopBlt((UINT8*)Logo_bmp,(UINTN)Logo_bmp_size,(void**)&Blt,&BltSize,&height,&width);
 	if(EFI_ERROR(s)) {
 	   klog("VIDEO",0,"Could not convert logo.bmp: %d",s);
            return;
@@ -355,32 +343,66 @@ void draw_logo() {
 	}
 }
 
-void init_video() {
-    EFI_STATUS s = ew_init(gImageHandle);
-    if(EFI_ERROR(s)) {
-       klog("VIDEO",0,"Could not setup efiwindow library!");
-       return;
-    } else {
-       klog("VIDEO",1,"Started efiwindow");
-    }
-    
-    FONT *font;
-    s = ew_load_psf_font(&font, "fs0:\\EFI\\boot\\unifont.psf");
-      
-    if(EFI_ERROR(s)) {
-       klog("VIDEO",0,"Could not load console font");
-       return;
-    } else {
-       klog("VIDEO",1,"Loaded console font");
-    }
+void init_video(char* vgamode) {
+     if(vgamode==NULL) {
+        vgamode = "1024x768x32"; // a sane default for most platforms
+     }
 
-/*    s = ew_set_mode(1024,768,32);
-    if(EFI_ERROR(s)) {
-       klog("VIDEO",0,"Could not set graphics mode 1024x768x32");
-       return;
-    } else {
-       klog("VIDEO",1,"Set graphics mode 1024x768x32");
-    }*/
+     UINTN desired_width  = atoi(strtok(vgamode,"x"));
+     UINTN desired_height = atoi(strtok(NULL,"x"));
+     UINTN desired_bpp    = atoi(strtok(NULL,"x"));
+
+     klog("VIDEO",1,"Will attempt to set display mode of %dx%dx%d",desired_width,desired_height,desired_bpp);
+
+     UINTN handleCount;
+     EFI_HANDLE *handleBuffer;
+     BS->LocateHandleBuffer(
+                    ByProtocol,
+                    &gEfiGraphicsOutputProtocolGuid,
+                    NULL,
+                    &handleCount,
+                    &handleBuffer);
+     EFI_STATUS s = BS->HandleProtocol (handleBuffer[0], &gEfiGraphicsOutputProtocolGuid, (VOID **) &GraphicsOutput);
+     if(EFI_ERROR(s)) {
+        klog("VIDEO",0,"No graphics output support: %d",s); 
+        return;
+     } else {
+        klog("VIDEO",1,"Located %d GOP handles", handleCount);
+     }
+     int m=0;
+     BS->HandleProtocol (handleBuffer[0], &gEfiGraphicsOutputProtocolGuid, (VOID **) &GraphicsOutput);
+     EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *mi;
+     UINTN isize;
+     UINTN bpp;
+     UINTN width;
+     UINTN height;
+     int matching_mode = -1;
+     for(m=0; m < GraphicsOutput->Mode->MaxMode; m++) {
+         GraphicsOutput->QueryMode(GraphicsOutput, m, &isize, &mi);
+         bpp = 0;
+         width  = mi->HorizontalResolution;
+         height = mi->VerticalResolution;
+         switch(mi->PixelFormat) {
+            case PixelRedGreenBlueReserved8BitPerColor:
+              bpp = 32;
+            break;
+            case PixelBlueGreenRedReserved8BitPerColor:
+              bpp = 32;
+            break;
+            case PixelBitMask:
+              bpp = 0; // this will fail to match any sane mode, and weird framebuffers are a total pain, so forget about using bitmasks
+            break;
+         }
+         if((width==desired_width) && (height==desired_height) && (bpp==desired_bpp)) {
+            matching_mode = m;
+            break;
+         }
+     }
+     if(matching_mode==-1) {
+        klog("VIDEO",0,"Failed to set desired mode!");
+     } else {
+        GraphicsOutput->SetMode(GraphicsOutput,matching_mode);
+     }
 }
 
 static VTerm *console_term=NULL; 
@@ -432,16 +454,19 @@ int main(int argc, char** argv) {
     int i;
 
     char* initrd_path = NULL;
+    char* vgamode     = NULL;
 
     if(argc>1) {
        for(i=1; i<argc; i++) {
            if(strncmp(argv[i],"initrd=",7)==0) {
               initrd_path = argv[i]+7;
+           } else if(strncmp(argv[i], "vgamode=",8)==0) {
+              vgamode = argv[i]+8;
            }
        }
     }
 
-    init_video();
+    init_video(vgamode);
     ST->ConOut->ClearScreen(ST->ConOut);
 
     char* build_no = ZOIDBERG_BUILD;
