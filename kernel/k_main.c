@@ -374,13 +374,13 @@ void init_video() {
        klog("VIDEO",1,"Loaded console font");
     }
 
-    s = ew_set_mode(800,600,32);
+/*    s = ew_set_mode(1024,768,32);
     if(EFI_ERROR(s)) {
-       klog("VIDEO",0,"Could not set graphics mode 800x600x32");
+       klog("VIDEO",0,"Could not set graphics mode 1024x768x32");
        return;
     } else {
-       klog("VIDEO",1,"Set graphics mode 800x600x32");
-    }
+       klog("VIDEO",1,"Set graphics mode 1024x768x32");
+    }*/
 }
 
 static VTerm *console_term=NULL; 

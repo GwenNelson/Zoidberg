@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "elfload.h"
+#include "kmsg.h"
 
 FILE *f;
 void *buf;
@@ -40,29 +41,31 @@ static void *alloccb(
     return (void*) virt;
 }
 
+static void elf_exit(int retval) {
+     // TODO - implement this
+}
+
 static void check(el_status stat, const char* expln)
 {
     if (stat) {
-        fprintf(stderr, "%s: error %d\n", expln, stat);
-        exit(1);
+
+        klog("ELFLOAD",0,"%s: error %d\n", expln, stat);
+        elf_exit(1);
     }
 }
 
 static void go(entrypoint_t ep)
 {
+    // TODO - setup syscall stuff here
     ep(puts);
 }
 
-int elfload_main(int argc, char **argv)
+int elfload_run(char* filename)
 {
-    if (argc < 2) {
-        fprintf(stderr, "usage: %s [elf-to-load]\n", argv[0]);
-        return 1;
-    }
 
-    f = fopen(argv[1], "rb");
+    f = fopen(filename, "rb");
     if (!f) {
-        perror("opening file");
+        klog("ELFLOAD",0,"Error opening file %s", filename);
         return 1;
     }
 
@@ -82,7 +85,7 @@ int elfload_main(int argc, char **argv)
 
     entrypoint_t ep = (entrypoint_t) epaddr;
 
-    printf("Binary entrypoint is %x; invoking %p\n", ctx.ehdr.e_entry, ep);
+    klog("INITRD",1,"Binary entrypoint is %x; invoking %p\n", ctx.ehdr.e_entry, ep);
 
     go(ep);
     return 0;
