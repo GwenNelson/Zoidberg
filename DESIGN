@@ -35,6 +35,7 @@ VFS implementation
     longest matching path prefix for a file wins
     if 2 or more entries are registered under the same prefix, both will be queried for a file
        if more than 1 entry returns a positive for the file, the last one in the list is used
+    if no matches on any prefixes, treat it as a directory named after the prefix
     maps path prefixes to filesystem handler structs
 
 UEFI VFS handling:

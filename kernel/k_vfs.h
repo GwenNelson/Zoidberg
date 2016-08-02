@@ -35,9 +35,10 @@ struct vfs_prefix_entry_t {
      vfs_prefix_entry_t* prev;
 };
 
-// returns a vfs_fs_handler_t representing a UEFI volume
+// returns a vfs_fs_handler_t representing a UEFI volume, no trailing :
 vfs_fs_handler_t *get_vfs_handler_uefi(char* uefi_volume);
 
+void vfs_init();
 void vfs_mount(vfs_fs_handler_t* fs_handler, char* dev_name, char* mountpoint);
 
 
