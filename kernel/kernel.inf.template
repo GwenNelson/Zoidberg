@@ -18,6 +18,8 @@
   k_initrd.c
   k_utsname.c
 
+  nuklear.c
+
   elfload/elfload.c
   elfload/elfloader.c
   elfload/elfreloc_amd64.c
