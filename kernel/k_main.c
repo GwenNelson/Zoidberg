@@ -81,7 +81,8 @@ void uefi_run(void* _t) {
 void idle_task(void* _t) {
      klog("IDLE",1,"Kernel idle task started");
      for(;;) {
-         BS->Stall(100000);
+         __asm__("hlt");
+//         BS->Stall(100000);
      }
 }
 
