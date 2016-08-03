@@ -13,6 +13,7 @@
   logo/Logo.inf
 
 [LibraryClasses]
+  PosixLib|StdLib/PosixLib/PosixLib.inf
   #
   # Entry Point Libraries
   #

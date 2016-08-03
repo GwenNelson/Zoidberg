@@ -172,6 +172,7 @@ int main(int argc, char** argv) {
     }
 
     vfs_init();
+    dump_vfs();
 
     klog("UEFI",1,"Disabling watchdog");
     BS->SetWatchdogTimer(0, 0, 0, NULL);

@@ -65,6 +65,7 @@
   UefiLib
   DevicePathLib
   DxeServicesLib
+  PosixLib
 
 [Protocols]
   gEfiBlockIoProtocolGuid

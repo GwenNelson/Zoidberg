@@ -11,11 +11,15 @@ typedef struct vfs_fs_handler_t {
      // used by the file handler to represent the underlying device
      void* fs_data;
 
+     // what is shown by the mount command etc
+     char* fs_type;
+
      // called when unmounting
      void     (*shutdown)(vfs_fs_handler_t* this);
 
      // needed by the VFS layer
-     int      (*file_exists)(vfs_fs_handler_t* this, char* path);
+     int      (*file_exists)(vfs_fs_handler_t* this, char* path);   // simple boolean check
+     char**   (*list_root_dir)(vfs_fs_handler_t* this);             // returns an array of strings, caller must free()
 
      // standard I/O operations
      void*    (*open)(vfs_fs_handler_t* this, char* path, int flags);
@@ -37,12 +41,17 @@ struct vfs_prefix_entry_t {
      vfs_prefix_entry_t* prev;
 };
 
+// returns a vfs_fs_handler_t representing all the UEFI volumes (for use by /dev/uefi)
+vfs_fs_handler_t *get_vfs_handler_dev_uefi();
+
 // returns a vfs_fs_handler_t representing a UEFI volume, no trailing :
 vfs_fs_handler_t *get_vfs_handler_uefi(char* uefi_volume);
 
 void vfs_init();
 void vfs_mount(vfs_fs_handler_t* fs_handler, char* dev_name, char* mountpoint);
 
+// dump the mount table etc
+void dump_vfs();
 
 // either param can be NULL, but one must be non-null
 //  whichever is the most recent matching prefix entry will be removed
