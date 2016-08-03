@@ -6,7 +6,13 @@
 
 #include <Library/UefiLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Protocol/BlockIo.h>
+#include <Protocol/DevicePath.h>
+#include <Protocol/EfiShell.h>
+
 extern EFI_BOOT_SERVICES *BS;
+extern EFI_HANDLE gImageHandle;
+
 
 vfs_prefix_entry_t *vfs_prefix_list_first = NULL;
 vfs_prefix_entry_t *vfs_prefix_list_last  = NULL;
@@ -14,10 +20,10 @@ vfs_prefix_entry_t *vfs_prefix_list_last  = NULL;
 char boot_path[32];
 
 void vfs_init() {
-//     klog("VFS",1,"VFS mapping /dev/uefi to UEFI volumes");
-//     vfs_fs_handler_t* dev_uefi_handler;
-//     dev_uefi_handler = get_vfs_handler_dev_uefi();
-//     vfs_mount(dev_uefi_handler,"uefi","/dev/uefi");
+     klog("VFS",1,"VFS mapping /dev/uefi to UEFI volumes");
+     vfs_fs_handler_t* dev_uefi_handler;
+     dev_uefi_handler = get_vfs_handler_dev_uefi();
+     vfs_mount(dev_uefi_handler,"uefi","/dev/uefi/");
 
      klog("VFS",1,"VFS mapping / to UEFI initrd");
      vfs_fs_handler_t* initrd_handler;
@@ -163,6 +169,63 @@ vfs_fs_handler_t* get_vfs_handler_uefi(char* uefi_volume) {
 
 char* vfs_uefi_dev_type = "devuefi";
 
+
+char** vfs_dev_uefi_list_root_dir(vfs_fs_handler_t* this) {
+    UINTN BufferSize=0;
+    EFI_HANDLE *HandleBuffer;
+
+    EFI_STATUS s = BS->LocateHandle(ByProtocol,&gEfiBlockIoProtocolGuid,NULL,&BufferSize,HandleBuffer);
+    if(s == EFI_BUFFER_TOO_SMALL) {
+       HandleBuffer = (EFI_HANDLE*)calloc(BufferSize,1);
+       s = BS->LocateHandle(ByProtocol,&gEfiBlockIoProtocolGuid,NULL,&BufferSize,HandleBuffer);
+    }
+
+    EFI_SHELL_PROTOCOL *shell_proto;
+
+    s = BS->OpenProtocol(
+            gImageHandle,
+            &gEfiShellProtocolGuid,
+            &shell_proto,
+            gImageHandle,
+            NULL,
+            EFI_OPEN_PROTOCOL_GET_PROTOCOL
+            );
+    if (EFI_ERROR(s)) {
+        s = BS->LocateProtocol(
+                &gEfiShellProtocolGuid,
+                NULL,
+                &shell_proto
+                );
+    }
+
+
+    char** retval = (char**)calloc(sizeof(char*),(BufferSize/(sizeof(EFI_HANDLE))));
+
+    int i=0;
+    int retval_i=0;
+    CHAR16* dev_name;
+    char mapping_name[128];
+    char *single_map;
+    for(i=0; i< (BufferSize / sizeof(EFI_HANDLE)); i++) {
+        EFI_DEVICE_PATH_PROTOCOL *dev_path;
+        s = BS->OpenProtocol(HandleBuffer[i],&gEfiDevicePathProtocolGuid,&dev_path,gImageHandle,NULL,EFI_OPEN_PROTOCOL_GET_PROTOCOL);
+        if(s==EFI_SUCCESS) {
+           dev_name = NULL;
+           dev_name = shell_proto->GetMapFromDevicePath(&dev_path);
+           if(dev_name != NULL) {
+              retval[i] = calloc(sizeof(char),128);
+              wcstombs(retval[i],dev_name,128);
+              retval[i][strcspn(retval[i],":;")]=0;
+           }
+        }
+        retval[i+1] = NULL;
+    }
+    return retval;
+
+}
+
+
+
 vfs_fs_handler_t *get_vfs_handler_dev_uefi() {
      vfs_fs_handler_t* retval;
      retval = (vfs_fs_handler_t*)malloc(sizeof(vfs_fs_handler_t));
@@ -172,6 +235,8 @@ vfs_fs_handler_t *get_vfs_handler_dev_uefi() {
      //        just relay to the UEFI shell and treat volumes as block devices
      //        mount can cheat by using the "uefi" filesystem type to use the UEFI handler
      //        or can (later) mount them directly as proper filesystems
+
+     retval->list_root_dir = &vfs_dev_uefi_list_root_dir;
  
      retval->fs_type = vfs_uefi_dev_type;
      return retval;
