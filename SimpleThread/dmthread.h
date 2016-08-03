@@ -74,6 +74,8 @@ void resumeTimer();
 void* create_thread(thread_func_t f, void *  arg);
 void thread_join();
 
+void thread_yield();
+
 int setTimer ();
 #if 1
 #define myprintf(...) fprintf(stdout, __VA_ARGS__); fflush(stdout);

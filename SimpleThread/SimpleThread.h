@@ -66,9 +66,16 @@ EFI_STATUS
         IN  EFI_SIMPLETHREAD_PROTOCOL  *This
         );
 
+typedef
+EFI_STATUS
+(EFIAPI* EFI_YIELD_THREAD)(
+	IN EFI_SIMPLETHREAD_PROTOCOL *This
+	);
+
 struct _EFI_SIMPLETHREAD_PROTOCOL{
     UINT64          Revision;
     EFI_CREATE_THREAD  create_thread;
+    EFI_YIELD_THREAD thread_yield;
     EFI_JOIN_THREAD  thread_join;
 };
 

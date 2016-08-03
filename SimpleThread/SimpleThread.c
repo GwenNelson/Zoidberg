@@ -65,6 +65,15 @@ JoinThread(
     return 0;
 }
 
+EFI_STATUS
+EFIAPI
+YieldThread(
+	IN EFI_SIMPLETHREAD_PROTOCOL* This
+	)
+{
+    thread_yield();
+    return 0;
+}
 
 EFI_STATUS
 EFIAPI
@@ -78,6 +87,7 @@ UefiMain(
     gSIMPLETHREADPrivate.Signature = SIMPLETHREAD_PRIVATE_DATA_SIGNATURE  ;
     gSIMPLETHREADPrivate.SimpleThread.create_thread = CreateThread;
     gSIMPLETHREADPrivate.SimpleThread.thread_join = JoinThread;
+    gSIMPLETHREADPrivate.SimpleThread.thread_yield = YieldThread;
     //Print(L"%a: %d \n", __func__, __LINE__);
 
 

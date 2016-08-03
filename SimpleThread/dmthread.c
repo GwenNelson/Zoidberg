@@ -247,3 +247,8 @@ void thread_join()
     }
     closeTimer();
 }
+
+void thread_yield()
+{
+   Skedule();
+}
