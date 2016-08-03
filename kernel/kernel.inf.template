@@ -18,6 +18,7 @@
   k_initrd.c
   k_utsname.c
   k_vfs.c
+  k_video.c
 
   nuklear.c
 
