@@ -17,6 +17,7 @@
   k_syscalls.c
   k_initrd.c
   k_utsname.c
+  k_vfs.c
 
   nuklear.c
 

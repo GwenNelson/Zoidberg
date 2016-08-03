@@ -4,7 +4,9 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdio.h>
 
+typedef struct vfs_fs_handler_t vfs_fs_handler_t;
 typedef struct vfs_fs_handler_t {
      // used by the file handler to represent the underlying device
      void* fs_data;
