@@ -3,6 +3,12 @@
 
 #include "../SimpleThread/SimpleThread.h"
 
+#include <sys/EfiSysCall.h>
+#include <Library/UefiBootServicesTableLib.h>
+#include <Protocol/DevicePath.h>
+#include <Library/PcdLib.h>
+#include <Library/UefiLib.h>
+
 typedef struct task_def_t {
    int task_id;
    void (*task_proc)(void* arg, UINT64 task_id);
@@ -21,5 +27,7 @@ void init_kernel_task(void (*task_proc)(void* ctx), void* arg); // init a kernel
 struct task_def_t *get_task(UINT64 task_id);
 void kill_task(UINT64 task_id);
 void scheduler_start();
+
+void yield_until(EFI_EVENT e); // yield execution to other threads until the event is signalled
 
 #endif

@@ -128,5 +128,12 @@ void scheduler_start() {
 }
 
 
-
+void yield_until(EFI_EVENT e) {
+     // TODO - implement a timeout of some sort
+     for(;;) {
+         EFI_STATUS s = BS->CheckEvent(e);
+         if(s==EFI_SUCCESS) return;
+         thread_proto->thread_yield(thread_proto);
+     }
+}
 
