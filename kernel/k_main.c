@@ -171,6 +171,8 @@ int main(int argc, char** argv) {
        mount_initrd(initrd_path);
     }
 
+    vfs_init();
+
     klog("UEFI",1,"Disabling watchdog");
     BS->SetWatchdogTimer(0, 0, 0, NULL);
 

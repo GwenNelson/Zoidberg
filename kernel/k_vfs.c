@@ -25,6 +25,29 @@ void vfs_init() {
      vfs_mount(initrd_handler, "/dev/uefi/initrd", "/");
 }
 
+void vfs_mount(vfs_fs_handler_t* fs_handler, char* dev_name, char* mountpoint) {
+     vfs_prefix_entry_t* new_entry;
+     new_entry = (vfs_prefix_entry_t*)malloc(sizeof(vfs_prefix_entry_t));
+     BS->SetMem((void*)new_entry,sizeof(vfs_prefix_entry_t),0);
+
+     new_entry->prefix_str = mountpoint;
+     new_entry->dev_name   = dev_name;
+     new_entry->fs_handler = fs_handler;
+     new_entry->next       = NULL;
+
+     // TODO - add lock here and anywhere else we fiddle with the prefix list
+     if(vfs_prefix_list_first==NULL) {
+        new_entry->prev       = NULL;
+        vfs_prefix_list_first = new_entry;
+     } else {
+        new_entry->prev            = vfs_prefix_list_last;
+     }
+     vfs_prefix_list_last = new_entry;
+}
+
+
+
+
 void vfs_uefi_shutdown(vfs_fs_handler_t* this) {
 }
 
