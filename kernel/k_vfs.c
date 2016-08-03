@@ -18,27 +18,42 @@ vfs_prefix_entry_t *vfs_prefix_list_first = NULL;
 vfs_prefix_entry_t *vfs_prefix_list_last  = NULL;
 
 char boot_path[32];
+char* vfs_uefi_type = "uefi"; // mounts VFS volumes
+char* vfs_uefi_dev_type = "devuefi"; // implements /dev/uefi
+
+
 
 void vfs_init() {
-     klog("VFS",1,"VFS mapping /dev/uefi to UEFI volumes");
-     vfs_fs_handler_t* dev_uefi_handler;
-     dev_uefi_handler = get_vfs_handler_dev_uefi();
-     vfs_mount(dev_uefi_handler,"uefi","/dev/uefi/");
+     vfs_simple_mount("devuefi","uefi","/dev/uefi/");
 
-     klog("VFS",1,"VFS mapping / to UEFI initrd");
-     vfs_fs_handler_t* initrd_handler;
-     initrd_handler = get_vfs_handler_uefi("initrd");
-     vfs_mount(initrd_handler, "/dev/uefi/initrd", "/");
+     vfs_simple_mount("uefi","/dev/uefi/initrd","/");
 
      char* boot_volume = "fs0"; // TODO - make this actually check
      snprintf(boot_path,32,"/dev/uefi/%s",boot_volume);
+     vfs_simple_mount("uefi",boot_path,"/boot/");
 
-     klog("VFS",1,"VFS mapping /boot to UEFI %s",boot_volume);
-     vfs_fs_handler_t* boot_handler;
-     boot_handler = get_vfs_handler_uefi(boot_volume);
-     vfs_mount(boot_handler, boot_path, "/boot/");
+}
 
+void vfs_simple_mount(char* fs_type, char* dev_name, char* mountpoint) {
+     // TODO - some sort of dynamic table of filesystem types
+     //        perhaps simply a list of vfs_fs_handler_t structs and add a new setup() method to the struct
+     //        then simply check the fs_type field of each until a match is found, and then call setup()
+     // TODO - if fs_type is NULL, try and autodetect the filesystem
 
+     vfs_fs_handler_t* fs_handler = NULL;
+
+     if(strncmp(fs_type,vfs_uefi_type,4)==0) {
+        // TODO - look up devicepath etc and allow the dev_name to be an actual VFS path (i.e "/dev/uefi/initrd" instead of just "initrd")
+        char* uefi_volname = strrchr(dev_name,'/'); // silly temporary hack
+        fs_handler = get_vfs_handler_uefi(uefi_volname+1);
+     } else if (strncmp(fs_type,vfs_uefi_dev_type,7)==0){
+        fs_handler = get_vfs_handler_dev_uefi();
+     } else {
+        return; // TODO - return an error of some sort
+     }
+     
+     vfs_mount(fs_handler,dev_name,mountpoint);
+     
 }
 
 void vfs_mount(vfs_fs_handler_t* fs_handler, char* dev_name, char* mountpoint) {
@@ -142,14 +157,15 @@ int vfs_uefi_stat(vfs_fs_handler_t* this, char* path, struct stat *buf) {
 int vfs_uefi_fstat(vfs_fs_handler_t* this, void* fd, struct stat *buf) {
 }
 
-char* vfs_uefi_type = "uefi";
+
 
 vfs_fs_handler_t* get_vfs_handler_uefi(char* uefi_volume) {
      vfs_fs_handler_t* retval;
      retval = (vfs_fs_handler_t*)malloc(sizeof(vfs_fs_handler_t));
      BS->SetMem((void*)retval,sizeof(vfs_fs_handler_t),0);
 
-     retval->fs_data = (void*)uefi_volume;
+     retval->fs_data = calloc(sizeof(char),strlen(uefi_volume)+1);
+     strncpy((char*)(retval->fs_data),uefi_volume,strlen(uefi_volume));
      retval->fs_type = vfs_uefi_type;
 
      retval->shutdown      = &vfs_uefi_shutdown;
@@ -166,8 +182,6 @@ vfs_fs_handler_t* get_vfs_handler_uefi(char* uefi_volume) {
      return retval;
 }
 
-
-char* vfs_uefi_dev_type = "devuefi";
 
 
 char** vfs_dev_uefi_list_root_dir(vfs_fs_handler_t* this) {

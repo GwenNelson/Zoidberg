@@ -48,6 +48,7 @@ vfs_fs_handler_t *get_vfs_handler_dev_uefi();
 vfs_fs_handler_t *get_vfs_handler_uefi(char* uefi_volume);
 
 void vfs_init();
+void vfs_simple_mount(char* fs_type, char* dev_name, char* mountpoint);
 void vfs_mount(vfs_fs_handler_t* fs_handler, char* dev_name, char* mountpoint);
 
 // dump the mount table etc
