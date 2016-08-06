@@ -24,7 +24,7 @@ vfs_prefix_entry_t *vfs_prefix_list_last  = NULL;
 vfs_fs_type_t* vfs_fs_type_list_first = NULL;
 vfs_fs_type_t* vfs_fs_type_list_last  = NULL;
 
-char boot_path[32];
+char boot_path[PATH_MAX];
 char* vfs_uefi_type = "uefi"; // mounts VFS volumes
 
 void vfs_init_types() {
@@ -49,6 +49,7 @@ void vfs_add_type(vfs_fs_type_t *fs_type) {
      }
 }
 
+extern char* argv0; // import from k_main
 void vfs_init() {
      vfs_init_types();
 
@@ -56,9 +57,11 @@ void vfs_init() {
 
 //     vfs_simple_mount("uefi","/dev/uefi/initrd","/");
 
-//     char* boot_volume = "fs0"; // TODO - make this actually check
-//     snprintf(boot_path,32,"/dev/uefi/%s",boot_volume);
-//     vfs_simple_mount("uefi",boot_path,"/boot/");
+     // this is of course a terrible and messy hack
+     char kernel_path[PATH_MAX];
+     strncpy(kernel_path,argv0,PATH_MAX);
+     snprintf(boot_path,PATH_MAX,"/dev/uefi/%s",strtok(kernel_path,":"));
+     vfs_simple_mount("uefi",boot_path,"/boot/");
 
 }
 
@@ -72,7 +75,6 @@ void vfs_simple_mount(char* fs_type, char* dev_name, char* mountpoint) {
      vfs_fs_type_t    *fs_t_iter  = NULL;
      fs_t_iter                    = vfs_fs_type_list_first;
      while(fs_t_iter != NULL) {
-       printf("%#llx\n",fs_t_iter);
        if(fs_t_iter->fs_type != NULL) {
           if(strncmp(fs_t_iter->fs_type,fs_type,strlen(fs_type)) == 0) {
              fs_handler = (vfs_fs_handler_t*)calloc(1,sizeof(vfs_fs_handler_t));

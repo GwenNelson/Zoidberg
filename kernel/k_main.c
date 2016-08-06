@@ -125,6 +125,8 @@ static VTermScreenCallbacks vtsc =
     .resize = NULL,
 };
 
+char* argv0; // this needs to be exported for the sake of the VFS module
+
 int main(int argc, char** argv) {
 
     ST = gST;
@@ -139,6 +141,7 @@ int main(int argc, char** argv) {
     char* initrd_path = NULL;
     char* vgamode     = NULL;
 
+    argv0 = argv[0];
     if(argc>1) {
        for(i=1; i<argc; i++) {
            if(strncmp(argv[i],"initrd=",7)==0) {
@@ -158,21 +161,26 @@ int main(int argc, char** argv) {
     kprintf("\n");
     kprintf("\t\tZoidberg kernel, Copyright 2016 Gareth Nelson\n");
     kprintf("\t\t%s %s %s %s\n",zoidberg_uname.sysname, zoidberg_uname.release, zoidberg_uname.version, zoidberg_uname.machine);
-    kprintf("\t\tKernel entry point located at %#11x\n\n\n\n", (UINT64)main);
+    kprintf("\t\t%s entry point located at %#11x\n\n\n\n", argv0, (UINT64)main);
  
 
     draw_logo();
  
     init_dynamic_kmsg();
- 
+
+    vfs_init(); 
 
     if(initrd_path==NULL) {
        klog("INITRD",0,"No initrd= option specified!");
+       klog("INITRD",0,"Can not continue without a valid initrd.img, startup aborted!");
+       return;
     } else {
-       mount_initrd(initrd_path);
+       if (mount_initrd(initrd_path) != 0) {
+           klog("INITRD",0,"Startup aborted!");
+           return;
+       }
     }
 
-    vfs_init();
     dump_vfs();
 
     klog("UEFI",1,"Disabling watchdog");

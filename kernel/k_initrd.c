@@ -84,12 +84,12 @@ RAM_DISK_DEVICE_PATH initrd_devpath_proto =
 };
 
 
-void mount_initrd(char* path) {
+int mount_initrd(char* path) {
      klog("INITRD",1,"Opening image in %s",path);
      FILE* fd = fopen(path,"rb");
      if(fd==NULL) {
         klog("INITRD",0,"Failed to open initrd image");
-        return;
+        return 1;
      }
      fseek(fd,0,SEEK_END);
      long size = ftell(fd);
@@ -102,7 +102,7 @@ void mount_initrd(char* path) {
      if(initrd_buf == NULL) {
         klog("INITRD",0,"Failed to allocate memory buffer for initrd image");
         fclose(fd);
-        return;
+        return 1;
      }
 
      klog("INITRD",KLOG_PROG,"Reading image into memory");
@@ -157,7 +157,7 @@ void mount_initrd(char* path) {
        klog("INITRD",1,"Added protocol interface to handle %#llx", initrd_handle);
      } else {
        klog("INITRD",0,"Failed to add protocol interface, return value is %d", s);
-       return;
+       return 1;
      }
 
      EFI_SHELL_PROTOCOL *shell_proto;
@@ -192,5 +192,7 @@ void mount_initrd(char* path) {
       s = shell_proto->SetMap(&initrd_devpath_proto,L"initrd:");
       if(EFI_ERROR(s)) {
          klog("INITRD",0,"SetMap failed: %d",s);
+         return 1;
       }
+      return 0;
 }
