@@ -15,7 +15,7 @@
 #include <Library/DxeServicesLib.h>
 #include <IndustryStandard/Bmp.h>
 #include <Protocol/GraphicsOutput.h>
-
+#include <Protocol/Cpu.h>
 
 #include "kmsg.h"
 #include "k_thread.h"
@@ -127,6 +127,30 @@ static VTermScreenCallbacks vtsc =
 
 char* argv0; // this needs to be exported for the sake of the VFS module
 
+void EFIAPI syscall_inter_handler(IN CONST EFI_EXCEPTION_TYPE InterruptType, IN CONST EFI_SYSTEM_CONTEXT SystemContext) {
+     klog("CPU",1,"Got a syscall");
+}
+
+void cpu_proto_init() {
+     EFI_CPU_ARCH_PROTOCOL* cpu_proto;
+     EFI_STATUS s = BS->LocateProtocol(&gEfiCpuArchProtocolGuid,NULL,&cpu_proto);
+     if(EFI_ERROR(s)) {
+        klog("CPU",0,"Could not open arch protocol!");
+        return;
+     } else {
+        klog("CPU",1,"Opened arch protocol!");
+     }
+
+     s = cpu_proto->RegisterInterruptHandler(cpu_proto,0x80,syscall_inter_handler);
+     if(EFI_ERROR(s)) {
+        klog("CPU",0,"Could not register 0x80 handler: %d",s);
+     } else {
+        klog("CPU",1,"Registered handler!");
+     }
+
+     __asm__("int $0x80");
+}
+
 int main(int argc, char** argv) {
 
     ST = gST;
@@ -167,6 +191,8 @@ int main(int argc, char** argv) {
     draw_logo();
  
     init_dynamic_kmsg();
+
+    cpu_proto_init();
 
     vfs_init(); 
 

@@ -74,6 +74,7 @@
   gEfiBlockIoProtocolGuid
   gEfiDevicePathProtocolGuid
   gEfiSimpleFileSystemProtocolGuid
+  gEfiCpuArchProtocolGuid
 
 [BuildOptions]
   GCC:*_*_*_CC_FLAGS = -w -std=c99 
