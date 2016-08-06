@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "kmsg.h"
 #include "k_vfs.h"
+#include <stdio.h>
 
 #include "vfs/devuefi.h"
 //include "vfs/uefi.h"
@@ -26,6 +27,21 @@ vfs_fs_type_t* vfs_fs_type_list_last  = NULL;
 
 char boot_path[PATH_MAX];
 char* vfs_uefi_type = "uefi"; // mounts VFS volumes
+
+char* vfs_uefi_root = "initrd:"; // TODO - make this ZOIDBERG and implement the SIMPLE_FILE_SYSTEM protocol to map the VFS for EFI functions
+
+FILE* vfs_fopen(char* path, char* mode) {
+      // for now, this only works with initrd
+      char uefi_path[PATH_MAX];
+      snprintf(uefi_path,"%s\\path",PATH_MAX);
+      char* s = uefi_path;
+      while(*s != 0) {
+         if(*s == '/') {
+             *s = '\\';
+         }
+      }
+      return fopen(uefi_path,mode);
+}
 
 void vfs_init_types() {
      // TODO - find some way to make this more dynamic - EFI protocols perhaps?

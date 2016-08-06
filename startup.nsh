@@ -1,9 +1,12 @@
 echo -off
-echo Loading UEFI drivers for zoidberg kernel...
-load fs0:\EFI\BOOT\SimpleThread.efi
-
-
+cls
 mode 100 31
+fs0:
+cd fs0:\EFI\BOOT
+
+echo Loading UEFI drivers for zoidberg kernel...
+load SimpleThread.efi
+
 echo Loading zoidberg kernel...
-fs0:\EFI\BOOT\kernel.efi initrd=/boot/EFI/BOOT/initrd.img
+kernel.efi initrd=initrd.img
 

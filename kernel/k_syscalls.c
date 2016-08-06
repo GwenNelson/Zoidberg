@@ -7,6 +7,7 @@
 #include "kmsg.h"
 #include "dmthread.h"
 #include "k_utsname.h"
+#include "k_vfs.h"
 
 #include <Library/BaseLib.h>
 
