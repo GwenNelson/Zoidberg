@@ -128,7 +128,8 @@ static VTermScreenCallbacks vtsc =
 char* argv0; // this needs to be exported for the sake of the VFS module
 
 void EFIAPI syscall_inter_handler(IN CONST EFI_EXCEPTION_TYPE InterruptType, IN CONST EFI_SYSTEM_CONTEXT SystemContext) {
-     klog("CPU",1,"Got a syscall");
+     klog("SYSCALL",1,"Got a syscall on 0x80");
+     klog("SYSCALL",1,"Syscall number: %d",SystemContext.SystemContextX64->Rax);
 }
 
 void cpu_proto_init() {
@@ -148,7 +149,8 @@ void cpu_proto_init() {
         klog("CPU",1,"Registered handler!");
      }
 
-     __asm__("int $0x80");
+     __asm__("mov $666, %rax;"
+             "int $0x80");
 }
 
 int main(int argc, char** argv) {
