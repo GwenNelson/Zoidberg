@@ -19,6 +19,12 @@
 extern EFI_BOOT_SERVICES *BS;
 extern EFI_HANDLE gImageHandle;
 
+// TODO - setup private context struct for the EFI_FILE_PROTOCOL struct
+// TODO - import ext3 driver
+// TODO - implement a tar driver so initrd can be a tarball
+// TODO - abstraction layer for getting an EFI_FILE_PROTOCOL directly from /dev/uefi/whatever
+// TODO - perhaps a gzip layer over block devices?
+
 /*EFI_FILE_PROTOCOL ZoidbergVFSFileInterface = {
   EFI_FILE_PROTOCOL_REVISION,
   ZoidbergVFSOpen,
