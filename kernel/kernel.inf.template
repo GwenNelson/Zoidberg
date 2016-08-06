@@ -18,6 +18,7 @@
   k_initrd.c
   k_utsname.c
   k_vfs.c
+  k_vfs_proto.c
   k_video.c
 
   vfs/devuefi.c
@@ -72,6 +73,7 @@
 [Protocols]
   gEfiBlockIoProtocolGuid
   gEfiDevicePathProtocolGuid
+  gEfiSimpleFileSystemProtocolGuid
 
 [BuildOptions]
   GCC:*_*_*_CC_FLAGS = -w -std=c99 

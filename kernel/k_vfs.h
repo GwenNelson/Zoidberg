@@ -78,4 +78,5 @@ void vfs_umount(char* dev_name, char* mountpoint);
 // simple wrapper so EDK2 libc can still be used to do stdio
 FILE* vfs_fopen(char* path, char* mode);
 
+
 #endif

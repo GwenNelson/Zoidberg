@@ -106,6 +106,7 @@ extern EFI_HANDLE gImageHandle;
 EFI_ZOIDBERG_SYSCALL_PROTOCOL new_syscall_proto;
 
 void install_syscall_protocol(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable,UINT64 task_id) {
+     // TODO - fix this so it actually allocates new protocol instance per task
      klog("SYSCALL",1,"Installing syscall protocol for task ID %d",task_id);
 
      new_syscall_proto.my_task_id   = task_id;

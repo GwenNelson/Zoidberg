@@ -14,6 +14,11 @@
 #include <Protocol/BlockIo.h>
 #include <Protocol/DevicePath.h>
 #include <Protocol/EfiShell.h>
+#include <Protocol/SimpleFileSystem.h>
+#include <Guid/FileInfo.h>
+#include <Guid/FileSystemInfo.h>
+#include <Guid/FileSystemVolumeLabelInfo.h>
+
 
 extern EFI_BOOT_SERVICES *BS;
 extern EFI_HANDLE gImageHandle;
@@ -42,6 +47,10 @@ FILE* vfs_fopen(char* path, char* mode) {
       }
       return fopen(uefi_path,mode);
 }
+
+
+
+
 
 void vfs_init_types() {
      // TODO - find some way to make this more dynamic - EFI protocols perhaps?
@@ -79,6 +88,7 @@ void vfs_init() {
      snprintf(boot_path,PATH_MAX,"/dev/uefi/%s",strtok(kernel_path,":"));
      vfs_simple_mount("uefi",boot_path,"/boot/");
 
+     init_vfs_proto();
 }
 
 void vfs_simple_mount(char* fs_type, char* dev_name, char* mountpoint) {
