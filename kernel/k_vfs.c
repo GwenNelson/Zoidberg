@@ -4,6 +4,10 @@
 #include "kmsg.h"
 #include "k_vfs.h"
 
+#include "vfs/devuefi.h"
+//include "vfs/uefi.h"
+//include "vfs/devfs.h"
+
 #include <Library/UefiLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Protocol/BlockIo.h>
@@ -17,20 +21,44 @@ extern EFI_HANDLE gImageHandle;
 vfs_prefix_entry_t *vfs_prefix_list_first = NULL;
 vfs_prefix_entry_t *vfs_prefix_list_last  = NULL;
 
+vfs_fs_type_t* vfs_fs_type_list_first = NULL;
+vfs_fs_type_t* vfs_fs_type_list_last  = NULL;
+
 char boot_path[32];
 char* vfs_uefi_type = "uefi"; // mounts VFS volumes
-char* vfs_uefi_dev_type = "devuefi"; // implements /dev/uefi
 
+void vfs_init_types() {
+     // TODO - find some way to make this more dynamic - EFI protocols perhaps?
+     klog("VFS",1,"Setting up VFS filesystem types");
+     vfs_init_devuefi_fs_type();
+     vfs_add_type(devuefi_fs_type);
+}
 
+void vfs_add_type(vfs_fs_type_t *fs_type) {
+     // TODO - locking (as in vfs_mount)
+     // TODO - use macros to handle these linked lists, abstract it out to something more generic too so it's possible to switch containers to hashmap etc
+     if(vfs_fs_type_list_first==NULL) {
+        fs_type->prev          = NULL;
+        vfs_fs_type_list_first = fs_type;
+        vfs_fs_type_list_last  = fs_type;
+     } else {
+        vfs_fs_type_list_last->next = fs_type;
+        fs_type->prev               = vfs_fs_type_list_last;
+        vfs_fs_type_list_last       = fs_type;
+
+     }
+}
 
 void vfs_init() {
+     vfs_init_types();
+
      vfs_simple_mount("devuefi","uefi","/dev/uefi/");
 
-     vfs_simple_mount("uefi","/dev/uefi/initrd","/");
+//     vfs_simple_mount("uefi","/dev/uefi/initrd","/");
 
-     char* boot_volume = "fs0"; // TODO - make this actually check
-     snprintf(boot_path,32,"/dev/uefi/%s",boot_volume);
-     vfs_simple_mount("uefi",boot_path,"/boot/");
+//     char* boot_volume = "fs0"; // TODO - make this actually check
+//     snprintf(boot_path,32,"/dev/uefi/%s",boot_volume);
+//     vfs_simple_mount("uefi",boot_path,"/boot/");
 
 }
 
@@ -40,19 +68,23 @@ void vfs_simple_mount(char* fs_type, char* dev_name, char* mountpoint) {
      //        then simply check the fs_type field of each until a match is found, and then call setup()
      // TODO - if fs_type is NULL, try and autodetect the filesystem
 
-     vfs_fs_handler_t* fs_handler = NULL;
-
-     if(strncmp(fs_type,vfs_uefi_type,4)==0) {
-        // TODO - look up devicepath etc and allow the dev_name to be an actual VFS path (i.e "/dev/uefi/initrd" instead of just "initrd")
-        char* uefi_volname = strrchr(dev_name,'/'); // silly temporary hack
-        fs_handler = get_vfs_handler_uefi(uefi_volname+1);
-     } else if (strncmp(fs_type,vfs_uefi_dev_type,7)==0){
-        fs_handler = get_vfs_handler_dev_uefi();
-     } else {
-        return; // TODO - return an error of some sort
+     vfs_fs_handler_t *fs_handler = NULL;
+     vfs_fs_type_t    *fs_t_iter  = NULL;
+     fs_t_iter                    = vfs_fs_type_list_first;
+     while(fs_t_iter != NULL) {
+       printf("%#llx\n",fs_t_iter);
+       if(fs_t_iter->fs_type != NULL) {
+          if(strncmp(fs_t_iter->fs_type,fs_type,strlen(fs_type)) == 0) {
+             fs_handler = (vfs_fs_handler_t*)calloc(1,sizeof(vfs_fs_handler_t));
+             strncpy(fs_handler->fs_type,fs_type,MAX_VFS_TYPE_LEN);
+             fs_handler->setup = fs_t_iter->setup;
+             fs_handler->setup(fs_handler,dev_name,mountpoint);
+          }
+          fs_t_iter = fs_t_iter->next;
+       }
      }
-     
-     vfs_mount(fs_handler,dev_name,mountpoint);
+     // TODO - error checking
+     if(fs_handler != NULL) vfs_mount(fs_handler,dev_name,mountpoint);
      
 }
 
@@ -166,7 +198,7 @@ vfs_fs_handler_t* get_vfs_handler_uefi(char* uefi_volume) {
 
      retval->fs_data = calloc(sizeof(char),strlen(uefi_volume)+1);
      strncpy((char*)(retval->fs_data),uefi_volume,strlen(uefi_volume));
-     retval->fs_type = vfs_uefi_type;
+     strncpy(retval->fs_type,vfs_uefi_type,MAX_VFS_TYPE_LEN);
 
      retval->shutdown      = &vfs_uefi_shutdown;
      retval->file_exists   = &vfs_uefi_file_exists;
@@ -184,74 +216,4 @@ vfs_fs_handler_t* get_vfs_handler_uefi(char* uefi_volume) {
 
 
 
-char** vfs_dev_uefi_list_root_dir(vfs_fs_handler_t* this) {
-    UINTN BufferSize=0;
-    EFI_HANDLE *HandleBuffer;
 
-    EFI_STATUS s = BS->LocateHandle(ByProtocol,&gEfiBlockIoProtocolGuid,NULL,&BufferSize,HandleBuffer);
-    if(s == EFI_BUFFER_TOO_SMALL) {
-       HandleBuffer = (EFI_HANDLE*)calloc(BufferSize,1);
-       s = BS->LocateHandle(ByProtocol,&gEfiBlockIoProtocolGuid,NULL,&BufferSize,HandleBuffer);
-    }
-
-    EFI_SHELL_PROTOCOL *shell_proto;
-
-    s = BS->OpenProtocol(
-            gImageHandle,
-            &gEfiShellProtocolGuid,
-            &shell_proto,
-            gImageHandle,
-            NULL,
-            EFI_OPEN_PROTOCOL_GET_PROTOCOL
-            );
-    if (EFI_ERROR(s)) {
-        s = BS->LocateProtocol(
-                &gEfiShellProtocolGuid,
-                NULL,
-                &shell_proto
-                );
-    }
-
-
-    char** retval = (char**)calloc(sizeof(char*),(BufferSize/(sizeof(EFI_HANDLE))));
-
-    int i=0;
-    int retval_i=0;
-    CHAR16* dev_name;
-    char mapping_name[128];
-    char *single_map;
-    for(i=0; i< (BufferSize / sizeof(EFI_HANDLE)); i++) {
-        EFI_DEVICE_PATH_PROTOCOL *dev_path;
-        s = BS->OpenProtocol(HandleBuffer[i],&gEfiDevicePathProtocolGuid,&dev_path,gImageHandle,NULL,EFI_OPEN_PROTOCOL_GET_PROTOCOL);
-        if(s==EFI_SUCCESS) {
-           dev_name = NULL;
-           dev_name = shell_proto->GetMapFromDevicePath(&dev_path);
-           if(dev_name != NULL) {
-              retval[i] = calloc(sizeof(char),128);
-              wcstombs(retval[i],dev_name,128);
-              retval[i][strcspn(retval[i],":;")]=0;
-           }
-        }
-        retval[i+1] = NULL;
-    }
-    return retval;
-
-}
-
-
-
-vfs_fs_handler_t *get_vfs_handler_dev_uefi() {
-     vfs_fs_handler_t* retval;
-     retval = (vfs_fs_handler_t*)malloc(sizeof(vfs_fs_handler_t));
-     BS->SetMem((void*)retval,sizeof(vfs_fs_handler_t),0);
-    
-     // TODO - actual implementation here
-     //        just relay to the UEFI shell and treat volumes as block devices
-     //        mount can cheat by using the "uefi" filesystem type to use the UEFI handler
-     //        or can (later) mount them directly as proper filesystems
-
-     retval->list_root_dir = &vfs_dev_uefi_list_root_dir;
- 
-     retval->fs_type = vfs_uefi_dev_type;
-     return retval;
-}

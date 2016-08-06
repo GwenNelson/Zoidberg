@@ -20,6 +20,8 @@
   k_vfs.c
   k_video.c
 
+  vfs/devuefi.c
+
   nuklear.c
 
   elfload/elfload.c

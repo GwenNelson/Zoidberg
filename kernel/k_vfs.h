@@ -6,13 +6,25 @@
 #include <sys/stat.h>
 #include <stdio.h>
 
+#include <Library/UefiLib.h>
+#include <Library/UefiBootServicesTableLib.h>
+#include <Protocol/BlockIo.h>
+#include <Protocol/DevicePath.h>
+#include <Protocol/EfiShell.h>
+
+#define MAX_VFS_TYPE_LEN 32
+
 typedef struct vfs_fs_handler_t vfs_fs_handler_t;
 typedef struct vfs_fs_handler_t {
      // used by the file handler to represent the underlying device
      void* fs_data;
 
      // what is shown by the mount command etc
-     char* fs_type;
+     char fs_type[MAX_VFS_TYPE_LEN];
+
+     // setup the FS handler - mountpoint param can probably be NULL most of the time, but should be provided where possible
+     // in case a driver requires the mountpoint for some reason
+     void     (*setup)(vfs_fs_handler_t* this, char* dev_name, char* mountpoint);
 
      // called when unmounting
      void     (*shutdown)(vfs_fs_handler_t* this);
@@ -41,17 +53,22 @@ struct vfs_prefix_entry_t {
      vfs_prefix_entry_t* prev;
 };
 
-// returns a vfs_fs_handler_t representing all the UEFI volumes (for use by /dev/uefi)
-vfs_fs_handler_t *get_vfs_handler_dev_uefi();
+typedef struct vfs_fs_type_t vfs_fs_type_t;
+typedef struct vfs_fs_type_t {
+     // TODO - add some sort of probe callback to this struct so we can probe devices for supported filesystem drivers
+     char* fs_type;
+     vfs_fs_type_t *next;
+     vfs_fs_type_t *prev;
+     void (*setup)(vfs_fs_handler_t* this, char* dev_name, char* mountpoint);  // a pointer to the setup() method for vfs_fs_handler_t struct
+} vfs_fs_type_t;
 
-// returns a vfs_fs_handler_t representing a UEFI volume, no trailing :
-vfs_fs_handler_t *get_vfs_handler_uefi(char* uefi_volume);
+void vfs_init_types();  // init the builtin types, should only be called by vfs_init()
+void vfs_add_type(vfs_fs_type_t *fs_type); // install a filesystem type after the driver is loaded and ready to rock - should eventually be able to dynamically load drivers from ELF
+void vfs_init();        // init the VFS layer and mount the mandatory filesystems the system needs in order to operate
+void vfs_simple_mount(char* fs_type, char* dev_name, char* mountpoint); // mount a filesystem, duh - calls vfs_mount() to implement
+void vfs_mount(vfs_fs_handler_t* fs_handler, char* dev_name, char* mountpoint); // mount a filesystem, but you have to lookup the handler and init the struct first
 
-void vfs_init();
-void vfs_simple_mount(char* fs_type, char* dev_name, char* mountpoint);
-void vfs_mount(vfs_fs_handler_t* fs_handler, char* dev_name, char* mountpoint);
-
-// dump the mount table etc
+// dump the mount table etc to system console
 void dump_vfs();
 
 // either param can be NULL, but one must be non-null
