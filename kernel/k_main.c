@@ -130,6 +130,7 @@ char* argv0; // this needs to be exported for the sake of the VFS module
 void EFIAPI syscall_inter_handler(IN CONST EFI_EXCEPTION_TYPE InterruptType, IN CONST EFI_SYSTEM_CONTEXT SystemContext) {
      klog("SYSCALL",1,"Got a syscall on 0x80");
      klog("SYSCALL",1,"Syscall number: %d",SystemContext.SystemContextX64->Rax);
+     SystemContext.SystemContextX64->Rax = 42;
 }
 
 void cpu_proto_init() {
@@ -149,8 +150,11 @@ void cpu_proto_init() {
         klog("CPU",1,"Registered handler!");
      }
 
-     __asm__("mov $666, %rax;"
-             "int $0x80");
+     int a=0;
+     __asm__("mov $666, %%rax;"
+             "int $0x80;"
+             :"=a"(a)::);
+     klog("CPU",1,"Got back %d from syscall",a);
 }
 
 int main(int argc, char** argv) {
