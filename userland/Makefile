@@ -1,4 +1,4 @@
-all: fullsdk newlib/build/x86_64-zoidberg/newlib/libc.a build/sbin/init gnu-efi-3.0.4/x86_64/lib/libefi.a build/bin/sh build/bin/mysh
+all: fullsdk build/u_syscalls.o newlib/build/x86_64-zoidberg/newlib/libc.a build/sbin/init gnu-efi-3.0.4/x86_64/lib/libefi.a build/bin/sh build/bin/mysh
 
 export PATH := ${PWD}/sdk/usr/bin:${PATH}
 
@@ -9,6 +9,7 @@ newlib/build/x86_64-zoidberg/newlib/libc.a: sdktools
 	mkdir -p newlib/build
 	cd newlib/build; ../configure --target=x86_64-zoidberg
 	CFLAGS="-nostdinc" make -C newlib/build -j
+	ar qf newlib/build/x86_64-zoidberg/newlib/libc.a build/u_syscalls.o
 
 INCLUDES=-I${PWD}/gnu-efi-3.0.4/inc/ -I${PWD}/newlib/newlib/libc/include/
 
@@ -16,6 +17,9 @@ APPCFLAGS=-nostdlib -Wl,-dll -shared -Wl,--subsystem,10 -e efi_main -L${PWD}/new
 
 export INCLUDES
 export APPCFLAGS
+
+build/u_syscalls.o: u_syscalls.asm
+	nasm -f elf64 $< -o $@
 
 build/sbin/init.o: sbin/init/init.c fullsdk
 	mkdir -p build/sbin

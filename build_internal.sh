@@ -23,13 +23,18 @@ cd ..
 bin2c/bin2c -o ../kernel/zoidberg_logo.h Logo.bmp
 popd
 
+pushd kernel
+./gen_syscalls.sh
+popd
+
 build -a X64 -p kernel.dsc
 
 cp -Rv $WORKSPACE/build/* build/
 
 echo Building userland
 
-cp kernel/k_syscalls.h userland/newlib/newlib/libc/sys/zoidberg/
+cp kernel/syscalls.inc userland/newlib/newlib/libc/sys/zoidberg
+cp kernel/u_syscalls.asm userland/
 pushd userland
 make  -j all
 popd

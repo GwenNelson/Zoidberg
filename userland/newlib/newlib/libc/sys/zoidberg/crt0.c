@@ -2,8 +2,7 @@
 #include <efilib.h>
 #include <setjmp.h>
 
-#define ZOIDBERG_USERLAND_SDK
-#include "k_syscalls.h"
+#include "syscalls.h"
 
 extern int main();
 
@@ -11,8 +10,6 @@ EFI_SYSTEM_TABLE *ST;
 EFI_BOOT_SERVICES *BS;
 EFI_RUNTIME_SERVICES *RT;
 EFI_HANDLE gImageHandle;
-EFI_ZOIDBERG_SYSCALL_PROTOCOL *syscall_proto = NULL;
-EFI_GUID gEfiZoidbergSyscallProtocolGUID = EFI_ZOIDBERG_SYSCALL_PROTOCOL_GUID;
 
 jmp_buf proc_start_env;
 
@@ -23,11 +20,6 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
      BS = ST->BootServices;
      RT = ST->RuntimeServices;
      gImageHandle = ImageHandle;
-     EFI_STATUS s = BS->HandleProtocol(ImageHandle, &gEfiZoidbergSyscallProtocolGUID, (VOID**)&syscall_proto);
-     if(s != EFI_SUCCESS) {
-       ST->ConOut->OutputString(ST->ConOut, L"crt0: Failed to connect to syscall protocol!\n\r");
-       return 1;
-     } else {
 
        int i;
        i = setjmp(proc_start_env);
@@ -37,6 +29,4 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
        } 
 
        return i-1;
-     }
-     return 0;
 }
