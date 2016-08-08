@@ -21,6 +21,7 @@
   k_vfs_proto.c
   k_video.c
 
+  vfs/uefi.c
   vfs/devuefi.c
 
   nuklear.c

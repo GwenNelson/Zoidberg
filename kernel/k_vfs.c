@@ -6,7 +6,7 @@
 #include <stdio.h>
 
 #include "vfs/devuefi.h"
-//include "vfs/uefi.h"
+#include "vfs/uefi.h"
 //include "vfs/devfs.h"
 
 #include <Library/UefiLib.h>
@@ -57,6 +57,9 @@ void vfs_init_types() {
      klog("VFS",1,"Setting up VFS filesystem types");
      vfs_init_devuefi_fs_type();
      vfs_add_type(devuefi_fs_type);
+
+     vfs_init_uefi_fs_type();
+     vfs_add_type(uefi_fs_type);
 }
 
 void vfs_add_type(vfs_fs_type_t *fs_type) {
@@ -80,7 +83,7 @@ void vfs_init() {
 
      vfs_simple_mount("devuefi","uefi","/dev/uefi/");
 
-//     vfs_simple_mount("uefi","/dev/uefi/initrd","/");
+     vfs_simple_mount("uefi","/dev/uefi/initrd","/");
 
      // this is of course a terrible and messy hack
      char kernel_path[PATH_MAX];
@@ -161,86 +164,6 @@ void dump_vfs() {
 }
 
 
-void vfs_uefi_shutdown(vfs_fs_handler_t* this) {
-}
-
-int vfs_uefi_file_exists(vfs_fs_handler_t* this, char* path) {
-}
-
-char** vfs_uefi_list_root_dir(vfs_fs_handler_t* this) {
-    char root_path[32];
-    snprintf(root_path,32,"%s:/",(char*)(this->fs_data));
-
-    char** retval = (char**)calloc(sizeof(char*),1024);
-
-    int i=0;
-    DIR* dir_fd = opendir(root_path);
-    struct dirent *dir_ent=NULL;
-    if(dir_fd==NULL) {
-       klog("VFS",0,"Error opening UEFI root on %s",root_path);
-       free(retval);
-       return NULL;
-    }
-    
-    while(dir_ent = readdir(dir_fd)) {
-       if(dir_ent==NULL) {
-          retval[i] = NULL;
-       } else {
-
-          retval[i] = (char*)calloc(1,128);
-          wcstombs(retval[i],dir_ent->d_name,128);
-          i++;
-       }
-    }
-    closedir(dir_fd);
-    return retval;
-}
-
-void* vfs_uefi_open(vfs_fs_handler_t* this, char* path, int flags) {
-}
-
-int vfs_uefi_close(vfs_fs_handler_t* this, void* fd) {
-}
-
-ssize_t vfs_uefi_read(vfs_fs_handler_t* this, void* fd, void* buf, size_t count) {
-}
-
-ssize_t vfs_uefi_write(vfs_fs_handler_t* this, void* fd, void* buf, size_t count) {
-}
-
-off_t vfs_uefi_lseek(vfs_fs_handler_t* this, void* fd, off_t offset, int whence) {
-}
-
-int vfs_uefi_stat(vfs_fs_handler_t* this, char* path, struct stat *buf) {
-}
-
-int vfs_uefi_fstat(vfs_fs_handler_t* this, void* fd, struct stat *buf) {
-}
-
-
-
-vfs_fs_handler_t* get_vfs_handler_uefi(char* uefi_volume) {
-     vfs_fs_handler_t* retval;
-     retval = (vfs_fs_handler_t*)malloc(sizeof(vfs_fs_handler_t));
-     BS->SetMem((void*)retval,sizeof(vfs_fs_handler_t),0);
-
-     retval->fs_data = calloc(sizeof(char),strlen(uefi_volume)+1);
-     strncpy((char*)(retval->fs_data),uefi_volume,strlen(uefi_volume));
-     strncpy(retval->fs_type,vfs_uefi_type,MAX_VFS_TYPE_LEN);
-
-     retval->shutdown      = &vfs_uefi_shutdown;
-     retval->file_exists   = &vfs_uefi_file_exists;
-     retval->list_root_dir = &vfs_uefi_list_root_dir;
-
-     retval->open          = &vfs_uefi_open;
-     retval->close         = &vfs_uefi_close;
-     retval->read          = &vfs_uefi_read;
-     retval->write         = &vfs_uefi_write;
-     retval->lseek         = &vfs_uefi_lseek;
-     retval->stat          = &vfs_uefi_stat;
-     retval->fstat         = &vfs_uefi_fstat;
-     return retval;
-}
 
 
 
