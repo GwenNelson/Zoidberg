@@ -11,3 +11,8 @@ echo "NULL," >>syscalls.inc
  cat syscalls.lst  | awk {'print "&sys_" tolower($2) ","'} >> syscalls.inc
 echo "};" >> syscalls.inc
 
+echo "section .text" > u_syscalls.asm
+cat syscalls.lst | awk '{print "global sys_" tolower($2) }' >> u_syscalls.asm
+
+cat syscalls.lst  | awk '{print "sys_" tolower($2) ":\n   mov rax," $1 "\n   int 0x80\n   ret"}' >> u_syscalls.asm
+
