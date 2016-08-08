@@ -75,24 +75,31 @@ ZoidbergVFSOpenVolume(
   IN  EFI_SIMPLE_FILE_SYSTEM_PROTOCOL  *This,
   OUT EFI_FILE_PROTOCOL                **File
   ) {
-   *File = (EFI_FILE_PROTOCOL*)calloc(sizeof(EFI_FILE_PROTOCOL),1);
-   if(*File == NULL) return EFI_OUT_OF_RESOURCES;
+     VFS_PROTO_PRIVATE_DATA *private = calloc(sizeof(VFS_PROTO_PRIVATE_DATA),1);
+     if(private == NULL) return EFI_OUT_OF_RESOURCES;
+     private->Signature = VFS_PROTO_PRIVATE_DATA_SIGNATURE;
+     private->is_fs = 0;
+     private->path = malloc(2);
+     snprintf(private->path,2,"/");
+     *File = &(private->FileProto);
    return EFI_SUCCESS; 
 }
 
 EFI_HANDLE vfs_handle;
 void init_vfs_proto() {
      klog("VFS",1,"Installing VFS protocol");
-     BS->SetMem(&new_vfs_proto,sizeof(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL),0);
-     new_vfs_proto.Revision   = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_REVISION;
-     new_vfs_proto.OpenVolume = ZoidbergVFSOpenVolume;
+     VFS_PROTO_PRIVATE_DATA *private = calloc(sizeof(VFS_PROTO_PRIVATE_DATA),1);
+     private->Signature = VFS_PROTO_PRIVATE_DATA_SIGNATURE;
+     private->is_fs = 1;
+     private->FileSystemProto.Revision   = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_REVISION;
+     private->FileSystemProto.OpenVolume = ZoidbergVFSOpenVolume;
 
      EFI_STATUS s = BS->InstallProtocolInterface(&vfs_handle,
                                                  &gEfiDevicePathProtocolGuid,
                                                  EFI_NATIVE_INTERFACE,
                                                  &vfs_devpath_proto);
 
-     s = BS->InstallProtocolInterface(&vfs_handle,&gEfiSimpleFileSystemProtocolGuid,EFI_NATIVE_INTERFACE,&new_vfs_proto);
+     s = BS->InstallProtocolInterface(&vfs_handle,&gEfiSimpleFileSystemProtocolGuid,EFI_NATIVE_INTERFACE,&(private->FileSystemProto));
      if(s==EFI_SUCCESS) {
         klog("VFS",1,"Added protocol interface to handle %#llx", vfs_handle);
      } else {
