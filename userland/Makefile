@@ -19,7 +19,7 @@ export INCLUDES
 export APPCFLAGS
 
 build/u_syscalls.o: u_syscalls.asm
-	nasm -f elf64 $< -o $@
+	nasm -f win64 $< -o $@
 
 build/sbin/init.o: sbin/init/init.c fullsdk
 	mkdir -p build/sbin
