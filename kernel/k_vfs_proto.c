@@ -5,6 +5,7 @@
 #include "k_vfs.h"
 #include <stdio.h>
 
+#include "k_vfs_proto.h"
 
 #include <Library/UefiLib.h>
 #include <Library/UefiBootServicesTableLib.h>
