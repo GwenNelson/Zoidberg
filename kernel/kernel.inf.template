@@ -78,4 +78,4 @@
   gEfiCpuArchProtocolGuid
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -w -std=c99 
+  GCC:*_*_*_CC_FLAGS = -w -std=c99 -mno-red-zone

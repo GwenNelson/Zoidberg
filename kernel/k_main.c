@@ -26,6 +26,7 @@
 #include "k_initrd.h"
 #include "k_utsname.h"
 #include "k_video.h"
+#include "k_syscalls.h"
 
 EFI_SYSTEM_TABLE *ST;
 EFI_BOOT_SERVICES *BS;
@@ -73,7 +74,6 @@ void uefi_run(void* _t) {
 
 
      s = BS->LoadImage(0,gImageHandle,path,NULL,NULL,&child_h);
-     install_syscall_protocol(child_h,ST,t->task_id);
      s = BS->StartImage(child_h,NULL,NULL);
      BS->UnloadImage(child_h);
 }
@@ -127,10 +127,26 @@ static VTermScreenCallbacks vtsc =
 
 char* argv0; // this needs to be exported for the sake of the VFS module
 
+
 void EFIAPI syscall_inter_handler(IN CONST EFI_EXCEPTION_TYPE InterruptType, IN CONST EFI_SYSTEM_CONTEXT SystemContext) {
      klog("SYSCALL",1,"Got a syscall on 0x80");
      klog("SYSCALL",1,"Syscall number: %d",SystemContext.SystemContextX64->Rax);
-     SystemContext.SystemContextX64->Rax = 42;
+     if(SystemContext.SystemContextX64->Rax == 666) {
+        SystemContext.SystemContextX64->Rax = 42;
+        return;
+     }
+     int64_t retval;
+     __asm__("movq %1, %%rcx;"
+             "movq %2, %%rdx;"
+             "movq %3, %%r8;"
+             "movq %4, %%r9;"
+             "call *%0" :"=a"(retval):
+                        "r"(syscalls[SystemContext.SystemContextX64->Rax]),
+                        "r"(SystemContext.SystemContextX64->Rcx),
+                        "r"(SystemContext.SystemContextX64->Rdx),
+                        "r"(SystemContext.SystemContextX64->R8),
+                        "r"(SystemContext.SystemContextX64->R9):);
+     SystemContext.SystemContextX64->Rax = retval;
 }
 
 void cpu_proto_init() {
