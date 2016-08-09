@@ -248,6 +248,7 @@ int main(int argc, char** argv) {
 
     klog("INIT",1,"Starting PID 1 /sbin/init");
 
+    system("fs0:\\EFI\\BOOT\\BOOTX64.efi -nostartup -nomap");
  
     req_task(&uefi_run,(void*)L"initrd:\\sbin\\init");
     while(1) {

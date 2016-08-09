@@ -26,24 +26,65 @@ extern EFI_HANDLE gImageHandle;
 // TODO - abstraction layer for getting an EFI_FILE_PROTOCOL directly from /dev/uefi/whatever
 // TODO - perhaps a gzip layer over block devices?
 
-/*EFI_FILE_PROTOCOL ZoidbergVFSFileInterface = {
-  EFI_FILE_PROTOCOL_REVISION,
-  ZoidbergVFSOpen,
-  ZoidbergVFSClose,
-  ZoidbergVFSDelete,
-  ZoidbergVFSRead,
-  ZoidbergVFSWrite,
-  ZoidbergVFSGetPosition,
-  ZoidbergVFSSetPosition,
-  ZoidbergVFSGetInfo,
-  ZoidbergVFSSetInfo,
-  ZoidbergVFSFlush,
-  ZoidbergVFSOpenEx,
-  ZoidbergVFSReadEx,
-  ZoidbergVFSWriteEx,
-  ZoidbergVFSFlushEx
+EFI_STATUS EFIAPI ZoidbergVFSOpen(
+ IN EFI_FILE_PROTOCOL *This,
+ OUT EFI_FILE_PROTOCOL **NewHandle,
+ IN CHAR16 *FileName,
+ IN UINT64 OpenMode,
+ IN UINT64 Attributes
+ ) {
+ VFS_PROTO_PRIVATE_DATA *private;
+ char filename_path[PATH_MAX];
+ wcstombs(filename_path,FileName,PATH_MAX);
+ private = VFS_PROTO_PRIVATE_DATA_FROM_FILE(This);
 
-};*/
+ if(private->is_dir == 0) {
+   if(strncmp(filename_path,".",1)==0) { // just return This for attempts to open .
+      *NewHandle = This;
+   } else {
+      return EFI_NOT_FOUND; // placeholder for now
+   }
+ } else {
+   return EFI_UNSUPPORTED;
+ }
+
+
+ klog("VFS",1,"Attempted open %s on file_proto",filename_path);
+ return EFI_NOT_FOUND;
+}
+
+EFI_STATUS EFIAPI ZoidbergVFSClose(
+ IN EFI_FILE_PROTOCOL *This) {
+ return EFI_SUCCESS;
+}
+
+EFI_STATUS EFIAPI ZoidbergVFSRead(
+ IN EFI_FILE_PROTOCOL *This,
+ IN OUT UINTN *BufferSize,
+ OUT VOID *Buffer) {
+ klog("VFS",1,"Attempted read on file_proto");
+ *BufferSize = 0;
+ return EFI_SUCCESS;
+}
+
+EFI_FILE_PROTOCOL ZoidbergVFSFileInterface = {
+  .Revision    = EFI_FILE_PROTOCOL_REVISION,
+  .Open        = ZoidbergVFSOpen,
+  .Close       = ZoidbergVFSClose,
+//  .Delete      = ZoidbergVFSDelete,
+  .Read        = ZoidbergVFSRead,
+/*  .Write       = ZoidbergVFSWrite,
+  .GetPosition = ZoidbergVFSGetPosition,
+  .SetPosition = ZoidbergVFSSetPosition,
+  .GetInfo     = ZoidbergVFSGetInfo,
+  .SetInfo     = ZoidbergVFSSetInfo,
+  .Flush       = ZoidbergVFSFlush,
+  .OpenEx      = ZoidbergVFSOpenEx,
+  .ReadEx      = ZoidbergVFSReadEx,
+  .WriteEx     = ZoidbergVFSWriteEx,
+  .FlushEx     = ZoidbergVFSFlushEx*/
+
+};
 
 typedef struct __attribute__((__packed__)) sZOIDBERG_VFS_DEVICE_PATH
 {
@@ -77,10 +118,13 @@ ZoidbergVFSOpenVolume(
   ) {
      VFS_PROTO_PRIVATE_DATA *private = calloc(sizeof(VFS_PROTO_PRIVATE_DATA),1);
      if(private == NULL) return EFI_OUT_OF_RESOURCES;
+     klog("VFS",1,"Allocated private struct for zoidberg VFS protocol at %#llx",private);
      private->Signature = VFS_PROTO_PRIVATE_DATA_SIGNATURE;
      private->is_fs = 0;
+     private->is_dir = 1;
      private->path = malloc(2);
      snprintf(private->path,2,"/");
+     private->FileProto = ZoidbergVFSFileInterface;
      *File = &(private->FileProto);
    return EFI_SUCCESS; 
 }

@@ -13,7 +13,8 @@ typedef struct {
     UINTN              Signature;
     EFI_FILE_PROTOCOL FileProto;
     EFI_SIMPLE_FILE_SYSTEM_PROTOCOL FileSystemProto;
-    UINTN is_fs; // set to 1 if this is for the file system protocol, 0 for the file protocol
+    UINTN is_fs;  // set to 1 if this is for the file system protocol, 0 for the file protocol
+    UINTN is_dir; // should be obvious...
     char* path;
 } VFS_PROTO_PRIVATE_DATA;
 
