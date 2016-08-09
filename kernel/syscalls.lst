@@ -1,3 +1,4 @@
+0  NULL     void
 1  EXIT     void     
 2  READ     ssize_t  unsigned int fd, void* buf, size_t count
 3  WRITE    ssize_t  unsigned int fd, void* buf, size_t count

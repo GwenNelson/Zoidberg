@@ -129,23 +129,16 @@ char* argv0; // this needs to be exported for the sake of the VFS module
 
 
 void EFIAPI syscall_inter_handler(IN CONST EFI_EXCEPTION_TYPE InterruptType, IN CONST EFI_SYSTEM_CONTEXT SystemContext) {
-     klog("SYSCALL",1,"Got a syscall on 0x80");
-     klog("SYSCALL",1,"Syscall number: %d",SystemContext.SystemContextX64->Rax);
      if(SystemContext.SystemContextX64->Rax == 666) {
         SystemContext.SystemContextX64->Rax = 42;
         return;
      }
-     int64_t retval;
-     __asm__("movq %1, %%rcx;"
-             "movq %2, %%rdx;"
-             "movq %3, %%r8;"
-             "movq %4, %%r9;"
-             "call *%0" :"=a"(retval):
-                        "r"(syscalls[SystemContext.SystemContextX64->Rax]),
-                        "r"(SystemContext.SystemContextX64->Rcx),
-                        "r"(SystemContext.SystemContextX64->Rdx),
-                        "r"(SystemContext.SystemContextX64->R8),
-                        "r"(SystemContext.SystemContextX64->R9):);
+     UINT64 retval;
+     UINT64 (*teh_syscall)(UINT64 a, UINT64 b, UINT64 c) = syscalls[SystemContext.SystemContextX64->Rax];
+     // this is a crazy hack due to ABI differences
+     retval = teh_syscall(             SystemContext.SystemContextX64->Rcx,
+             SystemContext.SystemContextX64->Rdx,
+             SystemContext.SystemContextX64->R8);
      SystemContext.SystemContextX64->Rax = retval;
 }
 

@@ -38,9 +38,11 @@ pid_t sys_spawn(char* path) {
      free(wfname);
 }
 
+void sys_null() { }
 
 int sys_test(int a, int b, int c) {
-    printf("%d %d %d", a, b, c);
+    kprintf("%d %d %d", a, b, c);
+    return 0;
 }
 
 // ssize_t read(unsigned int fd, char* buf, size_t count)
