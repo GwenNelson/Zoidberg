@@ -35,7 +35,8 @@ pid_t sys_spawn(char* path) {
      mbstowcs((wchar_t *)wfname, path, strlen(path) + 1);
      conv_backslashes(wfname);
      req_task(&uefi_run,(void*)wfname);
-     free(wfname);
+     // TODO - fix the memory leak without early free()
+  //   free(wfname);
 }
 
 void sys_null() { }
@@ -54,7 +55,6 @@ ssize_t sys_read(unsigned int fd, void* buf, size_t count) {
 ssize_t sys_write(unsigned int fd, void* buf, size_t count) {
       // TODO implement multiple terminals etc, different stdin/stdout for different processes
       // TODO map the fd for the calling process
-      klog("WRITE",1,"Got write(%d, %#llx, %d)",(UINT64)fd,buf,count);
       return write(fd,buf,count);
 }
 
