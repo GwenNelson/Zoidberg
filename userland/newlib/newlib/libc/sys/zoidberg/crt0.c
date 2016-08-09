@@ -16,7 +16,6 @@ jmp_buf proc_start_env;
 
 EFI_STATUS
 efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
-     sys_test(1,2,3);
      ST = SystemTable;
      BS = ST->BootServices;
      RT = ST->RuntimeServices;
