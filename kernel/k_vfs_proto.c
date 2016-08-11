@@ -18,6 +18,7 @@
 #include <Guid/FileSystemVolumeLabelInfo.h>
 
 extern EFI_BOOT_SERVICES *BS;
+extern EFI_RUNTIME_SERVICES *RT;
 extern EFI_HANDLE gImageHandle;
 
 // TODO - setup private context struct for the EFI_FILE_PROTOCOL struct
@@ -33,18 +34,37 @@ EFI_STATUS EFIAPI ZoidbergVFSOpen(
  IN UINT64 OpenMode,
  IN UINT64 Attributes
  ) {
- VFS_PROTO_PRIVATE_DATA *private;
- char filename_path[PATH_MAX];
- wcstombs(filename_path,FileName,PATH_MAX);
- private = VFS_PROTO_PRIVATE_DATA_FROM_FILE(This);
+ VFS_PROTO_PRIVATE_DATA *Private;
+// char filename_path[PATH_MAX];
+// wcstombs(filename_path,FileName,PATH_MAX);
+ char* filename_path = ".";
+ int i=0;
+ for(i=0; i < strlen(filename_path); i++) {
+    if (filename_path[i]=='\\') {
+        filename_path[i] = '/';
+    }
+ }
+ Private = VFS_DATA_FROM_THIS(This);
+ klog("VFS",1,"Open %s", filename_path);
 
- if(private->is_dir == 0) {
+ if(Private->is_dir == 1) {
    if(strncmp(filename_path,".",1)==0) { // just return This for attempts to open .
-      *NewHandle = This;
+      klog("VFS",1,"Returning . directory");
+      VFS_PROTO_PRIVATE_DATA *new_handle = calloc(sizeof(VFS_PROTO_PRIVATE_DATA),1);
+      new_handle->vfs_root = Private->vfs_root;
+      new_handle->is_dir   = 1;
+      new_handle->dir_pos  = 0;
+      new_handle->path = NULL;
+      new_handle->FileProto = ZoidbergVFSFileInterface;
+      *NewHandle = &(new_handle->FileProto);
+      klog("VFS",1,"Allocated new file proto for . directory");
+      return EFI_SUCCESS;
    } else {
+      klog("VFS",1,"Returning NOT_FOUND");
       return EFI_NOT_FOUND; // placeholder for now
    }
  } else {
+   klog("VFS",1,"Returning unsupported!");
    return EFI_UNSUPPORTED;
  }
 
@@ -55,6 +75,11 @@ EFI_STATUS EFIAPI ZoidbergVFSOpen(
 
 EFI_STATUS EFIAPI ZoidbergVFSClose(
  IN EFI_FILE_PROTOCOL *This) {
+ klog("VFS",1,"Freeing struct");
+ VFS_PROTO_PRIVATE_DATA *Private;
+ Private = VFS_DATA_FROM_THIS(This);
+ free(Private->path);
+ free(Private);
  return EFI_SUCCESS;
 }
 
@@ -62,9 +87,77 @@ EFI_STATUS EFIAPI ZoidbergVFSRead(
  IN EFI_FILE_PROTOCOL *This,
  IN OUT UINTN *BufferSize,
  OUT VOID *Buffer) {
+ VFS_PROTO_PRIVATE_DATA *Private;
+ Private = VFS_DATA_FROM_THIS(This); 
+ if(Private->is_dir == 1) {
+    if(Private->dir_pos > 0) {
+       *BufferSize = 0;
+       
+       return EFI_SUCCESS;
+    } else {
+       if(BufferSize < sizeof(EFI_FILE_INFO)+4) {
+          *BufferSize = sizeof(EFI_FILE_INFO) + 4;
+          return EFI_BUFFER_TOO_SMALL;
+       }
+       EFI_FILE_INFO *file_info    = (EFI_FILE_INFO*)Buffer;
+       file_info->Size             = *BufferSize;
+       file_info->FileSize         = 0;
+       file_info->PhysicalSize     = 0;
+
+       RT->GetTime(&(file_info->CreateTime),NULL);
+       RT->GetTime(&(file_info->LastAccessTime),NULL);
+       RT->GetTime(&(file_info->ModificationTime),NULL);
+       file_info->Attribute = EFI_FILE_DIRECTORY;
+       mbstowcs(file_info->FileName,".",2);
+       Private->dir_pos = 0;
+       return EFI_SUCCESS;
+    }
+ }
+
  klog("VFS",1,"Attempted read on file_proto");
  *BufferSize = 0;
  return EFI_SUCCESS;
+}
+
+EFI_STATUS EFIAPI ZoidbergVFSGetInfo(
+IN EFI_FILE_PROTOCOL *This,
+ IN EFI_GUID *InformationType,
+ IN OUT UINTN *BufferSize,
+ OUT VOID *Buffer
+ ) {
+
+ UINTN RequiredSize;
+ if(CompareGuid(InformationType, &gEfiFileSystemInfoGuid)) {
+   RequiredSize = sizeof(EFI_FILE_SYSTEM_INFO);
+   if(*BufferSize < RequiredSize) {
+      *BufferSize = RequiredSize;
+      return EFI_BUFFER_TOO_SMALL;
+   }
+   Buffer = calloc(sizeof(EFI_FILE_SYSTEM_INFO),1);
+   EFI_FILE_SYSTEM_INFO *fs_info = (EFI_FILE_SYSTEM_INFO*)Buffer;
+   fs_info->Size       = sizeof(EFI_FILE_SYSTEM_INFO);
+   fs_info->ReadOnly   = FALSE;
+   fs_info->VolumeSize = 1024; // dummy
+   fs_info->FreeSpace  = 1099511627776; // silly big number just so we don't error out on writes
+   fs_info->BlockSize  = 512;
+   return EFI_SUCCESS;
+ } if(CompareGuid(InformationType, &gEfiFileInfoGuid)) { 
+   RequiredSize = sizeof(EFI_FILE_INFO)+2;
+   if(*BufferSize < RequiredSize) {
+      *BufferSize = RequiredSize;
+      return EFI_BUFFER_TOO_SMALL;
+   }
+   Buffer = calloc(sizeof(EFI_FILE_INFO)+2,1);
+   EFI_FILE_INFO *file_info = (EFI_FILE_INFO*)Buffer;
+   file_info->Size = sizeof(EFI_FILE_INFO)+2;
+   file_info->FileSize = 0;
+   file_info->PhysicalSize = 0;
+   file_info->Attribute = EFI_FILE_DIRECTORY;
+   mbstowcs(file_info->FileName,".",2);
+   return EFI_SUCCESS;
+ } else {
+   return EFI_UNSUPPORTED;
+ }
 }
 
 EFI_FILE_PROTOCOL ZoidbergVFSFileInterface = {
@@ -75,9 +168,9 @@ EFI_FILE_PROTOCOL ZoidbergVFSFileInterface = {
   .Read        = ZoidbergVFSRead,
 /*  .Write       = ZoidbergVFSWrite,
   .GetPosition = ZoidbergVFSGetPosition,
-  .SetPosition = ZoidbergVFSSetPosition,
+  .SetPosition = ZoidbergVFSSetPosition,*/
   .GetInfo     = ZoidbergVFSGetInfo,
-  .SetInfo     = ZoidbergVFSSetInfo,
+/*  .SetInfo     = ZoidbergVFSSetInfo,
   .Flush       = ZoidbergVFSFlush,
   .OpenEx      = ZoidbergVFSOpenEx,
   .ReadEx      = ZoidbergVFSReadEx,
@@ -108,7 +201,7 @@ ZOIDBERG_VFS_DEVICE_PATH vfs_devpath_proto =
 
 
 
-EFI_SIMPLE_FILE_SYSTEM_PROTOCOL new_vfs_proto;
+EFI_SIMPLE_FILE_SYSTEM_PROTOCOL *new_vfs_proto;
 
 EFI_STATUS
 EFIAPI
@@ -120,7 +213,9 @@ ZoidbergVFSOpenVolume(
      if(private == NULL) return EFI_OUT_OF_RESOURCES;
      klog("VFS",1,"Allocated private struct for zoidberg VFS protocol at %#llx",private);
      private->Signature = VFS_PROTO_PRIVATE_DATA_SIGNATURE;
-     private->is_fs = 0;
+     private->vfs_root   = 1;
+     private->fs_handler = NULL;
+     private->dir_pos = 0;
      private->is_dir = 1;
      private->path = malloc(2);
      snprintf(private->path,2,"/");
@@ -132,18 +227,16 @@ ZoidbergVFSOpenVolume(
 EFI_HANDLE vfs_handle;
 void init_vfs_proto() {
      klog("VFS",1,"Installing VFS protocol");
-     VFS_PROTO_PRIVATE_DATA *private = calloc(sizeof(VFS_PROTO_PRIVATE_DATA),1);
-     private->Signature = VFS_PROTO_PRIVATE_DATA_SIGNATURE;
-     private->is_fs = 1;
-     private->FileSystemProto.Revision   = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_REVISION;
-     private->FileSystemProto.OpenVolume = ZoidbergVFSOpenVolume;
+     new_vfs_proto = calloc(sizeof(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL),1);
+     new_vfs_proto->Revision   = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_REVISION;
+     new_vfs_proto->OpenVolume = ZoidbergVFSOpenVolume;
 
      EFI_STATUS s = BS->InstallProtocolInterface(&vfs_handle,
                                                  &gEfiDevicePathProtocolGuid,
                                                  EFI_NATIVE_INTERFACE,
                                                  &vfs_devpath_proto);
 
-     s = BS->InstallProtocolInterface(&vfs_handle,&gEfiSimpleFileSystemProtocolGuid,EFI_NATIVE_INTERFACE,&(private->FileSystemProto));
+     s = BS->InstallProtocolInterface(&vfs_handle,&gEfiSimpleFileSystemProtocolGuid,EFI_NATIVE_INTERFACE,new_vfs_proto);
      if(s==EFI_SUCCESS) {
         klog("VFS",1,"Added protocol interface to handle %#llx", vfs_handle);
      } else {
