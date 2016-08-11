@@ -42,26 +42,27 @@ EFI_STATUS EFIAPI ZoidbergVFSOpen(
  
  char filename_path[PATH_MAX];
  wcstombs(filename_path,FileName,PATH_MAX);
- if((strncmp(filename_path,"..")==0) && (Private->vfs_root==1)) {
+ if((strcmp(filename_path,"..")==0) && (Private->vfs_root==1)) {
     return EFI_NOT_FOUND;
  }
- if((strlen(filename_path)==0) || (strncmp(filename_path,".")==0) || (strncmp(filename_path,"\\")==0)) {
+ if(Private->vfs_root == 1) {
 
     VFS_PROTO_PRIVATE_DATA *priv = malloc(sizeof(VFS_PROTO_PRIVATE_DATA));
      if(priv == NULL) return EFI_OUT_OF_RESOURCES;
-     klog("VFS",1,"Allocated private struct for zoidberg VFS protocol at %#llx",priv);
+     klog("VFS",1,"Allocated private struct for \"%s\" protocol at %#llx",filename_path,priv);
      priv->Signature = VFS_PROTO_PRIVATE_DATA_SIGNATURE;
      priv->vfs_root   = 1;
      priv->fs_handler = NULL;
      priv->dir_pos = 0;
      priv->is_dir = 1;
      priv->path = malloc(strlen(filename_path)+1);
-     snprintf(priv->path,strlen(filename_path)+1,"%s",filename_path);
+     strncpy(priv->path,filename_path,strlen(filename_path)+1);
      priv->FileProto = ZoidbergVFSFileInterface;
      *NewHandle = &(priv->FileProto);
      return EFI_SUCCESS;
 
  } else {
+   klog("VFS",0,"Not found: %s",filename_path);
    return EFI_NOT_FOUND;
  }
 }
@@ -84,7 +85,7 @@ EFI_STATUS EFIAPI ZoidbergVFSRead(
  Private = VFS_DATA_FROM_THIS(This); 
  UINTN RequiredSize=0;
  if(Private->is_dir == 1) {
-    if(Private->dir_pos >= 2) {
+    if(Private->dir_pos >= 1) {
        *BufferSize = 0;
        
        return EFI_SUCCESS;
@@ -105,8 +106,6 @@ EFI_STATUS EFIAPI ZoidbergVFSRead(
        file_info->Attribute = EFI_FILE_DIRECTORY;
        if(Private->dir_pos==0) {
           mbstowcs(file_info->FileName,".",12);
-       } else if(Private->dir_pos==1) {
-          mbstowcs(file_info->FileName,"..",10);
        }
        Private->dir_pos++;
        return EFI_SUCCESS;
@@ -141,18 +140,18 @@ IN EFI_FILE_PROTOCOL *This,
    fs_info->BlockSize  = 512;
    return EFI_SUCCESS;
  } if(CompareGuid(InformationType, &gEfiFileInfoGuid)) { 
-   RequiredSize = sizeof(EFI_FILE_INFO)+strlen(Private->path);
+   RequiredSize = sizeof(EFI_FILE_INFO)+strlen(Private->path)+1;
    if(*BufferSize < RequiredSize) {
       *BufferSize = RequiredSize;
       return EFI_BUFFER_TOO_SMALL;
    }
    printf("%#llx for file info buffer\n",Buffer);
    EFI_FILE_INFO *file_info = (EFI_FILE_INFO*)Buffer;
-   file_info->Size = sizeof(EFI_FILE_INFO)+2;
+   file_info->Size = RequiredSize;
    file_info->FileSize = 1024;
    file_info->PhysicalSize = 1024;
    file_info->Attribute = EFI_FILE_DIRECTORY;
-   mbstowcs(file_info->FileName,Private->path,2);
+   mbstowcs(file_info->FileName,Private->path,strlen(Private->path)+1);
    return EFI_SUCCESS;
  } else {
    return EFI_UNSUPPORTED;

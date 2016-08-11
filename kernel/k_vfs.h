@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
+#include <dirent.h>
 
 #include <Library/UefiLib.h>
 #include <Library/UefiBootServicesTableLib.h>
@@ -35,6 +36,8 @@ typedef struct vfs_fs_handler_t {
 
      // standard I/O operations
      void*    (*open)(vfs_fs_handler_t* this, char* path, int flags);
+     void*    (*opendir)(vfs_fs_handler_t* this, char* path);
+     struct dirent *readdir(vfs_fs_handler_t* this, void* fd);
      int      (*close)(vfs_fs_handler_t* this, void* fd);
      ssize_t  (*read)(vfs_fs_handler_t* this, void* fd, void* buf, size_t count);
      ssize_t  (*write)(vfs_fs_handler_t* this, void* fd, void* buf, size_t count);
@@ -62,6 +65,11 @@ typedef struct vfs_fs_type_t {
      void (*setup)(vfs_fs_handler_t* this, char* dev_name, char* mountpoint);  // a pointer to the setup() method for vfs_fs_handler_t struct
 } vfs_fs_type_t;
 
+typedef struct vfs_fd_t {
+     vfs_fs_handler_t *fs_handler;
+     void* handler_fd;
+} vfs_fd_t;
+
 void vfs_init_types();  // init the builtin types, should only be called by vfs_init()
 void vfs_add_type(vfs_fs_type_t *fs_type); // install a filesystem type after the driver is loaded and ready to rock - should eventually be able to dynamically load drivers from ELF
 void vfs_init();        // init the VFS layer and mount the mandatory filesystems the system needs in order to operate
@@ -75,8 +83,9 @@ void dump_vfs();
 //  whichever is the most recent matching prefix entry will be removed
 void vfs_umount(char* dev_name, char* mountpoint);
 
-// simple wrapper so EDK2 libc can still be used to do stdio
-FILE* vfs_fopen(char* path, char* mode);
-
+vfs_fd_t* vfs_fopen(char* path, char* mode);
+vfs_fd_t* vfs_openddir(char* path);
+struct dirent* vfs_readdir(vfs_fd_t* fd);
+int vfs_fclose(vfs_fd_t* fd);
 
 #endif
