@@ -35,42 +35,35 @@ EFI_STATUS EFIAPI ZoidbergVFSOpen(
  IN UINT64 Attributes
  ) {
  VFS_PROTO_PRIVATE_DATA *Private;
-// char filename_path[PATH_MAX];
-// wcstombs(filename_path,FileName,PATH_MAX);
- char* filename_path = ".";
- int i=0;
- for(i=0; i < strlen(filename_path); i++) {
-    if (filename_path[i]=='\\') {
-        filename_path[i] = '/';
-    }
- }
  Private = VFS_DATA_FROM_THIS(This);
- klog("VFS",1,"Open %s", filename_path);
-
- if(Private->is_dir == 1) {
-   if(strncmp(filename_path,".",1)==0) { // just return This for attempts to open .
-      klog("VFS",1,"Returning . directory");
-      VFS_PROTO_PRIVATE_DATA *new_handle = calloc(sizeof(VFS_PROTO_PRIVATE_DATA),1);
-      new_handle->vfs_root = Private->vfs_root;
-      new_handle->is_dir   = 1;
-      new_handle->dir_pos  = 0;
-      new_handle->path = NULL;
-      new_handle->FileProto = ZoidbergVFSFileInterface;
-      *NewHandle = &(new_handle->FileProto);
-      klog("VFS",1,"Allocated new file proto for . directory");
-      return EFI_SUCCESS;
-   } else {
-      klog("VFS",1,"Returning NOT_FOUND");
-      return EFI_NOT_FOUND; // placeholder for now
-   }
- } else {
-   klog("VFS",1,"Returning unsupported!");
-   return EFI_UNSUPPORTED;
+ if((Private->is_dir==1) && (OpenMode != EFI_FILE_MODE_READ)) {
+    return EFI_ACCESS_DENIED;
  }
+ 
+ char filename_path[PATH_MAX];
+ wcstombs(filename_path,FileName,PATH_MAX);
+ if((strncmp(filename_path,"..")==0) && (Private->vfs_root==1)) {
+    return EFI_NOT_FOUND;
+ }
+ if((strlen(filename_path)==0) || (strncmp(filename_path,".")==0) || (strncmp(filename_path,"\\")==0)) {
 
+    VFS_PROTO_PRIVATE_DATA *priv = malloc(sizeof(VFS_PROTO_PRIVATE_DATA));
+     if(priv == NULL) return EFI_OUT_OF_RESOURCES;
+     klog("VFS",1,"Allocated private struct for zoidberg VFS protocol at %#llx",priv);
+     priv->Signature = VFS_PROTO_PRIVATE_DATA_SIGNATURE;
+     priv->vfs_root   = 1;
+     priv->fs_handler = NULL;
+     priv->dir_pos = 0;
+     priv->is_dir = 1;
+     priv->path = malloc(strlen(filename_path)+1);
+     snprintf(priv->path,strlen(filename_path)+1,"%s",filename_path);
+     priv->FileProto = ZoidbergVFSFileInterface;
+     *NewHandle = &(priv->FileProto);
+     return EFI_SUCCESS;
 
- klog("VFS",1,"Attempted open %s on file_proto",filename_path);
- return EFI_NOT_FOUND;
+ } else {
+   return EFI_NOT_FOUND;
+ }
 }
 
 EFI_STATUS EFIAPI ZoidbergVFSClose(
@@ -89,14 +82,16 @@ EFI_STATUS EFIAPI ZoidbergVFSRead(
  OUT VOID *Buffer) {
  VFS_PROTO_PRIVATE_DATA *Private;
  Private = VFS_DATA_FROM_THIS(This); 
+ UINTN RequiredSize=0;
  if(Private->is_dir == 1) {
-    if(Private->dir_pos > 0) {
+    if(Private->dir_pos >= 2) {
        *BufferSize = 0;
        
        return EFI_SUCCESS;
     } else {
-       if(BufferSize < sizeof(EFI_FILE_INFO)+4) {
-          *BufferSize = sizeof(EFI_FILE_INFO) + 4;
+       RequiredSize = sizeof(EFI_FILE_INFO)+strlen(Private->path);
+       if(BufferSize < RequiredSize) {
+          *BufferSize = RequiredSize;
           return EFI_BUFFER_TOO_SMALL;
        }
        EFI_FILE_INFO *file_info    = (EFI_FILE_INFO*)Buffer;
@@ -108,8 +103,12 @@ EFI_STATUS EFIAPI ZoidbergVFSRead(
        RT->GetTime(&(file_info->LastAccessTime),NULL);
        RT->GetTime(&(file_info->ModificationTime),NULL);
        file_info->Attribute = EFI_FILE_DIRECTORY;
-       mbstowcs(file_info->FileName,".",2);
-       Private->dir_pos = 0;
+       if(Private->dir_pos==0) {
+          mbstowcs(file_info->FileName,".",12);
+       } else if(Private->dir_pos==1) {
+          mbstowcs(file_info->FileName,"..",10);
+       }
+       Private->dir_pos++;
        return EFI_SUCCESS;
     }
  }
@@ -125,7 +124,8 @@ IN EFI_FILE_PROTOCOL *This,
  IN OUT UINTN *BufferSize,
  OUT VOID *Buffer
  ) {
-
+ VFS_PROTO_PRIVATE_DATA *Private;
+ Private = VFS_DATA_FROM_THIS(This); 
  UINTN RequiredSize;
  if(CompareGuid(InformationType, &gEfiFileSystemInfoGuid)) {
    RequiredSize = sizeof(EFI_FILE_SYSTEM_INFO);
@@ -133,7 +133,6 @@ IN EFI_FILE_PROTOCOL *This,
       *BufferSize = RequiredSize;
       return EFI_BUFFER_TOO_SMALL;
    }
-   Buffer = calloc(sizeof(EFI_FILE_SYSTEM_INFO),1);
    EFI_FILE_SYSTEM_INFO *fs_info = (EFI_FILE_SYSTEM_INFO*)Buffer;
    fs_info->Size       = sizeof(EFI_FILE_SYSTEM_INFO);
    fs_info->ReadOnly   = FALSE;
@@ -142,18 +141,18 @@ IN EFI_FILE_PROTOCOL *This,
    fs_info->BlockSize  = 512;
    return EFI_SUCCESS;
  } if(CompareGuid(InformationType, &gEfiFileInfoGuid)) { 
-   RequiredSize = sizeof(EFI_FILE_INFO)+2;
+   RequiredSize = sizeof(EFI_FILE_INFO)+strlen(Private->path);
    if(*BufferSize < RequiredSize) {
       *BufferSize = RequiredSize;
       return EFI_BUFFER_TOO_SMALL;
    }
-   Buffer = calloc(sizeof(EFI_FILE_INFO)+2,1);
+   printf("%#llx for file info buffer\n",Buffer);
    EFI_FILE_INFO *file_info = (EFI_FILE_INFO*)Buffer;
    file_info->Size = sizeof(EFI_FILE_INFO)+2;
-   file_info->FileSize = 0;
-   file_info->PhysicalSize = 0;
+   file_info->FileSize = 1024;
+   file_info->PhysicalSize = 1024;
    file_info->Attribute = EFI_FILE_DIRECTORY;
-   mbstowcs(file_info->FileName,".",2);
+   mbstowcs(file_info->FileName,Private->path,2);
    return EFI_SUCCESS;
  } else {
    return EFI_UNSUPPORTED;
@@ -218,7 +217,7 @@ ZoidbergVFSOpenVolume(
      private->dir_pos = 0;
      private->is_dir = 1;
      private->path = malloc(2);
-     snprintf(private->path,2,"/");
+     snprintf(private->path,2,".");
      private->FileProto = ZoidbergVFSFileInterface;
      *File = &(private->FileProto);
    return EFI_SUCCESS; 
