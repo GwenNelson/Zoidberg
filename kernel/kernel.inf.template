@@ -21,6 +21,8 @@
   k_vfs_proto.c
   k_video.c
 
+
+  dmthread.c
   vfs/uefi.c
   vfs/devuefi.c
 
@@ -53,6 +55,7 @@
 
 [Packages]
   StdLib/StdLib.dec
+  MdeModulePkg/MdeModulePkg.dec
   MdePkg/MdePkg.dec
   ShellPkg/ShellPkg.dec
 
@@ -70,6 +73,9 @@
   DevicePathLib
   DxeServicesLib
   PosixLib
+  BaseMemoryLib
+  UefiHiiServicesLib
+
 
 [Protocols]
   gEfiBlockIoProtocolGuid

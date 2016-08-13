@@ -1,3 +1,8 @@
+#include <Library/MemoryAllocationLib.h>
+#include <Library/BaseLib.h>
+#include <Library/HiiLib.h>
+#include <Library/UefiBootServicesTableLib.h>
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,8 +13,6 @@
 #include "dmthread.h"
 
 extern EFI_BOOT_SERVICES *BS;
-
-EFI_SIMPLETHREAD_PROTOCOL *thread_proto;
 
 task_def_t tasks[4096];
 
@@ -84,7 +87,7 @@ UINT64 init_task(void (*task_proc)(void* ctx), void* arg) {
      new_task.task_proc     = task_proc;
      new_task.arg           = arg;
      tasks[new_task_id]  = new_task;
-     thread_proto->create_thread(thread_proto,(THREAD_FUNC_T)task_proc,&(tasks[new_task_id]),new_task.ctx);
+     tasks[new_task_id].ctx = create_thread((THREAD_FUNC_T)task_proc,&(tasks[new_task_id]));
      last_task_id = new_task_id; 
      return new_task.task_id;
 }
@@ -95,7 +98,7 @@ void init_kernel_task(void (*task_proc)(void* ctx), void* arg) {
      new_task->task_id   = -1;
      new_task->task_proc = task_proc;
      new_task->arg       = arg;
-     thread_proto->create_thread(thread_proto,(THREAD_FUNC_T)task_proc,new_task,new_task->ctx);
+     new_task->ctx = create_thread((THREAD_FUNC_T)task_proc,&new_task);
 
 }
 
@@ -111,20 +114,10 @@ void kill_task(UINT64 task_id) {
      dmthread_ctx->status = STATUS_DEAD;
 }
 
-
-
-EFI_GUID gEfiSimpleThreadProtocolGUID = EFI_SIMPLETHREAD_PROTOCOL_GUID;
-
 void scheduler_start() {
      klog("TASKING",1,"Configuring task table");
      BS->SetMem((void*)tasks,sizeof(task_def_t)*4096,0);
 
-     klog("TASKING",1,"Setting up threading protocol");
-     EFI_STATUS s = BS->LocateProtocol(&gEfiSimpleThreadProtocolGUID , 0, (VOID**)&thread_proto);
-     if(s != EFI_SUCCESS) {
-        klog("TASKING",0,"Could not open EFI_SIMPLETHREAD_PROTOCOL, result: %d", s);
-        return;
-     }
 }
 
 
@@ -133,7 +126,7 @@ void yield_until(EFI_EVENT e) {
      for(;;) {
          EFI_STATUS s = BS->CheckEvent(e);
          if(s==EFI_SUCCESS) return;
-         thread_proto->thread_yield(thread_proto);
+         thread_yield();
      }
 }
 

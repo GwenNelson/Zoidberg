@@ -5,7 +5,6 @@ fs0:
 cd fs0:\EFI\BOOT
 
 echo Loading UEFI drivers for zoidberg kernel...
-load SimpleThread.efi
 
 echo Loading zoidberg kernel...
 kernel.efi initrd=initrd.img
