@@ -87,7 +87,7 @@ UINT64 init_task(void (*task_proc)(void* ctx), void* arg) {
      new_task.task_proc     = task_proc;
      new_task.arg           = arg;
      tasks[new_task_id]  = new_task;
-     tasks[new_task_id].ctx = create_thread((THREAD_FUNC_T)task_proc,&(tasks[new_task_id]));
+     tasks[new_task_id].ctx = create_thread((thread_func_t)task_proc,&(tasks[new_task_id]));
      last_task_id = new_task_id; 
      return new_task.task_id;
 }
@@ -98,7 +98,7 @@ void init_kernel_task(void (*task_proc)(void* ctx), void* arg) {
      new_task->task_id   = -1;
      new_task->task_proc = task_proc;
      new_task->arg       = arg;
-     new_task->ctx = create_thread((THREAD_FUNC_T)task_proc,&new_task);
+     new_task->ctx = create_thread((thread_func_t)task_proc,&new_task);
 
 }
 

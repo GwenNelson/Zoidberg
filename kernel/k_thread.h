@@ -1,8 +1,7 @@
 #ifndef K_THREAD_H
 #define K_THREAD_H
 
-#include "../SimpleThread/SimpleThread.h"
-
+#include "dmthread.h"
 #include <sys/EfiSysCall.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Protocol/DevicePath.h>
