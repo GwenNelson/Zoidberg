@@ -15,6 +15,11 @@
 
 #define MAX_VFS_TYPE_LEN 32
 
+typedef struct vfs_dirent_t {
+    char d_name[256];
+} vfs_dirent_t;
+
+
 typedef struct vfs_fs_handler_t vfs_fs_handler_t;
 typedef struct vfs_fs_handler_t {
      // used by the file handler to represent the underlying device
@@ -35,15 +40,15 @@ typedef struct vfs_fs_handler_t {
      char**   (*list_root_dir)(vfs_fs_handler_t* this);             // returns an array of strings, caller must free()
 
      // standard I/O operations
-     void*          (*open)(vfs_fs_handler_t* this, char* path, int flags);
-     void*          (*opendir)(vfs_fs_handler_t* this, char* path);
-     struct dirent* (*readdir)(vfs_fs_handler_t* this, void* fd);
-     int            (*close)(vfs_fs_handler_t* this, void* fd);
-     ssize_t        (*read)(vfs_fs_handler_t* this, void* fd, void* buf, size_t count);
-     ssize_t        (*write)(vfs_fs_handler_t* this, void* fd, void* buf, size_t count);
-     off_t          (*lseek)(vfs_fs_handler_t* this, void* fd, off_t offset, int whence);
-     int            (*stat)(vfs_fs_handler_t* this, char* path, struct stat *buf);
-     int            (*fstat)(vfs_fs_handler_t* this, void* fd, struct stat *buf);
+     void*                (*open)(vfs_fs_handler_t* this, char* path, int flags);
+     void*                (*opendir)(vfs_fs_handler_t* this, char* path);
+     struct vfs_dirent_t* (*readdir)(vfs_fs_handler_t* this, void* fd);
+     int                  (*close)(vfs_fs_handler_t* this, void* fd);
+     ssize_t              (*read)(vfs_fs_handler_t* this, void* fd, void* buf, size_t count);
+     ssize_t              (*write)(vfs_fs_handler_t* this, void* fd, void* buf, size_t count);
+     off_t                (*lseek)(vfs_fs_handler_t* this, void* fd, off_t offset, int whence);
+     int                  (*stat)(vfs_fs_handler_t* this, char* path, struct stat *buf);
+     int                  (*fstat)(vfs_fs_handler_t* this, void* fd, struct stat *buf);
 } vfs_fs_handler_t;
 
 typedef struct vfs_prefix_entry_t vfs_prefix_entry_t;
@@ -74,10 +79,13 @@ typedef struct vfs_dir_fd_t {
      vfs_fs_handler_t *fs_handler;
      void* handler_fd;
      char** prefix_dirs; // used when opendir("/") is called
-     int last_output; // used when opendir("/") is called so we can track the outputs
+     int last_out;
      vfs_prefix_entry_t* cur_prefix;
      int is_root;
 } vfs_dir_fd_t;
+
+
+
 
 void vfs_init_types();  // init the builtin types, should only be called by vfs_init()
 void vfs_add_type(vfs_fs_type_t *fs_type); // install a filesystem type after the driver is loaded and ready to rock - should eventually be able to dynamically load drivers from ELF
@@ -92,14 +100,14 @@ void dump_vfs();
 //  whichever is the most recent matching prefix entry will be removed
 void vfs_umount(char* dev_name, char* mountpoint);
 
-vfs_fd_t*         vfs_fopen(char* path, char* mode);
-vfs_dir_fd_t*     vfs_openddir(char* path);             // this is required to generate the listing first or otherwise guarantee a consistent read from vfs_readdir
-struct dirent*    vfs_readdir(vfs_dir_fd_t* fd);
-int               vfs_fclose(vfs_fd_t* fd);
-ssize_t           vfs_fread(vfs_fd_t* fd, void* buf, size_t count);
-ssize_t           vfs_fwrite(vfs_fd_t* fd, void* buf, size_t count);
-off_t             vfs_lseek(vfs_fd_t* fd, off_t offset, int whence);
-int               vfs_stat(char* path, struct stat *buf);
-int               vfs_fstat(vfs_fd_t* fs, struct stat *buf);
+vfs_fd_t*            vfs_fopen(char* path, char* mode);
+vfs_dir_fd_t*        vfs_openddir(char* path);             // this is required to generate the listing first or otherwise guarantee a consistent read from vfs_readdir
+struct vfs_dirent_t* vfs_readdir(vfs_dir_fd_t* fd);
+int                  vfs_fclose(vfs_fd_t* fd);
+ssize_t              vfs_fread(vfs_fd_t* fd, void* buf, size_t count);
+ssize_t              vfs_fwrite(vfs_fd_t* fd, void* buf, size_t count);
+off_t                vfs_lseek(vfs_fd_t* fd, off_t offset, int whence);
+int                  vfs_stat(char* path, struct stat *buf);
+int                  vfs_fstat(vfs_fd_t* fs, struct stat *buf);
 
 #endif

@@ -60,7 +60,7 @@ vfs_fd_t* vfs_fopen(char* path, char* mode) {
 
 vfs_dir_fd_t* vfs_opendir(char* path) {
    vfs_dir_fd_t* retval = calloc(sizeof(vfs_dir_fd_t),1);
-   if(strncmp(path,"/",strlen(path))==0) {  // root is a special case - on readdir() it iterates through prefixes
+   if((path[0]=='/') && (strlen(path)==1)) {  // root is a special case - on readdir() it iterates through prefixes
       retval->is_root     = 1;
       retval->cur_prefix  = vfs_prefix_list_first;
       retval->prefix_dirs = NULL;
@@ -73,29 +73,39 @@ vfs_dir_fd_t* vfs_opendir(char* path) {
    return retval;
 }
 
-struct dirent* vfs_readdir(vfs_dir_fd_t* fd) {
-   struct dirent* retval = calloc(sizeof(struct dirent),1);
+vfs_dirent_t* vfs_readdir(vfs_dir_fd_t* fd) {
+   vfs_dirent_t* retval = calloc(sizeof(vfs_dirent_t),1);
+   int i=0;
    if(fd->is_root==1) {
+     if((fd->cur_prefix->prefix_str[0]=='/') && (strlen(fd->cur_prefix->prefix_str)==1)) {
+       if(fd->prefix_dirs == NULL) {
+          fd->prefix_dirs = fd->cur_prefix->fs_handler->list_root_dir(fd->cur_prefix->fs_handler);
+          fd->last_out    = -1;
+       }
+       fd->last_out++;
+       if(fd->prefix_dirs[fd->last_out] == NULL) {
+          free(fd->prefix_dirs);
+          fd->prefix_dirs = NULL;
+          fd->cur_prefix = fd->cur_prefix->next; // should fall straight through to if(fd->cur_prefix != NULL) below
+       } else {
+          strncpy(retval->d_name,fd->prefix_dirs[fd->last_out],255);
+          return retval;
+       }
+     } 
      if(fd->cur_prefix != NULL) {
-        if((fd->cur_prefix->prefix_str[0]=='/') && (strlen(fd->cur_prefix->prefix_str)==0)) {
-           if(fd->prefix_dirs==NULL) {
-              fd->prefix_dirs = fd->cur_prefix->fs_handler->list_root_dir(fd->cur_prefix->fs_handler);
-              fd->last_output = -1;
-           }
-           fd->last_output++;
-           if(fd->prefix_dirs[fd->last_output] != NULL) {
-              strncpy(retval->d_name,fd->prefix_dirs[fd->last_output],255);
-              return retval;
-           } else {
-              fd->cur_prefix = fd->cur_prefix->next;
-           }
+        for(i=0; (i<256) && (i<strlen(fd->cur_prefix->prefix_str+1)); i++) {
+            retval->d_name[i]=0;
+            if((fd->cur_prefix->prefix_str+1)[i] != '/') {
+               retval->d_name[i]=(fd->cur_prefix->prefix_str+1)[i];
+            }
         }
-        strncpy(retval->d_name,strtok(fd->cur_prefix->prefix_str,"/"),255);
+        fd->cur_prefix = fd->cur_prefix->next;
         return retval;
      } else {
         return NULL;
      }
    }
+   return retval;
 }
 
 
@@ -192,7 +202,7 @@ void vfs_mount(vfs_fs_handler_t* fs_handler, char* dev_name, char* mountpoint) {
 void dump_vfs() {
      klog("VFS",1,"Dumping VFS");
      vfs_dir_fd_t* root_dir_fd = vfs_opendir("/");
-     struct dirent* dir_ent    = vfs_readdir(root_dir_fd);
+     vfs_dirent_t* dir_ent    = vfs_readdir(root_dir_fd);
      while(dir_ent != NULL) {
         klog("VFS",1,dir_ent->d_name);
         free(dir_ent);
