@@ -9,4 +9,5 @@
 8  REALLOC  void*    void* ptr, size_t size
 9  UNAME    int      struct utsname *buf
 10 WAIT     pid_t    int *status
-11 TEST     int      int a, int b, int c
+11 VFORK    pid_t
+12 GETPID   pid_t

@@ -161,6 +161,7 @@ void start_thread(dmthread_t*  thread)
     ptr_size* gbp = 0;
     int disp;
     char *  stack_btm;
+    int clone=0;
     __asm( "mov %%" bp_register ",%0":"=m"(gbp):); 
     __asm( "mov %%" sp_register ",%0":"=m"(gsp):);   
 
@@ -219,7 +220,7 @@ void resumeTimer()
     initTimer();
 }
 
-void* create_thread(thread_func_t f, void *  arg)
+thread_list* create_thread(thread_func_t f, void *  arg)
 {
     // __asm enter // or __asm push ebp; mov esp, ebp
     thread_list *  new_thread;
@@ -237,7 +238,25 @@ void* create_thread(thread_func_t f, void *  arg)
     sys.current = sys.threads;
 // Thanks there is leave here, then the esp is correct
 //     // __asm leave // or __asm mov ebp esp; pop ebp
-    return (void*)new_thread;
+    return new_thread;
+}
+
+thread_list* clone_thread(thread_list* orig) {
+    thread_list* new_thread;
+    new_thread = _new_thread(orig->thread.kernel, orig->thread.arg);
+    _insert_thread(new_thread, sys.threads->prev);
+
+    stopTimer();
+    sys.current = new_thread;
+    start_thread(& new_thread->thread);
+    sys.current = sys.threads;
+
+    gBS->CopyMem(new_thread->thread.stack,orig->thread.stack,STACK_SIZE+128);
+    gBS->CopyMem(&new_thread->thread.sig_context,&orig->thread.sig_context,sizeof(dmtcontext));
+    resumeTimer();
+
+    return new_thread;
+
 }
 
 void thread_join()

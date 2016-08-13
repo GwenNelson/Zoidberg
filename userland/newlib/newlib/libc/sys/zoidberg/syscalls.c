@@ -25,8 +25,7 @@ char **environ; /* pointer to array of char * strings that define the current en
 int execve(char *name, char **argv, char **env) { return 0; }
 
 int vfork() { 
-    errno = ENOSYS;
-    return -1;
+    return sys_vfork();
 }
 int spawn(char* path) {
     return sys_spawn(path);
@@ -42,9 +41,7 @@ int fstat(int file, struct stat *st) {
     return -1;
 }
 int getpid() { 
-    return 1;
-    // TODO - fix this
-//    return syscall_proto->my_task_id;
+    return sys_getpid();
 }
 int isatty(int file) {
     if(file <= 2) return 1;

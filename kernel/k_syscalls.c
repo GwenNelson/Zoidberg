@@ -41,9 +41,15 @@ pid_t sys_spawn(char* path) {
 
 void sys_null() { }
 
-int sys_test(int a, int b, int c) {
-    kprintf("%d %d %d", a, b, c);
-    return 0;
+pid_t sys_vfork() {
+      UINT64 parent_id = get_cur_task();
+      UINT64 child_id  = clone_task(parent_id);
+      if(sys_getpid() == parent_id) return child_id;
+      return 0;
+}
+
+pid_t sys_getpid() {
+      return get_cur_task();
 }
 
 // ssize_t read(unsigned int fd, char* buf, size_t count)

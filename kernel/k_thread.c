@@ -41,7 +41,7 @@ void init_tasks() {
      while(t != NULL) {
        klog("TASKING",1,"Found a task_req");
        if(t != NULL) {
-          UINT64 new_task_id = init_task(t->task_proc, t->arg);
+          UINT64 new_task_id = init_task(t->task_proc, t->arg, t->task_id);
           klog("TASKING",1,"task_req %d honoured",new_task_id);
        }
        if(t-> next != NULL) {
@@ -56,6 +56,24 @@ void init_tasks() {
      pending_tasks      = NULL;
      pending_tasks_last = NULL;
      release_tasks_lock();
+}
+
+UINT64 clone_task(UINT64 task_id) {
+     task_def_t* old_task = get_task(task_id);
+     UINT64 new_task_id = last_task_id+1;
+     max_task_id++;
+     task_def_t new_task;
+     new_task.task_id   = new_task_id;
+     new_task.task_proc = old_task->task_proc;
+     new_task.arg       = old_task->arg;
+     new_task.ctx = clone_thread(old_task->ctx);
+     new_task.ctx->thread.task_id = new_task_id;
+     tasks[new_task_id]=new_task;
+     return new_task_id;
+}
+
+UINT64 get_cur_task() {
+     return sys.current->thread.task_id;
 }
 
 void req_task(void (*task_proc)(void* ctx), void* arg) {
@@ -75,10 +93,15 @@ void req_task(void (*task_proc)(void* ctx), void* arg) {
      release_tasks_lock();
 }
 
-UINT64 init_task(void (*task_proc)(void* ctx), void* arg) {
-     UINT64 new_task_id = last_task_id+1;
-     if(tasks[new_task_id].task_id > 0) return;
-     max_task_id++;
+UINT64 init_task(void (*task_proc)(void* ctx), void* arg, UINT64 desired_id) {
+     UINT64 new_task_id;
+     if(desired_id <= 0) {
+        new_task_id = last_task_id+1;
+        if(tasks[new_task_id].task_id > 0) return;
+        max_task_id++;
+     } else {
+       new_task_id = desired_id;
+     }
      klog("TASKING",1,"Starting task ID %d at %#llx",new_task_id,task_proc);
 
      task_def_t new_task;
@@ -88,6 +111,7 @@ UINT64 init_task(void (*task_proc)(void* ctx), void* arg) {
      new_task.arg           = arg;
      tasks[new_task_id]  = new_task;
      tasks[new_task_id].ctx = create_thread((thread_func_t)task_proc,&(tasks[new_task_id]));
+     tasks[new_task_id].ctx->thread.task_id = new_task_id;
      last_task_id = new_task_id; 
      return new_task.task_id;
 }
@@ -99,6 +123,7 @@ void init_kernel_task(void (*task_proc)(void* ctx), void* arg) {
      new_task->task_proc = task_proc;
      new_task->arg       = arg;
      new_task->ctx = create_thread((thread_func_t)task_proc,&new_task);
+     new_task->ctx->thread.task_id = 0;
 
 }
 

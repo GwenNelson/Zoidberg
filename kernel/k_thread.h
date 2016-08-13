@@ -11,7 +11,7 @@
 typedef struct task_def_t {
    int task_id;
    void (*task_proc)(void* arg, UINT64 task_id);
-   void* ctx;
+   thread_list* ctx;
    void* arg;
 
 
@@ -19,8 +19,11 @@ typedef struct task_def_t {
    struct task_def_t *prev;
 } task_def_t;
 
+UINT64 get_cur_task();
+UINT64 clone_task(UINT64 task_id);
+
 void req_task(void (*task_proc)(void* ctx), void* arg);    // request a task init
-UINT64 init_task(void (*task_proc)(void* ctx), void* arg); // actually init the task (from main thread only)
+UINT64 init_task(void (*task_proc)(void* ctx), void* arg, UINT64 desired_id); // actually init the task (from main thread only)
 void init_tasks();                                         // do pending req_task
 void init_kernel_task(void (*task_proc)(void* ctx), void* arg); // init a kernel task, can NOT be killed - use with care
 struct task_def_t *get_task(UINT64 task_id);

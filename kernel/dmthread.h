@@ -47,6 +47,7 @@ typedef struct dmthread_t
     thread_func_t kernel;
     void *  arg;
     char *  stack;
+    UINT64 task_id;
     volatile unsigned int status_w;
 } dmthread_t;
 
@@ -71,9 +72,9 @@ extern Scheduler sys;
 
 void stopTimer();
 void resumeTimer();
-void* create_thread(thread_func_t f, void *  arg);
+thread_list* create_thread(thread_func_t f, void *  arg);
 void thread_join();
-
+thread_list* clone_thread(thread_list* orig);
 void thread_yield();
 
 int setTimer ();
