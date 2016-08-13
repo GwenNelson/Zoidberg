@@ -4,5 +4,6 @@
 #include "libvterm/vterm.h"
 
 void init_console();
+void console_write_chars(char* chars, size_t len);
 
 #endif

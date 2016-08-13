@@ -1,6 +1,17 @@
 #include "k_console.h"
 #include "kmsg.h"
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+
+#include <sys/EfiSysCall.h>
+#include <Library/UefiLib.h>
+extern EFI_SYSTEM_TABLE *ST;
+
+static VTerm *console_term=NULL; 
+static VTermScreen* vscreen=NULL;
 int term_damage(VTermRect rect, __unused void* user)
 {
     /* TODO: Reimplement in a less slow-ass way */
@@ -21,13 +32,13 @@ int term_damage(VTermRect rect, __unused void* user)
             color = bg | (fg << 4);
         else
             color = fg | (bg << 4);
+//        ST->ConOut->SetCursorPosition(ST->ConOut,col,row);
+//        printf(cell.chars[0]);
 //        display_put(col, row, cell.chars[0], color);
     }
     return 1;
 }
 
-static VTerm *console_term=NULL; 
-static VTermScreen* vscreen=NULL;
 
 static VTermScreenCallbacks vtsc =
 {
@@ -41,7 +52,7 @@ static VTermScreenCallbacks vtsc =
 
 void init_console() {
      klog("CONSOLE",1,"Configuring vterm for system console");
-     console_term = vterm_new(80,25);    
+     console_term = vterm_new(100,31);    
 
      if(console_term==NULL) {
         klog("TERM",0,"Failed to create libvterm terminal");
@@ -53,4 +64,10 @@ void init_console() {
         vterm_screen_reset(vscreen, 1);
      }
 
+}
+
+void console_write_chars(char* chars, size_t len) {
+     if(console_term != NULL) {
+        vterm_input_write(console_term,chars,len);
+     }
 }

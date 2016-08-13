@@ -20,7 +20,7 @@
   k_vfs.c
   k_vfs_proto.c
   k_video.c
-
+  k_console.c
 
   dmthread.c
   vfs/uefi.c
