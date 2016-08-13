@@ -76,7 +76,7 @@ vfs_dir_fd_t* vfs_opendir(char* path) {
 vfs_dirent_t* vfs_readdir(vfs_dir_fd_t* fd) {
    vfs_dirent_t* retval = calloc(sizeof(vfs_dirent_t),1);
    int i=0;
-   if(fd->is_root==1) {
+   if(fd->is_root==1) { // TODO - genericalise this, it's basically a special case for /, but the same algorithm should work for /dev and friends
      if((fd->cur_prefix->prefix_str[0]=='/') && (strlen(fd->cur_prefix->prefix_str)==1)) {
        if(fd->prefix_dirs == NULL) {
           fd->prefix_dirs = fd->cur_prefix->fs_handler->list_root_dir(fd->cur_prefix->fs_handler);
