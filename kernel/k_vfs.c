@@ -31,21 +31,31 @@ vfs_fs_type_t* vfs_fs_type_list_first = NULL;
 vfs_fs_type_t* vfs_fs_type_list_last  = NULL;
 
 char boot_path[PATH_MAX];
-char* vfs_uefi_type = "uefi"; // mounts VFS volumes
 
-char* vfs_uefi_root = "initrd:"; // TODO - make this ZOIDBERG and implement the SIMPLE_FILE_SYSTEM protocol to map the VFS for EFI functions
+vfs_prefix_entry_t* locate_prefix(char* path) { // scan the prefix table for a file
+   vfs_prefix_entry_t* p = vfs_prefix_list_first;
+   int max_len=0;
+   vfs_prefix_entry_t* retval = NULL;
+   while(p != NULL) {
+       if(strncmp(path,p->prefix_str,strlen(p->prefix_str))==0) {
+          if(strlen(p->prefix_str) > max_len) {
+             retval  = p;
+             max_len = strlen(p->prefix_str);
+          }
+       }
+       p = p->next;
+   } 
+   return retval;
+}
 
-FILE* vfs_fopen(char* path, char* mode) {
-      // for now, this only works with initrd
-      char uefi_path[PATH_MAX];
-      snprintf(uefi_path,"%s\\path",PATH_MAX);
-      char* s = uefi_path;
-      while(*s != 0) {
-         if(*s == '/') {
-             *s = '\\';
-         }
-      }
-      return fopen(uefi_path,mode);
+vfs_fd_t* vfs_fopen(char* path, char* mode) {
+   vfs_prefix_entry_t* p = locate_prefix(path);
+   if(p==NULL) return NULL;
+   if(p->fs_handler->file_exists(p->fs_handler,path)==0) return NULL;
+   vfs_fd_t* retval = malloc(sizeof(vfs_fd_t));
+   retval->fs_handler = p->fs_handler;
+   retval->handler_fd = p->fs_handler->open(p->fs_handler,path, mode);
+   return retval;
 }
 
 
