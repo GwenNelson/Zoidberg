@@ -20,7 +20,6 @@ typedef struct task_def_t {
 } task_def_t;
 
 UINT64 get_cur_task();
-UINT64 clone_task(UINT64 task_id);
 
 void req_task(void (*task_proc)(void* ctx), void* arg);    // request a task init
 UINT64 init_task(void (*task_proc)(void* ctx), void* arg, UINT64 desired_id); // actually init the task (from main thread only)

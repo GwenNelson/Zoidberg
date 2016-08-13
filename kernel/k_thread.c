@@ -58,20 +58,6 @@ void init_tasks() {
      release_tasks_lock();
 }
 
-UINT64 clone_task(UINT64 task_id) {
-     task_def_t* old_task = get_task(task_id);
-     UINT64 new_task_id = last_task_id+1;
-     max_task_id++;
-     task_def_t new_task;
-     new_task.task_id   = new_task_id;
-     new_task.task_proc = old_task->task_proc;
-     new_task.arg       = old_task->arg;
-     new_task.ctx = clone_thread(old_task->ctx);
-     new_task.ctx->thread.task_id = new_task_id;
-     tasks[new_task_id]=new_task;
-     return new_task_id;
-}
-
 UINT64 get_cur_task() {
      return sys.current->thread.task_id;
 }

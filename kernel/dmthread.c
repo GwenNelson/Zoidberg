@@ -241,24 +241,6 @@ thread_list* create_thread(thread_func_t f, void *  arg)
     return new_thread;
 }
 
-thread_list* clone_thread(thread_list* orig) {
-    thread_list* new_thread;
-    new_thread = _new_thread(orig->thread.kernel, orig->thread.arg);
-    _insert_thread(new_thread, sys.threads->prev);
-
-    stopTimer();
-    sys.current = new_thread;
-    start_thread(& new_thread->thread);
-    sys.current = sys.threads;
-
-    gBS->CopyMem(new_thread->thread.stack,orig->thread.stack,STACK_SIZE+128);
-    gBS->CopyMem(&new_thread->thread.sig_context,&orig->thread.sig_context,sizeof(dmtcontext));
-    resumeTimer();
-
-    return new_thread;
-
-}
-
 void thread_join()
 {
     while(sys.current->next && (sys.current->next != sys.current)){
