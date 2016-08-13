@@ -73,6 +73,10 @@ typedef struct vfs_fd_t {
 typedef struct vfs_dir_fd_t {
      vfs_fs_handler_t *fs_handler;
      void* handler_fd;
+     char** prefix_dirs; // used when opendir("/") is called
+     int last_output; // used when opendir("/") is called so we can track the outputs
+     vfs_prefix_entry_t* cur_prefix;
+     int is_root;
 } vfs_dir_fd_t;
 
 void vfs_init_types();  // init the builtin types, should only be called by vfs_init()
@@ -90,7 +94,7 @@ void vfs_umount(char* dev_name, char* mountpoint);
 
 vfs_fd_t*         vfs_fopen(char* path, char* mode);
 vfs_dir_fd_t*     vfs_openddir(char* path);             // this is required to generate the listing first or otherwise guarantee a consistent read from vfs_readdir
-struct dirent     vfs_readdir(vfs_dir_fd_t* fd);
+struct dirent*    vfs_readdir(vfs_dir_fd_t* fd);
 int               vfs_fclose(vfs_fd_t* fd);
 ssize_t           vfs_fread(vfs_fd_t* fd, void* buf, size_t count);
 ssize_t           vfs_fwrite(vfs_fd_t* fd, void* buf, size_t count);

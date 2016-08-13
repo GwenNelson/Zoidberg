@@ -58,8 +58,45 @@ vfs_fd_t* vfs_fopen(char* path, char* mode) {
    return retval;
 }
 
+vfs_dir_fd_t* vfs_opendir(char* path) {
+   vfs_dir_fd_t* retval = calloc(sizeof(vfs_dir_fd_t),1);
+   if(strncmp(path,"/",strlen(path))==0) {  // root is a special case - on readdir() it iterates through prefixes
+      retval->is_root     = 1;
+      retval->cur_prefix  = vfs_prefix_list_first;
+      retval->prefix_dirs = NULL;
+   } else {
+      retval->is_root    = 0;
+      retval->fs_handler = locate_prefix(path);
+      if(retval->fs_handler == NULL) return NULL;
+      retval->handler_fd = retval->fs_handler->opendir(retval->fs_handler,path);
+   }
+   return retval;
+}
 
-
+struct dirent* vfs_readdir(vfs_dir_fd_t* fd) {
+   struct dirent* retval = calloc(sizeof(struct dirent),1);
+   if(fd->is_root==1) {
+     if(fd->cur_prefix != NULL) {
+        if((fd->cur_prefix->prefix_str[0]=='/') && (strlen(fd->cur_prefix->prefix_str)==0)) {
+           if(fd->prefix_dirs==NULL) {
+              fd->prefix_dirs = fd->cur_prefix->fs_handler->list_root_dir(fd->cur_prefix->fs_handler);
+              fd->last_output = -1;
+           }
+           fd->last_output++;
+           if(fd->prefix_dirs[fd->last_output] != NULL) {
+              strncpy(retval->d_name,fd->prefix_dirs[fd->last_output],255);
+              return retval;
+           } else {
+              fd->cur_prefix = fd->cur_prefix->next;
+           }
+        }
+        strncpy(retval->d_name,strtok(fd->cur_prefix->prefix_str,"/"),255);
+        return retval;
+     } else {
+        return NULL;
+     }
+   }
+}
 
 
 void vfs_init_types() {
@@ -154,22 +191,12 @@ void vfs_mount(vfs_fs_handler_t* fs_handler, char* dev_name, char* mountpoint) {
 
 void dump_vfs() {
      klog("VFS",1,"Dumping VFS");
-     vfs_prefix_entry_t* p = vfs_prefix_list_first;
-     while(p != NULL) {
-        klog("VFS",1,"%s on %s type %s",p->dev_name,p->prefix_str,p->fs_handler->fs_type);
-        if(p->fs_handler->list_root_dir != NULL) {
-           char** root_files = p->fs_handler->list_root_dir(p->fs_handler);
-           char** f=root_files;
-           while(*f != NULL) {
-              if(*f != NULL) {
-                 klog("VFS",1,"\t%s%s",p->prefix_str,*f);
-                 f++;
-              }
-           }
-           
-        }
-        p = p->next;
-        if(p==NULL) return;
+     vfs_dir_fd_t* root_dir_fd = vfs_opendir("/");
+     struct dirent* dir_ent    = vfs_readdir(root_dir_fd);
+     while(dir_ent != NULL) {
+        klog("VFS",1,dir_ent->d_name);
+        free(dir_ent);
+        dir_ent    = vfs_readdir(root_dir_fd);
      }
 }
 
