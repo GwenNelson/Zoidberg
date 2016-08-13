@@ -26,11 +26,6 @@ int main() {
     printf("       [+] sysname=%s\n",uname_buf.sysname);
     if(strncmp(uname_buf.sysname,"zoidberg",8) != 0) stop_startup("wrong OS, should run on zoidberg");
 
-    pid_t test_pid = vfork();
-    printf("       [+] hello from vfork() PID %d\n",test_pid);
-    if(test_pid != 0) {
-       for(;;);
-    }
 
     printf("[init] Will spawn shell from %s\n",shell_path);
     pid_t shell_pid = spawn(shell_path);
