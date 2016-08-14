@@ -96,14 +96,34 @@ void uefi_run(void* _t) {
      }
 }
 
+typedef struct spawn_req_t {
+    char* wfname;
+    char** argv;
+    char** envp;
+} spawn_req_t;
 
+void spawn_req(void* arg) {
+     task_def_t* t = (task_def_t*)arg;
+     spawn_req_t *req = (spawn_req_t*)t->arg;
+     char* spawn_filename = calloc(1024,1);
+     wcstombs(spawn_filename,req->wfname,1024);
+     klog("SPAWN",1,"Trying to spawn %s",spawn_filename);
+     free(spawn_filename);
+     uefi_run((void*)req->wfname);
+     free(req);
+}
 
 // pid_t spawn(char* path)
 pid_t sys_spawn(char* path, char** argv, char** envp) {
+     klog("SPAWN",1,"Trying to spawn %s",path);
      CHAR16 *wfname = (CHAR16 *)malloc((strlen(path) + 1) * sizeof(CHAR16));
      mbstowcs((wchar_t *)wfname, path, strlen(path) + 1);
      conv_backslashes(wfname);
-     req_task(&uefi_run,(void*)wfname);
+     spawn_req_t* req = calloc(sizeof(spawn_req_t),1);
+     req->wfname = wfname;
+     req->argv   = argv;
+     req->envp   = envp;
+     req_task(&spawn_req,(void*)req);
      // TODO - fix the memory leak without early free()
   //   free(wfname);
 }

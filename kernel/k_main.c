@@ -48,7 +48,7 @@ void userland_init(void* arg) {
      // this is a bit of a cheat (directly invoking a syscall function) - will need to use inline asm later
      char* argv[]={"/sbin/init",NULL};
      char* env[] ={"PATH=/bin:/sbin",NULL};
-     sys_execve("initrd:\\sbin\\init",argv,env);
+     sys_execve("initrd:/sbin/init",argv,env);
 }
 
 int main(int argc, char** argv) {
