@@ -21,6 +21,7 @@ typedef struct task_def_t {
 
 UINT64 get_cur_task();
 
+// TODO - make req_task return the task ID
 void req_task(void (*task_proc)(void* ctx), void* arg);    // request a task init
 UINT64 init_task(void (*task_proc)(void* ctx), void* arg, UINT64 desired_id); // actually init the task (from main thread only)
 void init_tasks();                                         // do pending req_task

@@ -25,7 +25,9 @@ char **environ; /* pointer to array of char * strings that define the current en
 int execve(char *name, char **argv, char **env) { return 0; }
 
 int spawn(char* path) {
-    return sys_spawn(path);
+    char* argv[] = {NULL}; // ugly hack alert
+    char* envp[] = {NULL};
+    return sys_spawn(path,argv,envp);
 }
 
 int fstat(int file, struct stat *st) { 

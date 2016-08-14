@@ -9,6 +9,17 @@
 #include "k_utsname.h"
 #include "k_vfs.h"
 
+#include <sys/EfiSysCall.h>
+#include <Library/UefiBootServicesTableLib.h>
+#include <Protocol/DevicePath.h>
+#include <Library/PcdLib.h>
+#include <Library/UefiLib.h>
+#include <Protocol/LoadedImage.h>
+#include <Protocol/EfiShell.h>
+#include <Library/BaseLib.h>
+#include <Pi/PiFirmwareFile.h>
+#include <Library/DxeServicesLib.h>
+
 #include <../MdePkg/Include/Library/DevicePathLib.h>
 #include <Protocol/EfiShell.h>
 #include <Library/BaseLib.h>
@@ -22,6 +33,7 @@
 #include <Library/BaseLib.h>
 
 extern EFI_BOOT_SERVICES *BS;
+extern EFI_HANDLE gImageHandle;
 
 void sys_exit() {
 //     kill_task(ctx->task_id);
@@ -38,9 +50,56 @@ void conv_backslashes(CHAR16 *s)
 }
 
 
-extern void uefi_run(void* _t);
+
+EFI_STATUS OpenShellProtocol( EFI_SHELL_PROTOCOL            **gEfiShellProtocol )
+{
+    EFI_STATUS                      Status;
+    Status = gBS->OpenProtocol(
+            gImageHandle,
+            &gEfiShellProtocolGuid,
+            (VOID **)gEfiShellProtocol,
+            gImageHandle,
+            NULL,
+            EFI_OPEN_PROTOCOL_GET_PROTOCOL
+            );
+    if (EFI_ERROR(Status)) {
+    //
+    // Search for the shell protocol
+    //
+        Status = gBS->LocateProtocol(
+                &gEfiShellProtocolGuid,
+                NULL,
+                (VOID **)gEfiShellProtocol
+                );
+        if (EFI_ERROR(Status)) {
+            gEfiShellProtocol = NULL;
+        }
+  }
+  return Status;
+}
+
+void uefi_run(void* _t) {
+     char* _filename = (char*)_t;
+     EFI_STATUS rstat = 0;
+     EFI_SHELL_PROTOCOL            *shell;
+     EFI_DEVICE_PATH_PROTOCOL *path;
+     EFI_STATUS s = OpenShellProtocol(&shell);
+     EFI_HANDLE child_h;
+     path = shell->GetDevicePathFromFilePath(_filename);
+
+     s = BS->LoadImage(0,gImageHandle,path,NULL,NULL,&child_h);
+     if(EFI_ERROR(s)) {
+        klog("UEFI",0,"Could not load image! Error: %d",s);
+     } else {
+        s = BS->StartImage(child_h,NULL,NULL);
+        BS->UnloadImage(child_h);
+     }
+}
+
+
+
 // pid_t spawn(char* path)
-pid_t sys_spawn(char* path) {
+pid_t sys_spawn(char* path, char** argv, char** envp) {
      CHAR16 *wfname = (CHAR16 *)malloc((strlen(path) + 1) * sizeof(CHAR16));
      mbstowcs((wchar_t *)wfname, path, strlen(path) + 1);
      conv_backslashes(wfname);
@@ -87,7 +146,13 @@ int sys_uname (struct utsname *buf) {
 pid_t sys_wait(int* status) {
 }
 
+
 int sys_execve(char *filename, char **argv, char** envp) {
+    CHAR16 *wfname = (CHAR16 *)malloc((strlen(filename) + 1) * sizeof(CHAR16));
+    mbstowcs((wchar_t *)wfname, filename, strlen(filename) + 1);
+    conv_backslashes(wfname);
+    uefi_run((void*)wfname);
+
     return 0;
 }
 

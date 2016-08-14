@@ -5,6 +5,8 @@
 
 #include <sys/EfiSysCall.h>
 #include <Library/UefiLib.h>
+#include <Library/DebugLib.h>
+
 
 #define IN_KMSG
 #include "kmsg.h"
@@ -90,6 +92,16 @@ int kvprintf(const char *fmt, va_list ap)
 	} else {
 		strcat(static_kmsg,temp_buf);
 	}
+	
+	int i=0;
+	UINT16 port = 0x402;
+	UINT8  c=0;
+	for(i=0; i < strlen(temp_buf); i++) {
+	    c = temp_buf[i];
+	    __asm__ volatile("outb %0, %1" : : "a"(c), "Nd"(port));
+	}
+	c = '\n';
+        __asm__ volatile("outb %0, %1" : : "a"(c), "Nd"(port));
 	printf(temp_buf);
 	release_kmsg_lock();
         return retval;

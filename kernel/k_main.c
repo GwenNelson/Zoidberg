@@ -32,51 +32,6 @@ EFI_BOOT_SERVICES *BS;
 EFI_RUNTIME_SERVICES *RT;
 extern EFI_HANDLE gImageHandle;
 
-
-EFI_STATUS OpenShellProtocol( EFI_SHELL_PROTOCOL            **gEfiShellProtocol )
-{
-    EFI_STATUS                      Status;
-    Status = gBS->OpenProtocol(
-            gImageHandle,
-            &gEfiShellProtocolGuid,
-            (VOID **)gEfiShellProtocol,
-            gImageHandle,
-            NULL,
-            EFI_OPEN_PROTOCOL_GET_PROTOCOL
-            );
-    if (EFI_ERROR(Status)) {
-    //
-    // Search for the shell protocol
-    //
-        Status = gBS->LocateProtocol(
-                &gEfiShellProtocolGuid,
-                NULL,
-                (VOID **)gEfiShellProtocol
-                );
-        if (EFI_ERROR(Status)) {
-            gEfiShellProtocol = NULL;
-        }
-  }
-  return Status;
-}
-
-// TODO - move this to another file
-void uefi_run(void* _t) {
-     struct task_def_t *t = (struct task_def_t*)_t;
-     char* _filename = (char*)t->arg;
-     EFI_STATUS rstat = 0;
-     EFI_SHELL_PROTOCOL            *shell;
-     EFI_DEVICE_PATH_PROTOCOL *path;
-     EFI_STATUS s = OpenShellProtocol(&shell);
-     EFI_HANDLE child_h;
-     path = shell->GetDevicePathFromFilePath(_filename);
-
-
-     s = BS->LoadImage(0,gImageHandle,path,NULL,NULL,&child_h);
-     s = BS->StartImage(child_h,NULL,NULL);
-     BS->UnloadImage(child_h);
-}
-
 void idle_task(void* _t) {
      klog("IDLE",1,"Kernel idle task started");
      for(;;) {
@@ -89,13 +44,18 @@ void idle_task(void* _t) {
 
 char* argv0; // this needs to be exported for the sake of the VFS module
 
+void userland_init(void* arg) {
+     // this is a bit of a cheat (directly invoking a syscall function) - will need to use inline asm later
+     char* argv[]={"/sbin/init",NULL};
+     char* env[] ={"PATH=/bin:/sbin",NULL};
+     sys_execve("initrd:\\sbin\\init",argv,env);
+}
 
 int main(int argc, char** argv) {
 
     ST = gST;
     BS = ST->BootServices;
     RT = ST->RuntimeServices;
-    
 
     init_static_kmsg();
 
@@ -164,7 +124,7 @@ int main(int argc, char** argv) {
 
   //  system("fs0:\\EFI\\BOOT\\BOOTX64.efi -nostartup -nomap");
  
-    req_task(&uefi_run,(void*)L"initrd:\\sbin\\init");
+    req_task(&userland_init,NULL);
     while(1) {
        init_tasks();
     }
