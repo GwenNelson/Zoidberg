@@ -13,4 +13,6 @@
 #include "k_utsname.h"
 #include "syscalls.inc"
 
+void cpu_proto_init();
+
 #endif

@@ -90,44 +90,6 @@ void idle_task(void* _t) {
 char* argv0; // this needs to be exported for the sake of the VFS module
 
 
-void EFIAPI syscall_inter_handler(IN CONST EFI_EXCEPTION_TYPE InterruptType, IN CONST EFI_SYSTEM_CONTEXT SystemContext) {
-     if(SystemContext.SystemContextX64->Rax == 666) {
-        SystemContext.SystemContextX64->Rax = 42;
-        return;
-     }
-     UINT64 retval;
-     UINT64 (*teh_syscall)(UINT64 a, UINT64 b, UINT64 c) = syscalls[SystemContext.SystemContextX64->Rax];
-     // this is a crazy hack due to ABI differences
-     retval = teh_syscall(             SystemContext.SystemContextX64->Rcx,
-             SystemContext.SystemContextX64->Rdx,
-             SystemContext.SystemContextX64->R8);
-     SystemContext.SystemContextX64->Rax = retval;
-}
-
-void cpu_proto_init() {
-     EFI_CPU_ARCH_PROTOCOL* cpu_proto;
-     EFI_STATUS s = BS->LocateProtocol(&gEfiCpuArchProtocolGuid,NULL,&cpu_proto);
-     if(EFI_ERROR(s)) {
-        klog("CPU",0,"Could not open arch protocol!");
-        return;
-     } else {
-        klog("CPU",1,"Opened arch protocol!");
-     }
-
-     s = cpu_proto->RegisterInterruptHandler(cpu_proto,0x80,syscall_inter_handler);
-     if(EFI_ERROR(s)) {
-        klog("CPU",0,"Could not register 0x80 handler: %d",s);
-     } else {
-        klog("CPU",1,"Registered handler!");
-     }
-
-     int a=0;
-     __asm__("mov $666, %%rax;"
-             "int $0x80;"
-             :"=a"(a)::);
-     klog("CPU",1,"Got back %d from syscall",a);
-}
-
 int main(int argc, char** argv) {
 
     ST = gST;
@@ -163,7 +125,6 @@ int main(int argc, char** argv) {
     kprintf("\t\tZoidberg kernel, Copyright 2016 Gareth Nelson\n");
     kprintf("\t\t%s %s %s %s\n",zoidberg_uname.sysname, zoidberg_uname.release, zoidberg_uname.version, zoidberg_uname.machine);
     kprintf("\t\t%s entry point located at %#11x\n\n\n\n", argv0, (UINT64)main);
- 
 
     draw_logo();
 
