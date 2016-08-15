@@ -5,6 +5,7 @@
 #include "syscalls.h"
 
 extern int main();
+extern char** environ;
 
 EFI_SYSTEM_TABLE *ST;
 EFI_BOOT_SERVICES *BS;
@@ -20,6 +21,7 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
      BS = ST->BootServices;
      RT = ST->RuntimeServices;
      gImageHandle = ImageHandle;
+     environ = sys_getenvp();
 
        int i;
        i = setjmp(proc_start_env);

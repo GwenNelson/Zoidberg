@@ -140,6 +140,11 @@ void sys_getcwd(char* buf, size_t size) {
      klog("GETCWD",1,"Task %d is in %s",cur_pid,buf);
 }
 
+void* sys_getenvp() {
+      int cur_pid = get_cur_task();
+      return tasks[cur_pid].environ;
+}
+
 int sys_chdir(char* path) {
      int cur_pid = get_cur_task();
      klog("CHDIR",1,"Trying to chdir for task %d to %s",cur_pid,path);

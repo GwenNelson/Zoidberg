@@ -28,6 +28,7 @@ int main() {
        __getline(&input_line,&len,stdin);
        if(strncmp(input_line,"cd ",3)==0) {
           sys_chdir(strtok(input_line+3,"\n"));
+       } else {
        }
 
     }
