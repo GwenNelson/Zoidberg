@@ -145,6 +145,26 @@ void* sys_getenvp() {
       return tasks[cur_pid].environ;
 }
 
+// ripped from newlib
+char* unix_dirname(char *path)
+{
+        char *p;
+        if( path == NULL || *path == '\0' )
+                return ".";
+        p = path + strlen(path) - 1;
+        while( *p == '/' ) {
+                if( p == path )
+                        return path;
+                *p-- = '\0';
+        }
+        while( p >= path && *p != '/' )
+                p--;
+        return
+                p < path ? "." :
+                p == path ? "/" :
+                (*p = '\0', path);
+}
+
 int sys_chdir(char* path) {
      int cur_pid = get_cur_task();
      klog("CHDIR",1,"Trying to chdir for task %d to %s",cur_pid,path);
@@ -155,8 +175,12 @@ int sys_chdir(char* path) {
      } else {
         char tmp_buf[PATH_MAX];
         if(strlen(tasks[cur_pid].cwd)>1) {
-           snprintf(tmp_buf,PATH_MAX,"%s/%s",tasks[cur_pid].cwd,path);
-        } else {
+           if(strncmp(path,"..",strlen(path))==0) { 
+              snprintf(tmp_buf,PATH_MAX,"%s",unix_dirname(tasks[cur_pid].cwd));
+           } else {
+              snprintf(tmp_buf,PATH_MAX,"%s/%s",tasks[cur_pid].cwd,path);
+           }
+        }else {
            snprintf(tmp_buf,PATH_MAX,"/%s",path);
         }
         strncpy(tasks[cur_pid].cwd,tmp_buf,PATH_MAX);
