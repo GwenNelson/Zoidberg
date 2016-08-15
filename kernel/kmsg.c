@@ -10,6 +10,7 @@
 
 #define IN_KMSG
 #include "kmsg.h"
+#include "k_console.h"
 
 char *kmsg=NULL;
 
@@ -72,7 +73,8 @@ int kprintf(const char *fmt, ...)
 	} else {
 		strcat(static_kmsg,temp_buf);
 	}
-	printf(temp_buf);
+	console_write_chars(temp_buf,strlen(temp_buf));
+//	printf(temp_buf);
 	release_kmsg_lock();
         return retval;
 }
@@ -102,7 +104,8 @@ int kvprintf(const char *fmt, va_list ap)
 	}
 	c = '\n';
         __asm__ volatile("outb %0, %1" : : "a"(c), "Nd"(port));
-	printf(temp_buf);
+	console_write_chars(temp_buf,strlen(temp_buf));
+	//printf(temp_buf);
 	release_kmsg_lock();
         return retval;
 }
@@ -147,6 +150,7 @@ void kmsg_prog_start(UINT64 total) {
      prog_start_cur = prog_start_total = 0;
      prog_start_total = total;
      snprintf(prog_chars,32,"%0*d",30,0);
+     console_write_chars("\n",1);
      printf("\n");
 }
 

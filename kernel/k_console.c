@@ -33,7 +33,7 @@ int term_damage(VTermRect rect, __unused void* user)
         else
             color = fg | (bg << 4);
 //        ST->ConOut->SetCursorPosition(ST->ConOut,col,row);
-//        printf(cell.chars[0]);
+//        printf("%c",cell.chars[0]);
 //        display_put(col, row, cell.chars[0], color);
     }
     return 1;
@@ -67,6 +67,7 @@ void init_console() {
 }
 
 void console_write_chars(char* chars, size_t len) {
+     printf(chars); return;
      if(console_term != NULL) {
         vterm_input_write(console_term,chars,len);
      }
