@@ -130,7 +130,13 @@ pid_t sys_spawn(char* path, char** argv, char** envp) {
   //   free(wfname);
 }
 
-void sys_null() { }
+// used to setup a userspace process
+void sys_init() { 
+     int cur_pid = get_cur_task();
+     tasks[cur_pid].fds[0] = vfs_fopen("/dev/console","r");
+     tasks[cur_pid].fds[1] = vfs_fopen("/dev/console","w");
+     tasks[cur_pid].fds[2] = vfs_fopen("/dev/console","w");
+}
 
 void sys_getcwd(char* buf, size_t size) {
      int cur_pid = get_cur_task();

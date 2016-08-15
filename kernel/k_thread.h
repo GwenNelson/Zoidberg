@@ -7,6 +7,7 @@
 #include <Protocol/DevicePath.h>
 #include <Library/PcdLib.h>
 #include <Library/UefiLib.h>
+#include "k_vfs.h"
 
 typedef struct task_def_t {
    int task_id;
@@ -14,6 +15,7 @@ typedef struct task_def_t {
    thread_list* ctx;
    void* arg;
 
+   vfs_fd_t* fds[512]; // file descriptor table
    char** environ;
    char* cwd;
 

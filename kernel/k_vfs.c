@@ -7,7 +7,7 @@
 
 #include "vfs/devuefi.h"
 #include "vfs/uefi.h"
-//include "vfs/devfs.h"
+#include "vfs/devfs.h"
 
 #include <Library/UefiLib.h>
 #include <Library/UefiBootServicesTableLib.h>
@@ -117,6 +117,9 @@ void vfs_init_types() {
 
      vfs_init_uefi_fs_type();
      vfs_add_type(uefi_fs_type);
+     
+     vfs_init_devfs_fs_type();
+     vfs_add_type(devfs_fs_type);
 }
 
 void vfs_add_type(vfs_fs_type_t *fs_type) {
@@ -137,6 +140,8 @@ void vfs_add_type(vfs_fs_type_t *fs_type) {
 extern char* argv0; // import from k_main
 void vfs_init() {
      vfs_init_types();
+
+     vfs_simple_mount("devfs", "devfs", "/dev");
 
      vfs_simple_mount("devuefi","uefi","/dev/uefi/");
 
