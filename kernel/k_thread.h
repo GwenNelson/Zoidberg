@@ -14,6 +14,8 @@ typedef struct task_def_t {
    thread_list* ctx;
    void* arg;
 
+   char* environ;
+   char* cwd;
 
    struct task_def_t *next;
    struct task_def_t *prev;

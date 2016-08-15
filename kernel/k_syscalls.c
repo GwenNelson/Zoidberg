@@ -35,6 +35,8 @@
 extern EFI_BOOT_SERVICES *BS;
 extern EFI_HANDLE gImageHandle;
 
+extern task_def_t* tasks;
+
 void sys_exit() {
 //     kill_task(ctx->task_id);
 }
@@ -129,6 +131,24 @@ pid_t sys_spawn(char* path, char** argv, char** envp) {
 }
 
 void sys_null() { }
+
+void sys_getcwd(char* buf, size_t size) {
+     int cur_pid = get_cur_task();
+     if(tasks[cur_pid].cwd == NULL) return NULL;
+
+     strncpy(buf,tasks[cur_pid].cwd,size);
+     klog("GETCWD",1,"Task %d is in %s",cur_pid,buf);
+}
+
+int sys_chdir(char* path) {
+     int cur_pid = get_cur_task();
+     klog("CHDIR",1,"Trying to chdir for task %d to %s",cur_pid,path);
+     if(tasks[cur_pid].cwd == NULL) tasks[cur_pid].cwd = calloc(PATH_MAX,1);
+     strncpy(tasks[cur_pid].cwd,path,PATH_MAX);
+     // TODO - check with VFS layer if the requested path exists
+     // TODO - take relative paths into account
+     return 0;
+}
 
 pid_t sys_getpid() {
       return get_cur_task();

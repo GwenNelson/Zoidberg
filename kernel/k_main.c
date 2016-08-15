@@ -44,6 +44,8 @@ void idle_task(void* _t) {
 
 char* argv0; // this needs to be exported for the sake of the VFS module
 
+extern task_def_t* tasks;
+
 void userland_init(void* arg) {
      // this is a bit of a cheat (directly invoking a syscall function) - will need to use inline asm later
      char* argv[]={"/sbin/init",NULL};

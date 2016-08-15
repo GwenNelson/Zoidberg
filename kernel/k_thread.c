@@ -95,6 +95,7 @@ UINT64 init_task(void (*task_proc)(void* ctx), void* arg, UINT64 desired_id) {
      new_task.task_id       = new_task_id;
      new_task.task_proc     = task_proc;
      new_task.arg           = arg;
+     new_task.cwd           = NULL;
      tasks[new_task_id]  = new_task;
      tasks[new_task_id].ctx = create_thread((thread_func_t)task_proc,&(tasks[new_task_id]));
      tasks[new_task_id].ctx->thread.task_id = new_task_id;

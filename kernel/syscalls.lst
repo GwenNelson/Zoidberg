@@ -10,3 +10,5 @@
 9  UNAME    int      struct utsname *buf
 10 WAIT     pid_t    int *status
 11 GETPID   pid_t
+12 CHDIR    int      char* path
+13 GETCWD   void     char* buf, size_t size
