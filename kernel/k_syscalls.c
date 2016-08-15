@@ -144,9 +144,19 @@ int sys_chdir(char* path) {
      int cur_pid = get_cur_task();
      klog("CHDIR",1,"Trying to chdir for task %d to %s",cur_pid,path);
      if(tasks[cur_pid].cwd == NULL) tasks[cur_pid].cwd = calloc(PATH_MAX,1);
-     strncpy(tasks[cur_pid].cwd,path,PATH_MAX);
+     if(path[strlen(path)]=='/') path[strlen(path)]==0; // eliminate trailing /
+     if(path[0]=='/') {  // absolute path
+        strncpy(tasks[cur_pid].cwd,path,PATH_MAX);
+     } else {
+        char tmp_buf[PATH_MAX];
+        if(strlen(tasks[cur_pid].cwd)>1) {
+           snprintf(tmp_buf,PATH_MAX,"%s/%s",tasks[cur_pid].cwd,path);
+        } else {
+           snprintf(tmp_buf,PATH_MAX,"/%s",path);
+        }
+        strncpy(tasks[cur_pid].cwd,tmp_buf,PATH_MAX);
+     }
      // TODO - check with VFS layer if the requested path exists
-     // TODO - take relative paths into account
      return 0;
 }
 
