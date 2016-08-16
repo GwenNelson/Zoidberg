@@ -17,6 +17,7 @@
 
 typedef struct vfs_dirent_t {
     char d_name[256];
+    unsigned char d_type;
 } vfs_dirent_t;
 
 

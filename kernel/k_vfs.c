@@ -71,6 +71,7 @@ vfs_dir_fd_t* vfs_opendir(char* path) {
    if(!strcmp(path,p->prefix_str)) {
       retval->is_root = 1;
       retval->last_out = -1;
+      // TODO make list_root_dir return vfs_dir_fd_t array and set d_type
       retval->prefix_dirs = p->fs_handler->list_root_dir(p->fs_handler);
    } else {
       retval->handler_fd = p->fs_handler->opendir(p->fs_handler,path+strlen(p->prefix_str));
@@ -81,7 +82,7 @@ vfs_dir_fd_t* vfs_opendir(char* path) {
 vfs_dirent_t* vfs_readdir(vfs_dir_fd_t* fd) {
    vfs_dirent_t* retval = calloc(sizeof(vfs_dirent_t),1);
    int i=0;
-   if(fd->is_root==1) { // TODO - genericalise this, it's basically a special case for /, but the same algorithm should work for /dev and friends
+   if(fd->is_root==1) { // root of the fs_handler filesystem
      fd->last_out++;
      if(fd->prefix_dirs[fd->last_out] == NULL) {
         free(fd->prefix_dirs);
@@ -189,7 +190,6 @@ void vfs_mount(vfs_fs_handler_t* fs_handler, char* dev_name, char* mountpoint) {
         new_entry->prev            = vfs_prefix_list_last;
         vfs_prefix_list_last = new_entry;
      }
-
 }
 
 void dump_vfs() {
