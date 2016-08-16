@@ -55,6 +55,8 @@ mcopy -i boot.img startup.nsh ::/
 echo Building initrd
 dd if=/dev/zero of=initrd.img bs=1M count=1
 /sbin/mkfs.vfat initrd.img 
+mmd -i initrd.img ::/dev
+mmd -i initrd.img ::/boot
 mmd -i initrd.img ::/sbin
 mmd -i initrd.img ::/bin
 mcopy -i initrd.img userland/build/sbin/init ::/sbin

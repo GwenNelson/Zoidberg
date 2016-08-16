@@ -60,15 +60,20 @@ vfs_fd_t* vfs_fopen(char* path, char* mode) {
 
 vfs_dir_fd_t* vfs_opendir(char* path) {
    vfs_dir_fd_t* retval = calloc(sizeof(vfs_dir_fd_t),1);
-   if((path[0]=='/') && (strlen(path)==1)) {  // root is a special case - on readdir() it iterates through prefixes
-      retval->is_root     = 1;
-      retval->cur_prefix  = vfs_prefix_list_first;
-      retval->prefix_dirs = NULL;
+   retval->is_root    = 0;
+   vfs_prefix_entry_t* p = locate_prefix(path);
+   if(p==NULL) {
+      free(retval);
+      return NULL;
+   }
+   retval->fs_handler = p->fs_handler;
+   klog("VFS",1,"Will open %s",path+strlen(p->prefix_str));
+   if(!strcmp(path,p->prefix_str)) {
+      retval->is_root = 1;
+      retval->last_out = -1;
+      retval->prefix_dirs = p->fs_handler->list_root_dir(p->fs_handler);
    } else {
-      retval->is_root    = 0;
-      retval->fs_handler = locate_prefix(path);
-      if(retval->fs_handler == NULL) return NULL;
-      retval->handler_fd = retval->fs_handler->opendir(retval->fs_handler,path);
+      retval->handler_fd = p->fs_handler->opendir(p->fs_handler,path+strlen(p->prefix_str));
    }
    return retval;
 }
@@ -77,33 +82,16 @@ vfs_dirent_t* vfs_readdir(vfs_dir_fd_t* fd) {
    vfs_dirent_t* retval = calloc(sizeof(vfs_dirent_t),1);
    int i=0;
    if(fd->is_root==1) { // TODO - genericalise this, it's basically a special case for /, but the same algorithm should work for /dev and friends
-     if((fd->cur_prefix->prefix_str[0]=='/') && (strlen(fd->cur_prefix->prefix_str)==1)) {
-       if(fd->prefix_dirs == NULL) {
-          fd->prefix_dirs = fd->cur_prefix->fs_handler->list_root_dir(fd->cur_prefix->fs_handler);
-          fd->last_out    = -1;
-       }
-       fd->last_out++;
-       if(fd->prefix_dirs[fd->last_out] == NULL) {
-          free(fd->prefix_dirs);
-          fd->prefix_dirs = NULL;
-          fd->cur_prefix = fd->cur_prefix->next; // should fall straight through to if(fd->cur_prefix != NULL) below
-       } else {
-          strncpy(retval->d_name,fd->prefix_dirs[fd->last_out],255);
-          return retval;
-       }
-     } 
-     if(fd->cur_prefix != NULL) {
-        for(i=0; (i<256) && (i<strlen(fd->cur_prefix->prefix_str+1)); i++) {
-            retval->d_name[i]=0;
-            if((fd->cur_prefix->prefix_str+1)[i] != '/') {
-               retval->d_name[i]=(fd->cur_prefix->prefix_str+1)[i];
-            }
-        }
-        fd->cur_prefix = fd->cur_prefix->next;
-        return retval;
-     } else {
+     fd->last_out++;
+     if(fd->prefix_dirs[fd->last_out] == NULL) {
+        free(fd->prefix_dirs);
         return NULL;
      }
+     strncpy(retval->d_name,fd->prefix_dirs[fd->last_out],255);
+     return retval;
+   } else {
+     free(retval);
+     retval = fd->fs_handler->readdir(fd->fs_handler,fd->handler_fd);
    }
    return retval;
 }
