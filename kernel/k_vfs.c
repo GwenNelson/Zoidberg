@@ -130,7 +130,7 @@ extern char* argv0; // import from k_main
 void vfs_init() {
      vfs_init_types();
 
-     vfs_simple_mount("devfs", "devfs", "/dev");
+     vfs_simple_mount("devfs", "devfs", "/dev/");
 
      vfs_simple_mount("devuefi","uefi","/dev/uefi/");
 
