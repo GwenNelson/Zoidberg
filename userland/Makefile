@@ -30,9 +30,6 @@ build/sbin/init: build/sbin/init.o newlib/build/x86_64-zoidberg/newlib/libc/sys/
 	mkdir -p build/sbin
 	x86_64-zoidberg-gcc ${APPCFLAGS} ${INCLUDES} -o $@ $^ -lgcc -lc
 
-build/bin/sh_wordexp.o: bin/sh/sh_wordexp.c
-	mkdir -p build/bin
-	x86_64-zoidberg-gcc -ffreestanding ${INCLUDES} -c $< -o $@
 
 build/bin/sh.o: bin/sh/sh.c fullsdk
 	mkdir -p build/bin
