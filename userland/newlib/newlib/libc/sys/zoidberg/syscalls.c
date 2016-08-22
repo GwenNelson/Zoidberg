@@ -10,9 +10,6 @@
 
 #include "syscalls.h"
 
-// this is just to make libgcc happy
-int atexit(void (*function)(void)) {
-}
 
 extern jmp_buf proc_start_env;
 void _exit() { 

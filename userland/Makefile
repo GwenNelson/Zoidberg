@@ -1,4 +1,4 @@
-all: fullsdk build/u_syscalls.o newlib/build/x86_64-zoidberg/newlib/libc.a build/sbin/init gnu-efi-3.0.4/x86_64/lib/libefi.a build/bin/sh build/bin/mysh
+all: fullsdk build/u_syscalls.o newlib/build/x86_64-zoidberg/newlib/libc.a build/sbin/init gnu-efi-3.0.4/x86_64/lib/libefi.a build/bin/sh build/bin/mysh build/bin/uname
 
 export PATH := ${PWD}/sdk/usr/bin:${PATH}
 
@@ -30,6 +30,13 @@ build/sbin/init: build/sbin/init.o newlib/build/x86_64-zoidberg/newlib/libc/sys/
 	mkdir -p build/sbin
 	x86_64-zoidberg-gcc ${APPCFLAGS} ${INCLUDES} -o $@ $^ -lgcc -lc
 
+build/bin/uname.o: bin/uname/uname.c fullsdk
+	mkdir -p build/bin
+	x86_64-zoidberg-gcc -ffreestanding ${INCLUDES} -c $< -o $@
+
+build/bin/uname: build/bin/uname.o
+	mkdir -p build/bin
+	x86_64-zoidberg-gcc ${APPCFLAGS} ${INCLUDES} -o $@ $^ -lgcc -lc
 
 build/bin/sh.o: bin/sh/sh.c fullsdk
 	mkdir -p build/bin
